@@ -1,0 +1,22 @@
+#+STARTUP: showall hidestars
+
+* 小小的 Emacs 配置
+
+** 概述
+   使用 org 管理的简单的 Emacs 配置，使用 use-package 管理插件
+
+** 内容
+*** Python
+ 	使用 jedi 补全
+*** C/C++ 
+	不完全配置
+*** Scheme
+	使用 mit-scheme 作为解释器
+*** auto-complete
+*** yasnippet
+
+** 使用说明
+   在用户目录下执行
+   #+BEGIN_SRC shell
+	 git clone https://github.com/pandaye/.emacs.d.git
+   #+END_SRC
