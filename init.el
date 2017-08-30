@@ -33,7 +33,7 @@
 	("bffa9739ce0752a37d9b1eee78fc00ba159748f50dc328af4be661484848e476" default)))
  '(package-selected-packages
    (quote
-	(YASnippet markdown-mode graphviz-dot-mode python-mode paredit paredit-mode hlinum powerline flycheck spacemacs-theme auto-complete ivy-mode ace-window which-key try use-package org-bullets)))
+	(ox-gfm YASnippet markdown-mode graphviz-dot-mode python-mode paredit paredit-mode hlinum powerline flycheck spacemacs-theme auto-complete ivy-mode ace-window which-key try use-package org-bullets)))
  '(safe-local-variable-values (quote ((encoding . utf-8))))
  '(tool-bar-mode nil))
 (custom-set-faces

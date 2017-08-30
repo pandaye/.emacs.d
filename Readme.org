@@ -18,5 +18,5 @@
 ** 使用说明
    在用户目录下执行
    #+BEGIN_SRC shell
-	 git clone https://github.com/pandaye/.emacs.d.git
+     git clone https://github.com/pandaye/.emacs.d.git
    #+END_SRC

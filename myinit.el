@@ -38,7 +38,8 @@
 (use-package org-bullets
   :ensure t
   :config
-  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+  (add-hook 'org-mode-hook (lambda () (setq indent-tabs-mode nil))))
 
 (defalias 'list-buffers 'ibuffer)
 
@@ -47,11 +48,11 @@
   :ensure t
   :init
   (progn
-    (global-set-key [remap other-window] 'ace-window)
-    (custom-set-faces
-     '(aw-leading-char-face
-       ((t (:inherit ace-jump-face-foreground :height 3.0)))))
-    ))
+        (global-set-key [remap other-window] 'ace-window)
+        (custom-set-faces
+         '(aw-leading-char-face
+           ((t (:inherit ace-jump-face-foreground :height 3.0)))))
+        ))
 
 (use-package auto-complete
   :ensure t
@@ -61,8 +62,7 @@
     (global-auto-complete-mode t)
     (setq ac-auto-start nil)
     (setq ac-quick-help-delay 0.2)
-    (define-key ac-mode-map (kbd "M-/") 'auto-complete)
-    ))
+    (define-key ac-mode-map (kbd "M-/") 'auto-complete)))
 
 (use-package spacemacs-theme
   :ensure t
@@ -103,7 +103,7 @@
 (use-package helm
   :ensure t
   :bind (("C-x C-f" . helm-find-files)
-	 ("M-x" . helm-M-x)))
+         ("M-x" . helm-M-x)))
 
 (require 'helm)
 (require 'helm-config)			;?
@@ -128,7 +128,7 @@
 (use-package helm-swoop
   :ensure t
   :bind (("C-s" . helm-swoop)
-	 ("C-r" . helm-swoop)))
+         ("C-r" . helm-swoop)))
 
 (helm-mode 1)
 
@@ -141,28 +141,31 @@
   :ensure t
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
-	 ("\\.md\\'" . markdown-mode)
-	 ("\\.markdown\\'" . markdown-mode))
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
   :init 
   (setq markdown-command
-	"pandoc -f markdown -t html -s -c /home/pandaye/CSS/style.css --mathjax --highlight-style pygments"))
+        "pandoc -f markdown -t html -s -c /home/pandaye/CSS/style.css --mathjax --highlight-style pygments"))
+
+(use-package ox-gfm
+  :ensure ox-gfm)
 
 (use-package auto-complete-clang
   :ensure t
   :init
   (setq ac-clang-flags
-	(mapcar (lambda (item)(concat "-I" item))
-		(split-string
-		 "
-     /usr/include/c++/7.1.1
-     /usr/include/c++/7.1.1/x86_64-pc-linux-gnu
-     /usr/include/c++/7.1.1/backward
-     /usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/include
-     /usr/local/include
-     /usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/include-fixed
-     /usr/include
-    "
-		 )))
+        (mapcar (lambda (item)(concat "-I" item))
+                (split-string
+                 "
+ /usr/include/c++/7.1.1
+ /usr/include/c++/7.1.1/x86_64-pc-linux-gnu
+ /usr/include/c++/7.1.1/backward
+ /usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/include
+ /usr/local/include
+ /usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/include-fixed
+ /usr/include
+"
+                 )))
   (setq-default ac-sources '(ac-source-abbrev ac-source-dictionary ac-source-words-in-same-mode-buffers)))
 
 (require 'auto-complete-clang)
@@ -186,10 +189,9 @@
 (add-hook 'c++-mode-hook 'my:ac-c-headers-init)
 (add-hook 'c-mode-hook 'my:ac-c-headers-init)
 
-(setq-default tab-width 4)
 (setq c-default-style "linux"
-      c-basic-offset 4
-      indent-tabs-mode t)
+  c-basic-offset 4
+  indent-tabs-mode t)
 (add-hook 'c-mode-common-hook '(lambda () (c-toggle-auto-state 1)))
 
 (use-package yasnippet
