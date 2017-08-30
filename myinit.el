@@ -48,11 +48,11 @@
   :ensure t
   :init
   (progn
-        (global-set-key [remap other-window] 'ace-window)
-        (custom-set-faces
-         '(aw-leading-char-face
-           ((t (:inherit ace-jump-face-foreground :height 3.0)))))
-        ))
+    (global-set-key [remap other-window] 'ace-window)
+    (custom-set-faces
+     '(aw-leading-char-face
+       ((t (:inherit ace-jump-face-foreground :height 3.0)))))
+    ))
 
 (use-package auto-complete
   :ensure t
