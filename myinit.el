@@ -94,17 +94,22 @@
   :init
   (global-flycheck-mode t))
 
-(use-package jedi
+;    (use-package jedi
+;      :ensure t
+;      :init
+;      (add-hook 'python-mode-hook 'jedi:setup)
+;      (add-hook 'python-mode-hook 'jedi:ac-setup)
+;      (setq jedi:complete-on-dot t))
+;
+;    (use-package py-autopep8
+;      :ensure t
+;      :init
+;      (add-hook 'python-mode-hook 'py-autopep8-enable-on-save))
+(use-package elpy
   :ensure t
   :init
-  (add-hook 'python-mode-hook 'jedi:setup)
-  (add-hook 'python-mode-hook 'jedi:ac-setup)
-  (setq jedi:complete-on-dot t))
-
-(use-package py-autopep8
-  :ensure t
-  :init
-  (add-hook 'python-mode-hook 'py-autopep8-enable-on-save))
+  (elpy-enable)
+  (pyvenv-activate "/home/pandaye/MyEnvs"))
 
 (use-package helm
   :ensure t

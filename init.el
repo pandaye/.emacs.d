@@ -30,10 +30,10 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-	("bffa9739ce0752a37d9b1eee78fc00ba159748f50dc328af4be661484848e476" default)))
+    ("bffa9739ce0752a37d9b1eee78fc00ba159748f50dc328af4be661484848e476" default)))
  '(package-selected-packages
    (quote
-	(ox-gfm YASnippet markdown-mode graphviz-dot-mode python-mode paredit paredit-mode hlinum powerline flycheck spacemacs-theme auto-complete ivy-mode ace-window which-key try use-package org-bullets)))
+    (elpy ox-gfm YASnippet markdown-mode graphviz-dot-mode python-mode paredit paredit-mode hlinum powerline flycheck spacemacs-theme auto-complete ivy-mode ace-window which-key try use-package org-bullets)))
  '(safe-local-variable-values (quote ((encoding . utf-8))))
  '(tool-bar-mode nil))
 (custom-set-faces
@@ -42,7 +42,9 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(default ((t (:family "文泉驿等宽微米黑" :foundry "WQYF" :slant normal :weight normal :height 139 :width normal))))
- '(aw-leading-char-face ((t (:inherit ace-jump-face-foreground :height 3.0)))))
+ '(aw-leading-char-face ((t (:inherit ace-jump-face-foreground :height 3.0))))
+ '(flymake-errline ((t nil)))
+ '(flymake-warnline ((t nil))))
 
 (provide 'init)
 ;;; init.el ends here

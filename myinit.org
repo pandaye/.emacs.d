@@ -141,17 +141,22 @@
 * python
   首次使用 jedi 前需要运行 jedi:install-server，并且已经安装了 python virtualenv
   #+BEGIN_SRC emacs-lisp
-    (use-package jedi
+    ;    (use-package jedi
+    ;      :ensure t
+    ;      :init
+    ;      (add-hook 'python-mode-hook 'jedi:setup)
+    ;      (add-hook 'python-mode-hook 'jedi:ac-setup)
+    ;      (setq jedi:complete-on-dot t))
+    ;
+    ;    (use-package py-autopep8
+    ;      :ensure t
+    ;      :init
+    ;      (add-hook 'python-mode-hook 'py-autopep8-enable-on-save))
+    (use-package elpy
       :ensure t
       :init
-      (add-hook 'python-mode-hook 'jedi:setup)
-      (add-hook 'python-mode-hook 'jedi:ac-setup)
-      (setq jedi:complete-on-dot t))
-
-    (use-package py-autopep8
-      :ensure t
-      :init
-      (add-hook 'python-mode-hook 'py-autopep8-enable-on-save))
+      (elpy-enable)
+      (pyvenv-activate "/home/pandaye/MyEnvs"))
   #+END_SRC
 
 * helm
