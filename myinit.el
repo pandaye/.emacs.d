@@ -41,6 +41,12 @@
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
   (add-hook 'org-mode-hook (lambda () (setq indent-tabs-mode nil))))
 
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)
+   (scheme .t)
+   ))
+
 (defalias 'list-buffers 'ibuffer)
 
 (winner-mode 1)

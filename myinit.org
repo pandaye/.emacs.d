@@ -61,6 +61,12 @@
       :config
       (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
       (add-hook 'org-mode-hook (lambda () (setq indent-tabs-mode nil))))
+
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (scheme .t)
+       ))
   #+END_SRC
 
 * buffer and window
