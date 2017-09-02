@@ -6,8 +6,8 @@
 (setq package-enable-at-startup nil)
 (setq package-archives
       '(("gnu" . "https://elpa.emacs-china.org/gnu/")
-		("melpa" . "https://elpa.emacs-china.org/melpa/")
-		("marmalade" . "https://elpa.emacs-china.org/marmalade/")))
+        ("melpa" . "https://elpa.emacs-china.org/melpa/")
+        ("marmalade" . "https://elpa.emacs-china.org/marmalade/")))
 (package-initialize)
 
 ;; package install
