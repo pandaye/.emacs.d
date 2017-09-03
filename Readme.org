@@ -7,16 +7,25 @@
 
 ** 内容
 *** Python
- 	使用 jedi 补全
+    使用 [[https://github.com/jorgenschaefer/elpy][Elpy]] 作为 ~python~ 基本环境，并配置了 ~pyvenv~
 *** C/C++ 
-	不完全配置
+    补全配置不完全，头文件补全略显傻瓜
 *** Scheme
-	使用 mit-scheme 作为解释器
+    使用 mit-scheme 作为解释器，参考：[[http://www.yinwang.org/blog-cn/2013/04/11/scheme-setup][王垠的"Scheme编程环境的配置"]]
 *** auto-complete
+    基本能用
 *** yasnippet
-
+    使用默认，并没有没有添加自己的配置
 ** 使用说明
    在用户目录下执行
    #+BEGIN_SRC shell
      git clone https://github.com/pandaye/.emacs.d.git
    #+END_SRC
+   在 Linux 环境下面可以直接使用，如果出错，在启动一次（笑）  
+   其他环境的话就不知道是否有用了...
+** 其他的话
+   假定这个配置文件没有其他人会看，所以有的配置里面路径直接写的是自己PC上面的绝对路径  
+   如果路过的朋友看到这个，并心血来潮地使用它，你需要改动如下部分：
+   - ~python~ 设置里面的 ~pyvenv~ 路径
+   - 其他的应该没了，具体可以看看 ~myinit.org~ ，并不复杂的一份配置
+
