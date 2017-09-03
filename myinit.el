@@ -98,6 +98,7 @@
   :ensure t
   :init
   (elpy-enable)
+  (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
   (pyvenv-activate "/home/pandaye/MyEnvs"))
 
 (use-package helm
