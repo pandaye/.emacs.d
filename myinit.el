@@ -4,6 +4,7 @@
 (scroll-bar-mode -1)
 (fset 'yes-or-no-p 'y-or-n-p)
 (global-hl-line-mode t)
+(setq-default tab-width 4)
 
 (use-package powerline
   :ensure t
@@ -60,15 +61,15 @@
        ((t (:inherit ace-jump-face-foreground :height 3.0)))))
     ))
 
-(use-package auto-complete
+(use-package company
   :ensure t
   :init
-  (progn
-    (ac-config-default)
-    (global-auto-complete-mode t)
-    (setq ac-auto-start nil)
-    (setq ac-quick-help-delay 0.2)
-    (define-key ac-mode-map (kbd "M-/") 'auto-complete)))
+  (global-company-mode)
+  :config
+  (setq company-minimum-prefix-length 3)
+  (setq company-idle-delay nil)
+  :bind
+  (("M-/" . company-complete)))
 
 (use-package spacemacs-theme
   :ensure t
@@ -98,8 +99,8 @@
   :ensure t
   :init
   (elpy-enable)
-  (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
-  (pyvenv-activate "/home/pandaye/MyEnvs"))
+  (pyvenv-activate "/home/pandaye/MyEnvs")
+  (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save))
 
 (use-package helm
   :ensure t
@@ -151,49 +152,18 @@
 (use-package ox-gfm
   :ensure ox-gfm)
 
-(use-package auto-complete-clang
+(require 'company)
+(use-package company-c-headers
   :ensure t
   :init
-  (setq ac-clang-flags
-        (mapcar (lambda (item)(concat "-I" item))
-                (split-string
-                 "
- /usr/include/c++/7.1.1
- /usr/include/c++/7.1.1/x86_64-pc-linux-gnu
- /usr/include/c++/7.1.1/backward
- /usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/include
- /usr/local/include
- /usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/include-fixed
- /usr/include
-"
-                 )))
-  (setq-default ac-sources '(ac-source-abbrev ac-source-dictionary ac-source-words-in-same-mode-buffers)))
-
-(require 'auto-complete-clang)
-(defun my-ac-cc-mode-setup ()
-  (setq ac-sources (append '(ac-source-clang ac-source-yasnippet) ac-sources)))
-(add-hook 'c-mode-common-hook 'my-ac-cc-mode-setup)
-
-(use-package auto-complete-c-headers
-  :ensure t)
-(defun my:ac-c-headers-init ()
-  (require 'auto-complete-c-headers)
-  (add-to-list 'ac-sources 'ac-source-c-headers)
-  (add-to-list 'achead:include-directories '"/usr/include/c++/7.1.1")
-  (add-to-list 'achead:include-directories '"/usr/include/c++/7.1.1/x86_64-redhat-linux")
-  (add-to-list 'achead:include-directories '"/usr/include/c++/7.1.1/backward")
-  (add-to-list 'achead:include-directories '"/usr/lib/gcc/x86_64-redhat-linux/7.1.1/include")
-  (add-to-list 'achead:include-directories '"/usr/lib/gcc/x86_64-redhat-linux/7.1.1/include-fixed")
-  (add-to-list 'achead:include-directories '"/usr/local/include")
-  (add-to-list 'achead:include-directories '"/usr/include")
-  )
-(add-hook 'c++-mode-hook 'my:ac-c-headers-init)
-(add-hook 'c-mode-hook 'my:ac-c-headers-init)
+  (add-to-list 'company-backends 'company-c-headers)
+  :config
+  (add-to-list 'company-c-headers-path-system "/usr/include/c++/7.1.1/"))
 
 (setq c-default-style "linux"
-  c-basic-offset 4
-  indent-tabs-mode t)
+      c-basic-offset 4)
 (add-hook 'c-mode-common-hook '(lambda () (c-toggle-auto-state 1)))
+(add-hook 'c-mode-common-hook '(lambda () (setq indent-tabs-mode t)))
 
 (use-package yasnippet
   :ensure t
