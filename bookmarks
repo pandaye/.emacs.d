@@ -1,0 +1,10 @@
+;;;; Emacs Bookmark Format Version 1 ;;;;
+;;; This format is meant to be slightly human-readable;
+;;; nevertheless, you probably don't want to edit it.
+;;; -*- End Of Bookmark File Format Version Stamp -*-
+(("org-refile-last-stored"
+ (filename . "~/Notes/KEGnote/Task.org")
+ (front-context-string . "** TODO 当前的问题\n  ")
+ (rear-context-string . "的引用量变动频率设置更新优先级\n")
+ (position . 133))
+)

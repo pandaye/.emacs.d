@@ -4,6 +4,7 @@
 (scroll-bar-mode -1)
 (fset 'yes-or-no-p 'y-or-n-p)
 (global-hl-line-mode t)
+(global-set-key (kbd "<f9>") 'eshell)
 (setq-default tab-width 4)
 
 (use-package powerline
@@ -48,6 +49,18 @@
    (scheme .t)
    ))
 
+(setq org-todo-keyword-faces
+      '(("TODO" . (:foreground "DarkOrange" :weight bold))
+        ("DOING" . (:foreground "yellow" :weight bold))
+        ("DONE" . (:foreground "green" :weight bold)) 
+        ("CLOSED" . (:foreground "red"))
+        ))
+
+(add-hook 'org-mode-hook 'org-indent-mode)
+(add-hook 'org-mode-hook (lambda ()
+                           (define-key org-mode-map
+                             (kbd "<f5>") 'org-revert-all-org-buffers)))
+
 (defalias 'list-buffers 'ibuffer)
 
 (winner-mode 1)
@@ -67,7 +80,7 @@
   (global-company-mode)
   :config
   (setq company-minimum-prefix-length 3)
-  (setq company-idle-delay nil)
+  (setq company-idle-delay 0.16)
   :bind
   (("M-/" . company-complete)))
 
@@ -162,7 +175,7 @@
 
 (setq c-default-style "linux"
       c-basic-offset 4)
-(add-hook 'c-mode-common-hook '(lambda () (c-toggle-auto-state 1)))
+;; (add-hook 'c-mode-common-hook '(lambda () (c-toggle-auto-state 1)))
 (add-hook 'c-mode-common-hook '(lambda () (setq indent-tabs-mode t)))
 
 (use-package yasnippet
@@ -178,3 +191,12 @@
   (define-key yas-minor-mode-map [C-tab] 'yas-expand))
 
 (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
+
+;; Setting English Font
+(set-face-attribute 'default nil :font "DejaVu Sans Mono 13")
+
+;; Chinese Font
+(dolist (charset '(kana han symbol cjk-misc bopomofo))
+  (set-fontset-font (frame-parameter nil 'font)
+            charset (font-spec :family "WenQuanyi MicroHei"
+                       :size 26)))
