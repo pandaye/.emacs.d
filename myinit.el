@@ -43,10 +43,20 @@
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
   (add-hook 'org-mode-hook (lambda () (setq indent-tabs-mode nil))))
 
+(defun turn-on-org-show-all-inline-images ()
+  (org-display-inline-images t t))
+
+(add-hook 'org-mode-hook 'turn-on-org-show-all-inline-images)
+
+(use-package ob-ipython
+  :ensure t)
+
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((emacs-lisp . t)
-   (scheme .t)
+   (python . t)
+   (ipython . t)
+   (dot . t)
    ))
 
 (setq org-todo-keyword-faces
@@ -60,6 +70,8 @@
 (add-hook 'org-mode-hook (lambda ()
                            (define-key org-mode-map
                              (kbd "<f5>") 'org-revert-all-org-buffers)))
+
+(setq org-export-with-sub-superscripts (quote {}))
 
 (defalias 'list-buffers 'ibuffer)
 
@@ -76,8 +88,6 @@
 
 (use-package company
   :ensure t
-  :init
-  (global-company-mode)
   :config
   (setq company-minimum-prefix-length 3)
   (setq company-idle-delay 0.16)
@@ -177,6 +187,7 @@
       c-basic-offset 4)
 ;; (add-hook 'c-mode-common-hook '(lambda () (c-toggle-auto-state 1)))
 (add-hook 'c-mode-common-hook '(lambda () (setq indent-tabs-mode t)))
+(add-hook 'c-mode-common-hook 'company-mode)
 
 (use-package yasnippet
   :ensure t
@@ -191,6 +202,7 @@
   (define-key yas-minor-mode-map [C-tab] 'yas-expand))
 
 (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
+(add-hook 'emacs-lisp-mode-hook 'company-mode)
 
 ;; Setting English Font
 (set-face-attribute 'default nil :font "DejaVu Sans Mono 13")
@@ -200,3 +212,29 @@
   (set-fontset-font (frame-parameter nil 'font)
             charset (font-spec :family "WenQuanyi MicroHei"
                        :size 26)))
+
+(use-package auctex
+  :defer t
+  :ensure auctex
+  :init
+  (setq TeX-auto-save t)
+  (setq TeX-parse-self t)
+  (setq-default TeX-master nil)
+  (add-hook 'LaTeX-mode-hook
+            (lambda ()
+              (turn-on-auto-fill)
+              (LaTeX-math-mode 1)
+              (setq TeX-show-complilation nil)
+              (setq TeX-clean-confirm nil)
+              (setq TeX-save-query nil)
+              (setq TeX-view-program-list '(("Evince" "evince %o")))
+              (setq TeX-view-program-selection
+                    '((output-pdf "Evince")))
+              (setq TeX-engine 'xetex)
+              (TeX-global-PDF-mode t)
+              (add-to-list 'TeX-command-list
+                            '("XeLaTeX" "%'xelatex%(mode)%' %t"
+                                         TeX-run-TeX nil t))
+              (setq TeX-command-default "XeLaTeX"))
+  )
+)
