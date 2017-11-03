@@ -71,13 +71,14 @@
 
     (use-package ob-ipython
       :ensure t)
-  
+
     (org-babel-do-load-languages
      'org-babel-load-languages
      '((emacs-lisp . t)
        (python . t)
        (ipython . t)
        (dot . t)
+       (plantuml . t)
        ))
 
     (setq org-todo-keyword-faces
@@ -126,6 +127,7 @@
       :bind
       (("M-/" . company-complete)))
   #+END_SRC
+
   #+BEGIN_QUOTE
   ~company-idle-delay~ 设置在elpy中无效，如要取消，可以修改 ~elpy.el~
   并清除 ~elpy.elc~ 
@@ -218,9 +220,25 @@
     (require 'myscheme)
   #+END_SRC
 
-* graphviz/dot
+* graphviz
+dot 插件
   #+BEGIN_SRC emacs-lisp
     (use-package graphviz-dot-mode
+      :ensure t)
+  #+END_SRC
+
+PlantUML mode
+  #+BEGIN_SRC emacs-lisp
+    (use-package plantuml-mode
+      :ensure t
+      :init
+      (setq plantuml-jar-path
+            (expand-file-name "~/.emacs.d/plantuml.jar"))
+      (setq org-plantuml-jar-path
+            (expand-file-name "~/.emacs.d/plantuml.jar"))
+      (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
+      (add-to-list 'org-src-lang-modes '("plantuml" . plantuml)))
+    (use-package flycheck-plantuml
       :ensure t)
   #+END_SRC
 
@@ -232,7 +250,8 @@
       :mode (("README\\.md\\'" . gfm-mode)
              ("\\.md\\'" . markdown-mode)
              ("\\.markdown\\'" . markdown-mode))
-      :init 
+      :init
+      ;; 配置输出指令
       (setq markdown-command
             "pandoc -f markdown -t html -s -c /home/pandaye/CSS/style.css --mathjax --highlight-style pygments"))
 

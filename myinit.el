@@ -163,13 +163,23 @@
 (use-package graphviz-dot-mode
   :ensure t)
 
+(use-package plantuml-mode
+  :ensure t
+  :init
+  (setq plantuml-jar-path "/home/pandaye/.emacs.d/plantuml.jar")
+  (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
+  (add-to-list 'org-src-lang-modes '("plantuml" . plantuml)))
+(use-package flycheck-plantuml
+  :ensure t)
+
 (use-package markdown-mode
   :ensure t
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
-  :init 
+  :init
+  ;; 配置输出指令
   (setq markdown-command
         "pandoc -f markdown -t html -s -c /home/pandaye/CSS/style.css --mathjax --highlight-style pygments"))
 
