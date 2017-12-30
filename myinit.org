@@ -170,6 +170,20 @@
 
 * python
   使用 ~elpy~
+
+  首先安装依赖：
+  #+BEGIN_SRC shell
+    # Either of these
+    pip install rope
+    pip install jedi
+    # flake8 for code checks
+    pip install flake8
+    # and autopep8 for automatic PEP8 formatting
+    pip install autopep8
+    # and yapf for code formatting
+    pip install yapf
+
+  #+END_SRC
   #+Begin_SRC emacs-lisp
     (use-package elpy
       :ensure t
@@ -224,7 +238,9 @@
 dot 插件
   #+BEGIN_SRC emacs-lisp
     (use-package graphviz-dot-mode
-      :ensure t)
+      :ensure t
+      :init
+      (add-to-list 'org-src-lang-modes '("dot" . graphviz-dot)))
   #+END_SRC
 
 PlantUML mode

@@ -57,6 +57,7 @@
    (python . t)
    (ipython . t)
    (dot . t)
+   (plantuml . t)
    ))
 
 (setq org-todo-keyword-faces
@@ -161,12 +162,17 @@
 (require 'myscheme)
 
 (use-package graphviz-dot-mode
-  :ensure t)
+  :ensure t
+  :init
+  (add-to-list 'org-src-lang-modes '("dot" . graphviz-dot)))
 
 (use-package plantuml-mode
   :ensure t
   :init
-  (setq plantuml-jar-path "/home/pandaye/.emacs.d/plantuml.jar")
+  (setq plantuml-jar-path
+        (expand-file-name "~/.emacs.d/plantuml.jar"))
+  (setq org-plantuml-jar-path
+        (expand-file-name "~/.emacs.d/plantuml.jar"))
   (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
   (add-to-list 'org-src-lang-modes '("plantuml" . plantuml)))
 (use-package flycheck-plantuml
