@@ -4,6 +4,7 @@
 (scroll-bar-mode -1)
 (fset 'yes-or-no-p 'y-or-n-p)
 (global-hl-line-mode t)
+(global-linum-mode 1)
 (global-set-key (kbd "<f9>") 'eshell)
 (setq-default tab-width 4)
 
@@ -45,7 +46,11 @@
 
 (defun turn-on-org-show-all-inline-images ()
   (org-display-inline-images t t))
+(defun nolinum ()
+  (message "Deactive linum-mode")
+  (linum-mode 0))
 
+(add-hook 'org-mode-hook 'nolinum)
 (add-hook 'org-mode-hook 'turn-on-org-show-all-inline-images)
 
 (use-package ob-ipython
@@ -255,3 +260,9 @@
               (setq TeX-command-default "XeLaTeX"))
   )
 )
+
+(use-package magit
+  :ensure t
+  :init
+  (global-set-key (kbd "C-x g") 'magit-status)
+  (global-set-key (kbd "C-x M-g") 'magit-dispatch-popup))
