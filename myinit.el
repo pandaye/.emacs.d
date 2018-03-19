@@ -1,3 +1,4 @@
+
 (setq inhibit-startup-message t)
 (setq column-number-mode t)
 (tool-bar-mode -1)
@@ -100,24 +101,11 @@
   :bind
   (("M-/" . company-complete)))
 
-(use-package spacemacs-theme
-  :ensure t
-  :init
-  (progn
-    (require 'spacemacs-common)
-    (deftheme spacemacs-dark "Spacemacs theme, the dark version")
-    (create-spacemacs-theme 'dark 'spacemacs-dark)
-    (provide-theme 'spacemacs-dark)
-    (load-theme 'spacemacs-dark t)
-    ))
-
-(use-package ox-reveal
-  :ensure ox-reveal)
-(setq org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
-(setq org-reveal-mathjax t)
-
-(use-package htmlize
-  :ensure t)
+(require 'spacemacs-common)
+(deftheme spacemacs-dark "Spacemacs theme, the dark version")
+(create-spacemacs-theme 'dark 'spacemacs-dark)
+(provide-theme 'spacemacs-dark)
+(load-theme 'spacemacs-dark t)
 
 (use-package flycheck
   :ensure t
@@ -130,7 +118,8 @@
   (elpy-enable)
   (pyvenv-activate "/home/pandaye/MyEnvs")
   (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
-  (add-hook 'elpy-mode-hook 'company-mode))
+  ;;(add-hook 'elpy-mode-hook 'company-mode)
+  )
 
 (use-package helm
   :ensure t
@@ -138,9 +127,9 @@
          ("M-x" . helm-M-x)))
 
 (require 'helm)
-(require 'helm-config)			;?
-(require 'helm-eshell)			;?
-(require 'helm-files)			;?
+(require 'helm-config)                      ;?
+(require 'helm-eshell)                      ;?
+(require 'helm-files)                       ;?
 (require 'helm-grep)
 
 ; do not display invisible candidates
@@ -192,7 +181,7 @@
   :init
   ;; 配置输出指令
   (setq markdown-command
-        "pandoc -f markdown -t html -s -c /home/pandaye/CSS/style.css --mathjax --highlight-style pygments"))
+        "pandoc -f markdown -t html -s -c ~/.emacs.d/markdown/style.css --mathjax --highlight-style pygments"))
 
 (use-package ox-gfm
   :ensure ox-gfm)
@@ -222,6 +211,8 @@
   (define-key yas-minor-mode-map (kbd "TAB") nil)
   (define-key yas-minor-mode-map (kbd "<tab>") nil)
   (define-key yas-minor-mode-map [C-tab] 'yas-expand))
+(use-package yasnippet-snippets
+  :ensure t)
 
 (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
 (add-hook 'emacs-lisp-mode-hook 'company-mode)
