@@ -22,7 +22,7 @@
 ;; my init setting
 (org-babel-load-file (expand-file-name "~/.emacs.d/myinit.org"))
 
-(find-file "/home/keg_p/notebook.org")
+(find-file "/home/pandaye/Notes/Study/homework.org")
 
 ;; automatically add by emacs
 (custom-set-variables

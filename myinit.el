@@ -80,6 +80,13 @@
 
 (setq org-export-with-sub-superscripts (quote {}))
 
+(use-package neotree
+  :ensure t
+  :init
+  (global-set-key [f8] 'neotree-toggle)
+  (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
+  )
+
 (defalias 'list-buffers 'ibuffer)
 
 (winner-mode 1)
@@ -225,7 +232,7 @@
 (dolist (charset '(kana han symbol cjk-misc bopomofo))
   (set-fontset-font (frame-parameter nil 'font)
             charset (font-spec :family "WenQuanyi MicroHei"
-                       :size 22)))
+                       :size 26)))
 
 (use-package auctex
   :defer t
