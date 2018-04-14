@@ -1,0 +1,9 @@
+*~
+.notes
+.python-environments/
+elpa/
+eshell/
+*.dat
+recentf
+mytestinit.org
+example/
