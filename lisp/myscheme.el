@@ -1,7 +1,7 @@
 ;; Scheme config from wanying
 
 (require 'cmuscheme)
-(setq scheme-program-name "mit-scheme")         ;; 如果用 Petite 就改成 "petite"
+(setq scheme-program-name "mit-scheme")         ;;; 如果用 Petite 就改成 "petite"
 
 
 ;; bypass the interactive question and start the default interpreter
@@ -46,7 +46,7 @@
 
 (add-hook 'scheme-mode-hook
 		  (lambda ()
-			(setq indent-tabs-mode nil)		
+			(setq indent-tabs-mode nil)
 			(paredit-mode 1)
 			(define-key scheme-mode-map (kbd "<f5>") 'scheme-send-last-sexp-split-window)
 			(define-key scheme-mode-map (kbd "<f6>") 'scheme-send-definition-split-window)))

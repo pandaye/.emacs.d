@@ -1,13 +1,13 @@
 #+STARTUP: showall hidestars
 
-* 小小的 Emacs 配置
+* 简单的 Emacs 配置
 
 ** 概述
    使用 org 管理的简单的 Emacs 配置，使用 use-package 管理插件
 
 ** 内容
 *** Python
-    使用 [[https://github.com/jorgenschaefer/elpy][Elpy]] 作为 ~python~ 基本环境，并配置了 ~pyvenv~
+    使用 [[https://github.com/jorgenschaefer/elpy][Elpy]] 作为 ~python~ 基本环境，并配置了 ~pyvenv~ ，需要参照 ~myinit.org~ 对应说明安装外部依赖
 *** C/C++ 
     补全配置不完全，头文件补全略显傻瓜
 *** Scheme
@@ -16,6 +16,12 @@
     基本能用
 *** yasnippet
     使用默认，并没有没有添加自己的配置
+*** git
+    使用 ~magit~ 插件
+*** neotree
+    需要自己安装 ~all the icons~ 并且 =M-x all-the-icons-install-fonts=
+*** 主题
+    主题使用 ~spacemacs-dark~ ，需要手动安装 ~spacemacs-theme~ 包
 ** 使用说明
    在用户目录下执行
    #+BEGIN_SRC shell
@@ -27,5 +33,5 @@
    假定这个配置文件没有其他人会看，所以有的配置里面路径直接写的是自己PC上面的绝对路径  
    如果路过的朋友看到这个，并心血来潮地使用它，你需要改动如下部分：
    - ~python~ 设置里面的 ~pyvenv~ 路径
-   - 其他的应该没了，具体可以看看 ~myinit.org~ ，并不复杂的一份配置
+   - ~init.el~ 中需要修改打开 ~emacs~ 时自启文件
 

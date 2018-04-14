@@ -84,6 +84,7 @@
   :ensure t
   :init
   (global-set-key [f8] 'neotree-toggle)
+  (global-set-key [f7] 'neotree-find)
   (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
   )
 
@@ -135,8 +136,8 @@
          ("M-x" . helm-M-x)))
 
 (require 'helm)
-(require 'helm-config)                      ;?
-(require 'helm-eshell)                      ;?
+(require 'helm-config)              ;?
+(require 'helm-eshell)              ;?
 (require 'helm-files)                       ;?
 (require 'helm-grep)
 
