@@ -115,10 +115,11 @@
 (use-package elpy
   :ensure t
   :init
+  (setq elpy-rpc-python-command "python3")
   (elpy-enable)
   (pyvenv-activate "/home/pandaye/MyEnvs")
   (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
-  ;;(add-hook 'elpy-mode-hook 'company-mode)
+  ;; (add-hook 'elpy-mode-hook 'company-mode)
   )
 
 (use-package helm
@@ -218,13 +219,13 @@
 (add-hook 'emacs-lisp-mode-hook 'company-mode)
 
 ;; Setting English Font
-(set-face-attribute 'default nil :font "DejaVu Sans Mono 13")
+(set-face-attribute 'default nil :font "DejaVu Sans Mono 14")
 
 ;; Chinese Font
 (dolist (charset '(kana han symbol cjk-misc bopomofo))
   (set-fontset-font (frame-parameter nil 'font)
             charset (font-spec :family "WenQuanyi MicroHei"
-                       :size 26)))
+                       :size 22)))
 
 (use-package auctex
   :defer t

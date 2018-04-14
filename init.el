@@ -22,7 +22,7 @@
 ;; my init setting
 (org-babel-load-file (expand-file-name "~/.emacs.d/myinit.org"))
 
-(find-file "/home/pandaye/Notes/Study/homework.org")
+(find-file "/home/keg_p/notebook.org")
 
 ;; automatically add by emacs
 (custom-set-variables
@@ -30,9 +30,15 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(ansi-color-names-vector
+   ["#0a0814" "#f2241f" "#67b11d" "#b1951d" "#4f97d7" "#a31db1" "#28def0" "#b2b2b2"])
+ '(custom-safe-themes
+   (quote
+	("fa2b58bb98b62c3b8cf3b6f02f058ef7827a8e497125de0254f56e373abee088" default)))
+ '(delete-selection-mode nil)
  '(package-selected-packages
    (quote
-	(py-autopep8 yasnippet-snippets magit auctex apt-utils swoop ob-ipython ox-gfm YASnippet markdown-mode graphviz-dot-mode python-mode paredit paredit-mode hlinum powerline flycheck spacemacs-theme ivy-mode ace-window which-key try use-package org-bullets)))
+	(all-the-icons neotree py-autopep8 yasnippet-snippets magit auctex apt-utils swoop ob-ipython ox-gfm YASnippet markdown-mode graphviz-dot-mode python-mode paredit paredit-mode hlinum powerline flycheck spacemacs-theme ivy-mode ace-window which-key try use-package org-bullets)))
  '(safe-local-variable-values (quote ((encoding . utf-8))))
  '(tool-bar-mode nil))
 (custom-set-faces

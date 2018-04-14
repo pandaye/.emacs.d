@@ -101,6 +101,17 @@
     (setq org-export-with-sub-superscripts (quote {}))
   #+END_SRC
 
+* Project Tree
+安装 NeoTree
+#+BEGIN_SRC emacs-lisp
+  (use-package neotree
+    :ensure t
+    :init
+    (global-set-key [f8] 'neotree-toggle)
+    (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
+    )
+  (use-package all-the-icons)
+#+END_SRC
 * buffer and window
   buffer 
   #+BEGIN_SRC emacs-lisp
@@ -177,6 +188,7 @@
     (use-package elpy
       :ensure t
       :init
+      (setq elpy-rpc-python-command "python3")
       (elpy-enable)
       (pyvenv-activate "/home/pandaye/MyEnvs")
       (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
@@ -309,13 +321,13 @@ PlantUML mode
 * font
   #+BEGIN_SRC emacs-lisp
     ;; Setting English Font
-    (set-face-attribute 'default nil :font "DejaVu Sans Mono 13")
+    (set-face-attribute 'default nil :font "DejaVu Sans Mono 14")
 
     ;; Chinese Font
     (dolist (charset '(kana han symbol cjk-misc bopomofo))
       (set-fontset-font (frame-parameter nil 'font)
                 charset (font-spec :family "WenQuanyi MicroHei"
-                           :size 26)))
+                           :size 22)))
   #+END_SRC
 
 * LaTeX
