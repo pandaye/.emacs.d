@@ -8,6 +8,7 @@
 (global-linum-mode 1)
 (global-set-key (kbd "<f9>") 'eshell)
 (setq-default tab-width 4)
+(setq ring-bell-function 'ignore)
 
 (use-package powerline
   :ensure t
@@ -201,12 +202,36 @@
   :init
   (add-to-list 'company-backends 'company-c-headers)
   :config
-  (add-to-list 'company-c-headers-path-system "/usr/include/c++/7.1.1/"))
+  (add-to-list 'company-c-headers-path-system "/usr/include/c++/7.3.1/"))
 
 (setq c-default-style "linux"
       c-basic-offset 4)
+
 ;; (add-hook 'c-mode-common-hook '(lambda () (c-toggle-auto-state 1)))
+
 (add-hook 'c-mode-common-hook '(lambda () (setq indent-tabs-mode t)))
+(defun c-reformat-buffer()
+  (interactive)
+  (save-buffer)
+  (setq sh-indent-command (concat
+                           "indent -st -bad --blank-lines-after-procedures "
+                           "-bli0 -i4 -l79 -ncs -npcs -nut -npsl -fca "
+                           "-lc79 -fc1 -cli4 -bap -sob -ci4 -nlp "
+                           buffer-file-name
+                           )
+        )
+  (mark-whole-buffer)
+  (universal-argument)
+  (shell-command-on-region
+   (point-min)
+   (point-max)
+   sh-indent-command
+   (buffer-name)
+   )
+  (save-buffer)
+  )
+(global-set-key [f7] 'c-reformat-buffer)
+
 (add-hook 'c-mode-common-hook 'company-mode)
 
 (use-package yasnippet
@@ -227,7 +252,7 @@
 (add-hook 'emacs-lisp-mode-hook 'company-mode)
 
 ;; Setting English Font
-(set-face-attribute 'default nil :font "DejaVu Sans Mono 14")
+(set-face-attribute 'default nil :font "Monaco 13")
 
 ;; Chinese Font
 (dolist (charset '(kana han symbol cjk-misc bopomofo))
