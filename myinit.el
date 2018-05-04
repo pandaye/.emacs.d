@@ -1,4 +1,3 @@
-
 (setq inhibit-startup-message t)
 (setq column-number-mode t)
 (tool-bar-mode -1)
@@ -19,6 +18,20 @@
   :ensure t
   :config
   (hlinum-activate))
+
+(global-set-key (kbd "<f10>") 'loop-alpha)
+;当前窗口和非当前窗口时透明度
+(setq alpha-list '((95 90) (100 100)))
+(defun loop-alpha ()
+  (interactive)
+  (let ((h (car alpha-list)))
+    ((lambda (a ab)
+       (set-frame-parameter (selected-frame) 'alpha (list a ab))
+       (add-to-list 'default-frame-alist (cons 'alpha (list a ab))))
+     (car h) (car (cdr h)))
+    (setq alpha-list (cdr (append alpha-list (list h))))))
+;启动窗口时时自动开启窗口半透明效果
+(loop-alpha)
 
 (use-package try
   :ensure t)
@@ -137,9 +150,9 @@
          ("M-x" . helm-M-x)))
 
 (require 'helm)
-(require 'helm-config)              ;?
-(require 'helm-eshell)              ;?
-(require 'helm-files)                       ;?
+(require 'helm-config)		;?
+(require 'helm-eshell)		;?
+(require 'helm-files)			;?
 (require 'helm-grep)
 
 ; do not display invisible candidates
@@ -207,32 +220,83 @@
 (setq c-default-style "linux"
       c-basic-offset 4)
 
-;; (add-hook 'c-mode-common-hook '(lambda () (c-toggle-auto-state 1)))
-
-(add-hook 'c-mode-common-hook '(lambda () (setq indent-tabs-mode t)))
-(defun c-reformat-buffer()
-  (interactive)
-  (save-buffer)
-  (setq sh-indent-command (concat
-                           "indent -st -bad --blank-lines-after-procedures "
-                           "-bli0 -i4 -l79 -ncs -npcs -nut -npsl -fca "
-                           "-lc79 -fc1 -cli4 -bap -sob -ci4 -nlp "
-                           buffer-file-name
-                           )
-        )
-  (mark-whole-buffer)
-  (universal-argument)
-  (shell-command-on-region
-   (point-min)
-   (point-max)
-   sh-indent-command
-   (buffer-name)
-   )
-  (save-buffer)
-  )
-(global-set-key [f7] 'c-reformat-buffer)
-
+(add-hook 'c-mode-common-hook
+          '(lambda () (setq indent-tabs-mode t)))
 (add-hook 'c-mode-common-hook 'company-mode)
+
+(use-package rtags
+  :ensure t)
+
+(use-package company-rtags
+  :ensure t
+  :init
+  (setq rtags-completions-enabled t)
+  (eval-after-load 'company
+    '(add-to-list
+      'company-backends 'company-rtags))
+  (setq rtags-autostart-diagnostics t)
+  (rtags-enable-standard-keybindings)
+  ;; 设置快捷键
+  (define-key c-mode-base-map (kbd "M-.")
+    (function rtags-find-symbol-at-point))
+  (define-key c-mode-base-map (kbd "M-,")
+    (function rtags-find-references-at-point))
+  (define-key c-mode-base-map (kbd "M-;")
+    (function rtags-find-file))
+  (define-key c-mode-base-map (kbd "C-.")
+    (function rtags-find-symbol))
+  (define-key c-mode-base-map (kbd "C-,")
+    (function rtags-find-references)))
+
+(use-package flycheck-rtags
+  :ensure t)
+
+(defun my-flycheck-rtags-setup ()
+  ;; RTags creates more accurate overlays.
+  (flycheck-select-checker 'rtags)
+  (setq-local flycheck-highlighting-mode nil)
+  (setq-local flycheck-check-syntax-automatically nil))
+
+;; c-mode-common-hook is also called by c++-mode
+(add-hook 'c-mode-common-hook #'my-flycheck-rtags-setup)
+
+(use-package irony
+  :ensure t
+  :init
+  (add-hook 'c++-mode-hook 'irony-mode)
+  (add-hook 'c-mode-hook 'irony-mode)
+  (defun my-irony-mode-hook ()
+    (define-key irony-mode-map [remap completion-at-point]
+      'irony-completion-at-point-async)
+    (define-key irony-mode-map [remap complete-symbol]
+      'irony-completion-at-point-async))
+  (add-hook 'irony-mode-hook 'my-irony-mode-hook)
+  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
+
+(use-package company-irony
+  :ensure t
+  :init
+  (add-hook 'irony-mode-hook 'company-irony-setup-begin-commands)
+  (setq company-backends
+        (delete 'company-semantic company-backends)))
+
+(use-package company-irony-c-headers
+  :ensure t
+  :init
+  (eval-after-load 'company
+    '(add-to-list
+      'company-backends '(company-irony-c-headers company-irony)))
+  (setq company-idle-delay              t
+        company-minimum-prefix-length   3
+        company-show-numbers            t
+        company-tooltip-limit           20
+        company-dabbrev-downcase        nil))
+
+(use-package flycheck-irony
+  :ensure t
+  :init
+  (eval-after-load 'flycheck
+    '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup)))
 
 (use-package yasnippet
   :ensure t
@@ -255,10 +319,18 @@
 (set-face-attribute 'default nil :font "Monaco 13")
 
 ;; Chinese Font
-(dolist (charset '(kana han symbol cjk-misc bopomofo))
-  (set-fontset-font (frame-parameter nil 'font)
-            charset (font-spec :family "WenQuanyi MicroHei"
-                       :size 26)))
+(defun my-font-setting () 
+  (dolist (charset '(kana han symbol cjk-misc bopomofo))
+    (set-fontset-font (frame-parameter nil 'font)
+              charset (font-spec :family "WenQuanyi Micro Hei"
+                                 :size 26))))
+(add-to-list 'after-make-frame-functions
+             (lambda (new-frame)
+             (select-frame new-frame)
+             (if window-system
+               (my-font-setting))))
+(if window-system
+  (my-font-setting))
 
 (use-package auctex
   :defer t

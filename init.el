@@ -22,8 +22,6 @@
 ;; my init setting
 (org-babel-load-file (expand-file-name "~/.emacs.d/myinit.org"))
 
-(find-file "/home/pandaye/Notes/Study/homework.org")
-
 ;; automatically add by emacs
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -33,7 +31,7 @@
  '(delete-selection-mode nil)
  '(package-selected-packages
    (quote
-	(helm-bind-key paredit use-package powerline hlinum try which-key smooth-scrolling rainbow-delimiters org-bullets ob-ipython neotree all-the-icons ace-window company spacemacs-theme flycheck elpy py-autopep8 helm helm-swoop graphviz-dot-mode plantuml-mode flycheck-plantuml markdown-mode ox-gfm company-c-headers yasnippet yasnippet-snippets auctex magit)))
+	(rtags flycheck-rtags htmlize company-rtags org irony company-irony company-irony-c-headers flycheck-irony helm-bind-key paredit use-package powerline hlinum try which-key smooth-scrolling rainbow-delimiters org-bullets ob-ipython neotree all-the-icons ace-window company spacemacs-theme flycheck elpy py-autopep8 helm helm-swoop graphviz-dot-mode plantuml-mode flycheck-plantuml markdown-mode ox-gfm company-c-headers yasnippet yasnippet-snippets auctex magit)))
  '(safe-local-variable-values (quote ((encoding . utf-8))))
  '(tool-bar-mode nil))
 (custom-set-faces
