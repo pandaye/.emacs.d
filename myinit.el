@@ -52,7 +52,6 @@
   (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
   (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode))
 
-;; Org-mode stuff
 (use-package org-bullets
   :ensure t
   :config
@@ -80,19 +79,72 @@
    (plantuml . t)
    ))
 
-(setq org-todo-keyword-faces
-      '(("TODO" . (:foreground "DarkOrange" :weight bold))
-        ("DOING" . (:foreground "yellow" :weight bold))
-        ("DONE" . (:foreground "green" :weight bold)) 
-        ("CLOSED" . (:foreground "red"))
-        ))
-
 (add-hook 'org-mode-hook 'org-indent-mode)
 (add-hook 'org-mode-hook (lambda ()
                            (define-key org-mode-map
                              (kbd "<f5>") 'org-revert-all-org-buffers)))
 
 (setq org-export-with-sub-superscripts (quote {}))
+
+(setq org-use-fast-todo-selection t)
+(setq org-todo-keywords
+      (quote ((sequence "TODO(t!)" "NEXT(n)" "|" "DONE(d@/!)")
+              (sequence "PROJECT(p)" "|" "DONE(d!/!)" "CANCELLED(c@/!)")
+              (sequence "WAITING(w@/!)" "HOLD(h)" "|" "CANCELLED(c@/!)")
+              (sequence "SOMEDAY(s)"))))
+
+;; Easy basic searches. Get a quick view of nextactions, etc
+(setq org-agenda-custom-commands
+      '(("w" todo "WAITING" nil)
+        ("n" todo "NEXT" nil)
+        ("d" "Agenda + Next Actions" ((agenda) (todo "NEXT")))))
+
+;; I use org's tag feature to implement contexts.
+(setq org-tag-alist '(("STUDIO" . ?s) ;; company studio office
+                      ("PROJECT" . ?p) ;; difference task at company
+                      ("HOME" . ?h) ;; home
+                      ("MAIL" . ?m) ;; mail somebody
+                      ("LUNCHTIME" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
+                      ("TOURISM" . ?t) ;; tourism or not at home/company and any where
+                      ("COMPUTER" . ?c)
+                      ("READING" . ?r))) ;; reading
+
+(setq org-archive-location "%s_archive::* Archive")
+
+(setq gtd-path (expand-file-name "~/.org-gtd"))
+(defvar org-gtd-file
+  (concat gtd-path "/inbox.org"))
+(defun gtd ()
+  "Open the GTD file."
+  (interactive)
+  (find-file org-gtd-file))
+
+(defvar org-gtd-other-files)
+(setf org-gtd-other-files
+      (list (concat gtd-path "/project.org")
+            (concat gtd-path "/note.org")
+            (concat gtd-path "/task.org")
+            (concat gtd-path "/trash.org")
+            (concat gtd-path "/finished.org")))
+(setf org-agenda-files (cons org-gtd-file org-gtd-other-files))
+(setq org-agenda-prefix-format "  %-17:c%?-12t% s")
+(setq org-refile-use-outline-path 'file)
+(setq org-refile-targets '((org-agenda-files :level . 1)))
+(setq org-reverse-note-order t)  ;; note at beginning of file by default.
+(setq org-default-notes-file (concat gtd-path "/inbox.org"))
+(setq org-capture-templates
+      '(("t" "Todo" entry (file+headline (concat gtd-path "/tasks.org") "Tasks")
+         "* TODO %?\n  %i\n  %a\n")
+        ("i" "Idea" entry (file+headline (concat gtd-path "/note.org") "Idea")
+         "** %?\n %T\n  %a\n")
+        ("j" "Journal" entry (file+datetree (concat gtd-path "/journal.org"))
+         "* %?\nEntered on %U\n  %i\n  %a\n")))
+
+;; key bingings
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cg" 'gtd)
+(global-set-key "\C-cc" 'org-capture)
 
 (use-package neotree
   :ensure t
@@ -117,6 +169,9 @@
 
 (use-package company
   :ensure t
+  :init
+  (add-hook 'c-mode-common-hook 'company-mode)
+  (add-hook 'emacs-lisp-mode-hook 'company-mode)
   :config
   (setq company-minimum-prefix-length 3)
   (setq company-idle-delay 0.16)
@@ -141,7 +196,6 @@
   (elpy-enable)
   (pyvenv-activate "/home/pandaye/MyEnvs")
   (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
-  ;; (add-hook 'elpy-mode-hook 'company-mode)
   )
 
 (use-package helm
@@ -222,7 +276,6 @@
 
 (add-hook 'c-mode-common-hook
           '(lambda () (setq indent-tabs-mode t)))
-(add-hook 'c-mode-common-hook 'company-mode)
 
 (use-package rtags
   :ensure t)
@@ -295,7 +348,6 @@
   :ensure t)
 
 (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
-(add-hook 'emacs-lisp-mode-hook 'company-mode)
 
 ;; Setting English Font
 (set-face-attribute 'default nil :font "Monaco 13")
