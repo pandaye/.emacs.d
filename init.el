@@ -31,7 +31,7 @@
  '(delete-selection-mode nil)
  '(package-selected-packages
    (quote
-	(rtags flycheck-rtags htmlize company-rtags org irony company-irony company-irony-c-headers flycheck-irony helm-bind-key paredit use-package powerline hlinum try which-key smooth-scrolling rainbow-delimiters org-bullets ob-ipython neotree all-the-icons ace-window company spacemacs-theme flycheck elpy py-autopep8 helm helm-swoop graphviz-dot-mode plantuml-mode flycheck-plantuml markdown-mode ox-gfm company-c-headers yasnippet yasnippet-snippets auctex magit)))
+	(rtags htmlize company-rtags org irony company-irony company-irony-c-headers helm-bind-key paredit use-package powerline hlinum try which-key smooth-scrolling rainbow-delimiters org-bullets ob-ipython neotree all-the-icons ace-window company spacemacs-theme flycheck elpy py-autopep8 helm helm-swoop graphviz-dot-mode plantuml-mode flycheck-plantuml markdown-mode ox-gfm company-c-headers yasnippet yasnippet-snippets auctex magit)))
  '(safe-local-variable-values (quote ((encoding . utf-8))))
  '(tool-bar-mode nil))
 (custom-set-faces

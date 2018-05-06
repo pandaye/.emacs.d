@@ -234,7 +234,7 @@
   (eval-after-load 'company
     '(add-to-list
       'company-backends 'company-rtags))
-  (setq rtags-autostart-diagnostics t)
+  (setq rtags-autostart-diagnostics nil)
   (rtags-enable-standard-keybindings)
   ;; 设置快捷键
   (define-key c-mode-base-map (kbd "M-.")
@@ -247,18 +247,6 @@
     (function rtags-find-symbol))
   (define-key c-mode-base-map (kbd "C-,")
     (function rtags-find-references)))
-
-(use-package flycheck-rtags
-  :ensure t)
-
-(defun my-flycheck-rtags-setup ()
-  ;; RTags creates more accurate overlays.
-  (flycheck-select-checker 'rtags)
-  (setq-local flycheck-highlighting-mode nil)
-  (setq-local flycheck-check-syntax-automatically nil))
-
-;; c-mode-common-hook is also called by c++-mode
-(add-hook 'c-mode-common-hook #'my-flycheck-rtags-setup)
 
 (use-package irony
   :ensure t
@@ -291,12 +279,6 @@
         company-show-numbers            t
         company-tooltip-limit           20
         company-dabbrev-downcase        nil))
-
-(use-package flycheck-irony
-  :ensure t
-  :init
-  (eval-after-load 'flycheck
-    '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup)))
 
 (use-package yasnippet
   :ensure t
