@@ -87,6 +87,7 @@
       (linum-mode 0))
 
     (add-hook 'org-mode-hook 'nolinum)
+    (add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
     (add-hook 'org-mode-hook 'turn-on-org-show-all-inline-images)
 
     (use-package ob-ipython
@@ -111,65 +112,65 @@
 
 配置 GTD
 #+BEGIN_SRC emacs-lisp
-  (setq org-use-fast-todo-selection t)
-  (setq org-todo-keywords
-        (quote ((sequence "TODO(t!)" "NEXT(n)" "|" "DONE(d@/!)")
-                (sequence "PROJECT(p)" "|" "DONE(d!/!)" "CANCELLED(c@/!)")
-                (sequence "WAITING(w@/!)" "HOLD(h)" "|" "CANCELLED(c@/!)")
-                (sequence "SOMEDAY(s)"))))
+    (setq org-use-fast-todo-selection t)
+    (setq org-todo-keywords
+          (quote ((sequence "TODO(t!)" "NEXT(n)" "|" "DONE(d@/!)")
+                  (sequence "PROJECT(p)" "|" "DONE(d!/!)" "CANCELLED(c@/!)")
+                  (sequence "WAITING(w@/!)" "HOLD(h)" "|" "CANCELLED(c@/!)")
+                  (sequence "SOMEDAY(s)"))))
 
-  ;; Easy basic searches. Get a quick view of nextactions, etc
-  (setq org-agenda-custom-commands
-        '(("w" todo "WAITING" nil)
-          ("n" todo "NEXT" nil)
-          ("d" "Agenda + Next Actions" ((agenda) (todo "NEXT")))))
+    ;; Easy basic searches. Get a quick view of nextactions, etc
+    (setq org-agenda-custom-commands
+          '(("w" todo "WAITING" nil)
+            ("n" todo "NEXT" nil)
+            ("d" "Agenda + Next Actions" ((agenda) (todo "NEXT")))))
 
-  ;; I use org's tag feature to implement contexts.
-  (setq org-tag-alist '(("STUDIO" . ?s) ;; company studio office
-                        ("PROJECT" . ?p) ;; difference task at company
-                        ("HOME" . ?h) ;; home
-                        ("MAIL" . ?m) ;; mail somebody
-                        ("LUNCHTIME" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
-                        ("TOURISM" . ?t) ;; tourism or not at home/company and any where
-                        ("COMPUTER" . ?c)
-                        ("READING" . ?r))) ;; reading
+    ;; I use org's tag feature to implement contexts.
+    (setq org-tag-alist '(("办公" . ?s) ;; company studio office
+                          ("工程项目" . ?p) ;; difference task at company
+                          ("家里" . ?h) ;; home
+                          ("邮件" . ?m) ;; mail somebody
+                          ("乱谈" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
+                          ("计算机" . ?c)
+                          ("阅读" . ?r)
+                          ("玄" . ?x))) ;; reading
 
-  (setq org-archive-location "%s_archive::* Archive")
+    (setq org-archive-location "%s_archive::* Archive")
 
-  (setq gtd-path (expand-file-name "~/.org-gtd"))
-  (defvar org-gtd-file
-    (concat gtd-path "/inbox.org"))
-  (defun gtd ()
-    "Open the GTD file."
-    (interactive)
-    (find-file org-gtd-file))
+    (setq gtd-path (expand-file-name "~/.org-gtd"))
+    (defvar org-gtd-file
+      (concat gtd-path "/inbox.org"))
+    (defun gtd ()
+      "Open the GTD file."
+      (interactive)
+      (find-file org-gtd-file))
 
-  (defvar org-gtd-other-files)
-  (setf org-gtd-other-files
-        (list (concat gtd-path "/project.org")
-              (concat gtd-path "/note.org")
-              (concat gtd-path "/task.org")
-              (concat gtd-path "/trash.org")
-              (concat gtd-path "/finished.org")))
-  (setf org-agenda-files (cons org-gtd-file org-gtd-other-files))
-  (setq org-agenda-prefix-format "  %-17:c%?-12t% s")
-  (setq org-refile-use-outline-path 'file)
-  (setq org-refile-targets '((org-agenda-files :level . 1)))
-  (setq org-reverse-note-order t)  ;; note at beginning of file by default.
-  (setq org-default-notes-file (concat gtd-path "/inbox.org"))
-  (setq org-capture-templates
-        '(("t" "Todo" entry (file+headline (concat gtd-path "/tasks.org") "Tasks")
-           "* TODO %?\n  %i\n  %a\n")
-          ("i" "Idea" entry (file+headline (concat gtd-path "/note.org") "Idea")
-           "** %?\n %T\n  %a\n")
-          ("j" "Journal" entry (file+datetree (concat gtd-path "/journal.org"))
-           "* %?\nEntered on %U\n  %i\n  %a\n")))
+    (defvar org-gtd-other-files)
+    (setf org-gtd-other-files
+          (list (concat gtd-path "/project.org")
+                (concat gtd-path "/note.org")
+                (concat gtd-path "/task.org")
+                (concat gtd-path "/trash.org")
+                (concat gtd-path "/finished.org")))
+    (setf org-agenda-files (cons org-gtd-file org-gtd-other-files))
+    (setq org-agenda-prefix-format "  %-17:c%?-12t% s")
+    (setq org-refile-use-outline-path 'file)
+    (setq org-refile-targets '((org-agenda-files :level . 1)))
+    (setq org-reverse-note-order t)  ;; note at beginning of file by default.
+    (setq org-default-notes-file (concat gtd-path "/inbox.org"))
+    (setq org-capture-templates
+          '(("t" "Todo" entry (file+headline "/home/pandaye/.org-gtd/task.org" "Tasks")
+             "* TODO %?\n  %i\n")
+            ("i" "Idea" entry (file+headline "/home/pandaye/.org-gtd/note.org" "Idea")
+             "** %?\n %T\n")
+            ("j" "Journal" entry (file+datetree "/home/pandaye/.org-gtd/journal.org")
+             "* %?\nEntered on %U\n  %i\n")))
 
-  ;; key bingings
-  (global-set-key "\C-cl" 'org-store-link)
-  (global-set-key "\C-ca" 'org-agenda)
-  (global-set-key "\C-cg" 'gtd)
-  (global-set-key "\C-cc" 'org-capture)
+    ;; key bingings
+    (global-set-key "\C-cl" 'org-store-link)
+    (global-set-key "\C-ca" 'org-agenda)
+    (global-set-key "\C-cg" 'gtd)
+    (global-set-key "\C-cc" 'org-capture)
 #+END_SRC
 
 * Project Tree
@@ -213,9 +214,12 @@
       :init
       (add-hook 'c-mode-common-hook 'company-mode)
       (add-hook 'emacs-lisp-mode-hook 'company-mode)
+      (add-hook 'cmake-mode-hook 'company-mode)
       :config
       (setq company-minimum-prefix-length 3)
-      (setq company-idle-delay 0.16)
+      (setq company-tooltip-align-annotations t)
+      (setq company-transformers '(company-sort-by-occurrence))
+      (setq company-idle-delay 0.1)
       :bind
       (("M-/" . company-complete)))
   #+END_SRC
@@ -357,12 +361,6 @@ PlantUML mode
 需要手动安装 company，rtags 配置参考 [[http://senlinzhan.github.io/2016/01/11/emacs-as-cpp-ide/]]
   #+BEGIN_SRC emacs-lisp
     (require 'company)
-    (use-package company-c-headers
-      :ensure t
-      :init
-      (add-to-list 'company-backends 'company-c-headers)
-      :config
-      (add-to-list 'company-c-headers-path-system "/usr/include/c++/7.3.1/"))
 
     (setq c-default-style "linux"
           c-basic-offset 4)
@@ -371,6 +369,9 @@ PlantUML mode
               '(lambda () (setq indent-tabs-mode t)))
 
     (use-package rtags
+      :ensure t)
+
+    (use-package cmake-mode
       :ensure t)
 
     (use-package company-rtags
@@ -387,8 +388,6 @@ PlantUML mode
         (function rtags-find-symbol-at-point))
       (define-key c-mode-base-map (kbd "M-,")
         (function rtags-find-references-at-point))
-      (define-key c-mode-base-map (kbd "M-;")
-        (function rtags-find-file))
       (define-key c-mode-base-map (kbd "C-.")
         (function rtags-find-symbol))
       (define-key c-mode-base-map (kbd "C-,")
@@ -420,10 +419,10 @@ PlantUML mode
       (eval-after-load 'company
         '(add-to-list
           'company-backends '(company-irony-c-headers company-irony)))
-      (setq company-idle-delay              t
+      (setq company-idle-delay              0.1
             company-minimum-prefix-length   3
             company-show-numbers            t
-            company-tooltip-limit           20
+            company-tooltip-limit           10
             company-dabbrev-downcase        nil))
   #+END_SRC
 

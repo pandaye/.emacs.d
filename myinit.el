@@ -65,6 +65,7 @@
   (linum-mode 0))
 
 (add-hook 'org-mode-hook 'nolinum)
+(add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
 (add-hook 'org-mode-hook 'turn-on-org-show-all-inline-images)
 
 (use-package ob-ipython
@@ -100,14 +101,14 @@
         ("d" "Agenda + Next Actions" ((agenda) (todo "NEXT")))))
 
 ;; I use org's tag feature to implement contexts.
-(setq org-tag-alist '(("STUDIO" . ?s) ;; company studio office
-                      ("PROJECT" . ?p) ;; difference task at company
-                      ("HOME" . ?h) ;; home
-                      ("MAIL" . ?m) ;; mail somebody
-                      ("LUNCHTIME" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
-                      ("TOURISM" . ?t) ;; tourism or not at home/company and any where
-                      ("COMPUTER" . ?c)
-                      ("READING" . ?r))) ;; reading
+(setq org-tag-alist '(("办公" . ?s) ;; company studio office
+                      ("工程项目" . ?p) ;; difference task at company
+                      ("家里" . ?h) ;; home
+                      ("邮件" . ?m) ;; mail somebody
+                      ("乱谈" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
+                      ("计算机" . ?c)
+                      ("阅读" . ?r)
+                      ("玄" . ?x))) ;; reading
 
 (setq org-archive-location "%s_archive::* Archive")
 
@@ -133,11 +134,11 @@
 (setq org-reverse-note-order t)  ;; note at beginning of file by default.
 (setq org-default-notes-file (concat gtd-path "/inbox.org"))
 (setq org-capture-templates
-      '(("t" "Todo" entry (file+headline (concat gtd-path "/tasks.org") "Tasks")
+      '(("t" "Todo" entry (file+headline "/home/pandaye/.org-gtd/task.org" "Tasks")
          "* TODO %?\n  %i\n  %a\n")
-        ("i" "Idea" entry (file+headline (concat gtd-path "/note.org") "Idea")
+        ("i" "Idea" entry (file+headline "/home/pandaye/.org-gtd/note.org" "Idea")
          "** %?\n %T\n  %a\n")
-        ("j" "Journal" entry (file+datetree (concat gtd-path "/journal.org"))
+        ("j" "Journal" entry (file+datetree "/home/pandaye/.org-gtd/journal.org")
          "* %?\nEntered on %U\n  %i\n  %a\n")))
 
 ;; key bingings
@@ -172,9 +173,12 @@
   :init
   (add-hook 'c-mode-common-hook 'company-mode)
   (add-hook 'emacs-lisp-mode-hook 'company-mode)
+  (add-hook 'cmake-mode-hook 'company-mode)
   :config
   (setq company-minimum-prefix-length 3)
-  (setq company-idle-delay 0.16)
+  (setq company-tooltip-align-annotations t)
+  (setq company-transformers '(company-sort-by-occurrence))
+  (setq company-idle-delay 0.1)
   :bind
   (("M-/" . company-complete)))
 
@@ -264,12 +268,6 @@
   :ensure ox-gfm)
 
 (require 'company)
-(use-package company-c-headers
-  :ensure t
-  :init
-  (add-to-list 'company-backends 'company-c-headers)
-  :config
-  (add-to-list 'company-c-headers-path-system "/usr/include/c++/7.3.1/"))
 
 (setq c-default-style "linux"
       c-basic-offset 4)
@@ -278,6 +276,9 @@
           '(lambda () (setq indent-tabs-mode t)))
 
 (use-package rtags
+  :ensure t)
+
+(use-package cmake-mode
   :ensure t)
 
 (use-package company-rtags
@@ -294,8 +295,6 @@
     (function rtags-find-symbol-at-point))
   (define-key c-mode-base-map (kbd "M-,")
     (function rtags-find-references-at-point))
-  (define-key c-mode-base-map (kbd "M-;")
-    (function rtags-find-file))
   (define-key c-mode-base-map (kbd "C-.")
     (function rtags-find-symbol))
   (define-key c-mode-base-map (kbd "C-,")
@@ -327,10 +326,10 @@
   (eval-after-load 'company
     '(add-to-list
       'company-backends '(company-irony-c-headers company-irony)))
-  (setq company-idle-delay              t
+  (setq company-idle-delay              0.1
         company-minimum-prefix-length   3
         company-show-numbers            t
-        company-tooltip-limit           20
+        company-tooltip-limit           10
         company-dabbrev-downcase        nil))
 
 (use-package yasnippet
