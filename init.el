@@ -34,7 +34,7 @@
 	("~/.org-gtd/inbox.org" "~/.org-gtd/journal.org" "/home/pandaye/.org-gtd/project.org" "/home/pandaye/.org-gtd/note.org" "/home/pandaye/.org-gtd/task.org" "/home/pandaye/.org-gtd/trash.org" "/home/pandaye/.org-gtd/finished.org")))
  '(package-selected-packages
    (quote
-	(lua-mode rtags htmlize company-rtags org irony company-irony company-irony-c-headers helm-bind-key paredit use-package powerline hlinum try which-key smooth-scrolling rainbow-delimiters org-bullets ob-ipython neotree all-the-icons ace-window company spacemacs-theme flycheck elpy py-autopep8 helm helm-swoop graphviz-dot-mode plantuml-mode flycheck-plantuml markdown-mode ox-gfm company-c-headers yasnippet yasnippet-snippets auctex magit)))
+	(irony-eldoc lua-mode rtags htmlize company-rtags org irony company-irony company-irony-c-headers helm-bind-key paredit use-package powerline hlinum try which-key smooth-scrolling rainbow-delimiters org-bullets ob-ipython neotree all-the-icons ace-window company spacemacs-theme flycheck elpy py-autopep8 helm helm-swoop graphviz-dot-mode plantuml-mode flycheck-plantuml markdown-mode ox-gfm company-c-headers yasnippet yasnippet-snippets auctex magit)))
  '(safe-local-variable-values (quote ((encoding . utf-8))))
  '(tool-bar-mode nil))
 (custom-set-faces

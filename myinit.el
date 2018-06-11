@@ -135,11 +135,11 @@
 (setq org-default-notes-file (concat gtd-path "/inbox.org"))
 (setq org-capture-templates
       '(("t" "Todo" entry (file+headline "/home/pandaye/.org-gtd/task.org" "Tasks")
-         "* TODO %?\n  %i\n  %a\n")
+         "* TODO %?\n  %i\n")
         ("i" "Idea" entry (file+headline "/home/pandaye/.org-gtd/note.org" "Idea")
-         "** %?\n %T\n  %a\n")
+         "** %?\n %T\n")
         ("j" "Journal" entry (file+datetree "/home/pandaye/.org-gtd/journal.org")
-         "* %?\nEntered on %U\n  %i\n  %a\n")))
+         "* %?\nEntered on %U\n  %i\n")))
 
 ;; key bingings
 (global-set-key "\C-cl" 'org-store-link)
@@ -302,6 +302,7 @@
 
 (use-package irony
   :ensure t
+  :defer t
   :init
   (add-hook 'c++-mode-hook 'irony-mode)
   (add-hook 'c-mode-hook 'irony-mode)
@@ -327,10 +328,15 @@
     '(add-to-list
       'company-backends '(company-irony-c-headers company-irony)))
   (setq company-idle-delay              0.1
-        company-minimum-prefix-length   3
+        company-minimum-prefix-length   2
         company-show-numbers            t
         company-tooltip-limit           10
         company-dabbrev-downcase        nil))
+
+(use-package irony-eldoc
+  :ensure t
+  :init
+  (add-hook 'irony-mode-hook 'irony-eldoc))
 
 (use-package yasnippet
   :ensure t

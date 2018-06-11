@@ -395,6 +395,7 @@ PlantUML mode
 
     (use-package irony
       :ensure t
+      :defer t
       :init
       (add-hook 'c++-mode-hook 'irony-mode)
       (add-hook 'c-mode-hook 'irony-mode)
@@ -420,10 +421,15 @@ PlantUML mode
         '(add-to-list
           'company-backends '(company-irony-c-headers company-irony)))
       (setq company-idle-delay              0.1
-            company-minimum-prefix-length   3
+            company-minimum-prefix-length   2
             company-show-numbers            t
             company-tooltip-limit           10
             company-dabbrev-downcase        nil))
+
+    (use-package irony-eldoc
+      :ensure t
+      :init
+      (add-hook 'irony-mode-hook 'irony-eldoc))
   #+END_SRC
 
 * yasnippet 
