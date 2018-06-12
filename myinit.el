@@ -1,3 +1,4 @@
+
 (setq inhibit-startup-message t)
 (setq column-number-mode t)
 (tool-bar-mode -1)
@@ -156,7 +157,7 @@
   )
 
 (unless (package-installed-p 'all-the-icons)
-  (package-install all-the-icons))
+  (package-install 'all-the-icons))
 
 (defalias 'list-buffers 'ibuffer)
 
@@ -187,7 +188,7 @@
   (("M-/" . company-complete)))
 
 (unless (package-installed-p 'spacemacs-theme)
-  (package-install spacemacs-theme))
+  (package-install 'spacemacs-theme))
 
 (require 'spacemacs-common)
 (deftheme spacemacs-dark "Spacemacs theme, the dark version")
@@ -216,9 +217,9 @@
          ("M-x" . helm-M-x)))
 
 (require 'helm)
-(require 'helm-config)		;?
-(require 'helm-eshell)		;?
-(require 'helm-files)			;?
+(require 'helm-config)              ;?
+(require 'helm-eshell)              ;?
+(require 'helm-files)                       ;?
 (require 'helm-grep)
 
 ; do not display invisible candidates
