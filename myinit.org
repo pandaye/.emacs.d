@@ -185,7 +185,7 @@
     )
 
   (unless (package-installed-p 'all-the-icons)
-    (package-install all-the-icons))
+    (package-install 'all-the-icons))
 #+END_SRC
 尔后需要自行安装 ~all-the-icons~ ，并启动 ~all-the-icons-install-fonts~
 
@@ -237,7 +237,7 @@
 需要手动安装 ~spacemacs-theme~
   #+BEGIN_SRC emacs-lisp 
     (unless (package-installed-p 'spacemacs-theme)
-      (package-install spacemacs-theme))
+      (package-install 'spacemacs-theme))
 
     (require 'spacemacs-common)
     (deftheme spacemacs-dark "Spacemacs theme, the dark version")

@@ -155,6 +155,9 @@
   (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
   )
 
+(unless (package-installed-p 'all-the-icons)
+  (package-install all-the-icons))
+
 (defalias 'list-buffers 'ibuffer)
 
 (winner-mode 1)
@@ -182,6 +185,9 @@
   (setq company-idle-delay 0.1)
   :bind
   (("M-/" . company-complete)))
+
+(unless (package-installed-p 'spacemacs-theme)
+  (package-install spacemacs-theme))
 
 (require 'spacemacs-common)
 (deftheme spacemacs-dark "Spacemacs theme, the dark version")
