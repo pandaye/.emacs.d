@@ -170,6 +170,7 @@
 
 (use-package company
   :ensure t
+  :defer t
   :init
   (add-hook 'c-mode-common-hook 'company-mode)
   (add-hook 'emacs-lisp-mode-hook 'company-mode)
@@ -190,6 +191,7 @@
 
 (use-package flycheck
   :ensure t
+  :defer t
   :init
   (global-flycheck-mode t))
 
@@ -236,6 +238,74 @@
 
 (require 'myscheme)
 
+;; 要安装的软件包列表
+(setq my-package-list
+      '(rtags
+        company-rtags
+        company
+        irony
+        company-irony
+        company-irony-c-headers
+        flycheck-irony
+        flycheck-rtags
+        flycheck-irony))
+;; 安装列表中尚未安装的软件包
+(dolist (package my-package-list)
+  (unless (package-installed-p package)
+    (package-install package)))
+
+(setq c-default-style "linux"
+      c-basic-offset 4)
+
+(add-hook 'c-mode-common-hook
+          '(lambda () (setq indent-tabs-mode t)))
+
+(require 'rtags)
+(require 'company-rtags)
+(setq rtags-completions-enabled t)
+(eval-after-load 'company
+  '(add-to-list
+    'company-backends 'company-rtags))
+(rtags-enable-standard-keybindings)
+(define-key c-mode-base-map (kbd "M-.")
+  (function rtags-find-symbol-at-point))
+(define-key c-mode-base-map (kbd "M-,")
+  (function rtags-find-references-at-point))
+(define-key c-mode-base-map (kbd "C-.")
+  (function rtags-find-symbol))
+(define-key c-mode-base-map (kbd "C-,")
+  (function rtags-find-references))
+
+
+(require 'irony)
+(add-hook 'c++-mode-hook 'irony-mode)
+(add-hook 'c-mode-hook 'irony-mode)
+(add-hook 'objc-mode-hook 'irony-mode)
+
+(defun my-irony-mode-hook ()
+  (define-key irony-mode-map [remap completion-at-point]
+    'irony-completion-at-point-async)
+  (define-key irony-mode-map [remap complete-symbol]
+    'irony-completion-at-point-async))
+(add-hook 'irony-mode-hook 'my-irony-mode-hook)
+(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+
+(require 'company-irony)
+(add-hook 'irony-mode-hook 'company-irony-setup-begin-commands)
+(setq company-backends (delete 'company-semantic company-backends))
+
+(require 'company-irony-c-headers)
+(eval-after-load 'company
+  '(add-to-list
+    'company-backends '(company-irony-c-headers company-irony)))
+(setq company-show-numbers            t
+      company-tooltip-limit           10
+      company-dabbrev-downcase        nil)
+
+(require 'flycheck-irony)
+(eval-after-load 'flycheck
+  '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
+
 (use-package graphviz-dot-mode
   :ensure t
   :init
@@ -266,77 +336,6 @@
 
 (use-package ox-gfm
   :ensure ox-gfm)
-
-(require 'company)
-
-(setq c-default-style "linux"
-      c-basic-offset 4)
-
-(add-hook 'c-mode-common-hook
-          '(lambda () (setq indent-tabs-mode t)))
-
-(use-package rtags
-  :ensure t)
-
-(use-package cmake-mode
-  :ensure t)
-
-(use-package company-rtags
-  :ensure t
-  :init
-  (setq rtags-completions-enabled t)
-  (eval-after-load 'company
-    '(add-to-list
-      'company-backends 'company-rtags))
-  (setq rtags-autostart-diagnostics nil)
-  (rtags-enable-standard-keybindings)
-  ;; 设置快捷键
-  (define-key c-mode-base-map (kbd "M-.")
-    (function rtags-find-symbol-at-point))
-  (define-key c-mode-base-map (kbd "M-,")
-    (function rtags-find-references-at-point))
-  (define-key c-mode-base-map (kbd "C-.")
-    (function rtags-find-symbol))
-  (define-key c-mode-base-map (kbd "C-,")
-    (function rtags-find-references)))
-
-(use-package irony
-  :ensure t
-  :defer t
-  :init
-  (add-hook 'c++-mode-hook 'irony-mode)
-  (add-hook 'c-mode-hook 'irony-mode)
-  (defun my-irony-mode-hook ()
-    (define-key irony-mode-map [remap completion-at-point]
-      'irony-completion-at-point-async)
-    (define-key irony-mode-map [remap complete-symbol]
-      'irony-completion-at-point-async))
-  (add-hook 'irony-mode-hook 'my-irony-mode-hook)
-  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options))
-
-(use-package company-irony
-  :ensure t
-  :init
-  (add-hook 'irony-mode-hook 'company-irony-setup-begin-commands)
-  (setq company-backends
-        (delete 'company-semantic company-backends)))
-
-(use-package company-irony-c-headers
-  :ensure t
-  :init
-  (eval-after-load 'company
-    '(add-to-list
-      'company-backends '(company-irony-c-headers company-irony)))
-  (setq company-idle-delay              0.1
-        company-minimum-prefix-length   2
-        company-show-numbers            t
-        company-tooltip-limit           10
-        company-dabbrev-downcase        nil))
-
-(use-package irony-eldoc
-  :ensure t
-  :init
-  (add-hook 'irony-mode-hook 'irony-eldoc))
 
 (use-package yasnippet
   :ensure t
