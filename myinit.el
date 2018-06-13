@@ -255,7 +255,8 @@
         company-irony-c-headers
         flycheck-irony
         flycheck-rtags
-        flycheck-irony))
+        flycheck-irony
+        cmake-mode))
 ;; 安装列表中尚未安装的软件包
 (dolist (package my-package-list)
   (unless (package-installed-p package)
