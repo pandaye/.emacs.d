@@ -1,37 +1,22 @@
-#+STARTUP: showall hidestars
+#+STARTUP: showall
 
 * 简单的 Emacs 配置
 
-** 概述
-   使用 org 管理的简单的 Emacs 配置，使用 use-package 管理插件
+简单可用的 emacs~ 配置，使用 spacemacs-dark 主题，基本支持 C/C++、Python、Scheme、LaTeX
 
-** 内容
-*** Python
-    使用 [[https://github.com/jorgenschaefer/elpy][Elpy]] 作为 ~python~ 基本环境，并配置了 ~pyvenv~ ，需要参照 ~myinit.org~ 对应说明安装外部依赖
-*** C/C++ 
-    补全配置不完全，头文件补全略显傻瓜
-*** Scheme
-    使用 mit-scheme 作为解释器，参考：[[http://www.yinwang.org/blog-cn/2013/04/11/scheme-setup][王垠的"Scheme编程环境的配置"]]
-*** auto-complete
-    基本能用
-*** yasnippet
-    使用默认，并没有没有添加自己的配置
-*** git
-    使用 ~magit~ 插件
-*** neotree
-    需要自己安装 ~all the icons~ 并且 =M-x all-the-icons-install-fonts=
-*** 主题
-    主题使用 ~spacemacs-dark~ ，需要手动安装 ~spacemacs-theme~ 包
-** 使用说明
-   在用户目录下执行
-   #+BEGIN_SRC shell
-     git clone https://github.com/pandaye/.emacs.d.git
-   #+END_SRC
-   在 Linux 环境下面可以直接使用，如果出错，在启动一次（笑）  
-   其他环境的话就不知道是否有用了...
-** 其他的话
-   假定这个配置文件没有其他人会看，所以有的配置里面路径直接写的是自己PC上面的绝对路径  
-   如果路过的朋友看到这个，并心血来潮地使用它，你需要改动如下部分：
-   - ~python~ 设置里面的 ~pyvenv~ 路径
-   - ~init.el~ 中需要修改打开 ~emacs~ 时自启文件
+** 安装
+
+先备份自己的 .emacs.d 配置，删除
+
+#+BEGIN_SRC shell
+git clone https://github.com/pandaye/.emacs.d.git
+#+END_SRC
+
+** 其他的一些说明
+
+一些配置需要外部程序支持，比如 C/C++ 的 rtags，还有 python 补全用的 jedi 之类的。另外，这里使用 Monaco 字体，需自行安装调整  
+
+具体参考 ~myinit.org~
+
+Have a lot fun..
 
