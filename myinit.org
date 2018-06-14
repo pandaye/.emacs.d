@@ -108,6 +108,7 @@
                                  (kbd "<f5>") 'org-revert-all-org-buffers)))
 
     (setq org-export-with-sub-superscripts (quote {}))
+    (setq org-src-fontify-natively t)
   #+END_SRC
 
 配置 GTD

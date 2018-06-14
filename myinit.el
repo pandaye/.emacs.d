@@ -87,6 +87,7 @@
                              (kbd "<f5>") 'org-revert-all-org-buffers)))
 
 (setq org-export-with-sub-superscripts (quote {}))
+(setq org-src-fontify-natively t)
 
 (setq org-use-fast-todo-selection t)
 (setq org-todo-keywords
