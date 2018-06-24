@@ -1,11 +1,10 @@
-
 (setq inhibit-startup-message t)
 (setq column-number-mode t)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (fset 'yes-or-no-p 'y-or-n-p)
 (global-hl-line-mode t)
-(global-linum-mode 1)
+;; (global-linum-mode 1)
 (global-set-key (kbd "<f9>") 'eshell)
 (setq-default tab-width 4)
 (setq ring-bell-function 'ignore)
@@ -19,6 +18,8 @@
   :ensure t
   :config
   (hlinum-activate))
+
+(add-hook 'prog-mode-hook 'linum-mode)
 
 (global-set-key (kbd "<f10>") 'loop-alpha)
 ;当前窗口和非当前窗口时透明度
@@ -61,11 +62,11 @@
 
 (defun turn-on-org-show-all-inline-images ()
   (org-display-inline-images t t))
-(defun nolinum ()
-  (message "Deactive linum-mode")
-  (linum-mode 0))
+;; (defun nolinum ()
+;;   (message "Deactive linum-mode")
+;;   (linum-mode 0))
 
-(add-hook 'org-mode-hook 'nolinum)
+;; (add-hook 'org-mode-hook 'nolinum)
 (add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
 (add-hook 'org-mode-hook 'turn-on-org-show-all-inline-images)
 
@@ -218,9 +219,9 @@
          ("M-x" . helm-M-x)))
 
 (require 'helm)
-(require 'helm-config)              ;?
-(require 'helm-eshell)              ;?
-(require 'helm-files)                       ;?
+(require 'helm-config)		;?
+(require 'helm-eshell)		;?
+(require 'helm-files)			;?
 (require 'helm-grep)
 
 ; do not display invisible candidates
@@ -363,7 +364,7 @@
 (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
 
 ;; Setting English Font
-(set-face-attribute 'default nil :font "Monaco 13")
+(set-face-attribute 'default nil :font "Hack 13")
 
 ;; Chinese Font
 (defun my-font-setting () 
