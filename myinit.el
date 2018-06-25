@@ -159,7 +159,9 @@
   )
 
 (unless (package-installed-p 'all-the-icons)
-  (package-install 'all-the-icons))
+  (package-install 'all-the-icons)
+  (all-the-icons-install-fonts)
+  )
 
 (defalias 'list-buffers 'ibuffer)
 

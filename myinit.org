@@ -179,18 +179,19 @@
 * Project Tree
 安装 NeoTree
 #+BEGIN_SRC emacs-lisp
-  (use-package neotree
-    :ensure t
-    :init
-    (global-set-key [f8] 'neotree-toggle)
-    (global-set-key [f7] 'neotree-find)
-    (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
-    )
+    (use-package neotree
+      :ensure t
+      :init
+      (global-set-key [f8] 'neotree-toggle)
+      (global-set-key [f7] 'neotree-find)
+      (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
+      )
 
-  (unless (package-installed-p 'all-the-icons)
-    (package-install 'all-the-icons))
+    (unless (package-installed-p 'all-the-icons)
+      (package-install 'all-the-icons)
+      (all-the-icons-install-fonts)
+      )
 #+END_SRC
-尔后需要自行安装 ~all-the-icons~ ，并启动 ~all-the-icons-install-fonts~
 
 * buffer and window
   buffer 
