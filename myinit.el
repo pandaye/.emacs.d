@@ -1,3 +1,4 @@
+
 (setq inhibit-startup-message t)
 (setq column-number-mode t)
 (tool-bar-mode -1)
@@ -14,16 +15,22 @@
   :config
   (powerline-default-theme))
 
+(use-package nlinum
+  :ensure t
+  :config
+  (setq nlinum-delay t) ;; for smooth scrolling
+  (setq nlinum-highlight-current-line t))
+
 (use-package hlinum
   :ensure t
   :config
   (hlinum-activate))
 
-(add-hook 'prog-mode-hook 'linum-mode)
+(add-hook 'prog-mode-hook 'nlinum-mode)
 
 (global-set-key (kbd "<f10>") 'loop-alpha)
 ;当前窗口和非当前窗口时透明度
-(setq alpha-list '((95 90) (100 100)))
+(setq alpha-list '((100 100) (100 100)))
 (defun loop-alpha ()
   (interactive)
   (let ((h (car alpha-list)))
@@ -33,7 +40,7 @@
      (car h) (car (cdr h)))
     (setq alpha-list (cdr (append alpha-list (list h))))))
 ;启动窗口时时自动开启窗口半透明效果
-(loop-alpha)
+;; (loop-alpha)
 
 (use-package try
   :ensure t)
@@ -195,16 +202,19 @@
   (package-install 'spacemacs-theme))
 
 (require 'spacemacs-common)
-(deftheme spacemacs-dark "Spacemacs theme, the dark version")
-(create-spacemacs-theme 'dark 'spacemacs-dark)
-(provide-theme 'spacemacs-dark)
-(load-theme 'spacemacs-dark t)
+;; (deftheme spacemacs-dark "Spacemacs theme, the dark version")
+(deftheme spacemacs-light "Spacemacs theme, the light version")
+;; (create-spacemacs-theme 'dark 'spacemacs-dark)
+(create-spacemacs-theme 'light 'spacemacs-light)
+;; (provide-theme 'spacemacs-dark)
+(provide-theme 'spacemacs-light)
+(load-theme 'spacemacs-light t)
 
-(use-package flycheck
-  :ensure t
-  :defer t
-  :init
-  (global-flycheck-mode t))
+;; (use-package flycheck
+;;   :ensure t
+;;   :defer t
+;;   :init
+;;   (global-flycheck-mode t))
 
 (use-package elpy
   :ensure t
@@ -221,9 +231,9 @@
          ("M-x" . helm-M-x)))
 
 (require 'helm)
-(require 'helm-config)		;?
-(require 'helm-eshell)		;?
-(require 'helm-files)			;?
+(require 'helm-config)              ;?
+(require 'helm-eshell)              ;?
+(require 'helm-files)                       ;?
 (require 'helm-grep)
 
 ; do not display invisible candidates
@@ -287,7 +297,6 @@
   (function rtags-find-symbol))
 (define-key c-mode-base-map (kbd "C-,")
   (function rtags-find-references))
-
 
 (require 'irony)
 (add-hook 'c++-mode-hook 'irony-mode)
@@ -366,14 +375,14 @@
 (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
 
 ;; Setting English Font
-(set-face-attribute 'default nil :font "Hack 13")
+(set-face-attribute 'default nil :font "Hack 12")
 
 ;; Chinese Font
 (defun my-font-setting () 
   (dolist (charset '(kana han symbol cjk-misc bopomofo))
     (set-fontset-font (frame-parameter nil 'font)
               charset (font-spec :family "WenQuanyi Micro Hei"
-                                 :size 26))))
+                                 :size 24))))
 (add-to-list 'after-make-frame-functions
              (lambda (new-frame)
              (select-frame new-frame)
