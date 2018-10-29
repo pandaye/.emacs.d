@@ -19,7 +19,9 @@
   :ensure t
   :config
   (setq nlinum-delay t) ;; for smooth scrolling
-  (setq nlinum-highlight-current-line t))
+  (setq nlinum-highlight-current-line t)
+  :custom-face
+  (nlinum-current-line ((t (:inherit linum :inverse-video t :weight bold)))))
 
 (use-package hlinum
   :ensure t
@@ -69,11 +71,7 @@
 
 (defun turn-on-org-show-all-inline-images ()
   (org-display-inline-images t t))
-;; (defun nolinum ()
-;;   (message "Deactive linum-mode")
-;;   (linum-mode 0))
 
-;; (add-hook 'org-mode-hook 'nolinum)
 (add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
 (add-hook 'org-mode-hook 'turn-on-org-show-all-inline-images)
 
@@ -118,7 +116,7 @@
                       ("乱谈" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
                       ("计算机" . ?c)
                       ("阅读" . ?r)
-                      ("玄" . ?x))) ;; reading
+                      ("玄学" . ?x))) ;; reading
 
 (setq org-archive-location "%s_archive::* Archive")
 
@@ -144,11 +142,11 @@
 (setq org-reverse-note-order t)  ;; note at beginning of file by default.
 (setq org-default-notes-file (concat gtd-path "/inbox.org"))
 (setq org-capture-templates
-      '(("t" "Todo" entry (file+headline "/home/pandaye/.org-gtd/task.org" "Tasks")
+      '(("t" "Todo" entry (file+headline "/home/pandaye0/.org-gtd/task.org" "Tasks")
          "* TODO %?\n  %i\n")
-        ("i" "Idea" entry (file+headline "/home/pandaye/.org-gtd/note.org" "Idea")
+        ("i" "Idea" entry (file+headline "/home/pandaye0/.org-gtd/note.org" "Idea")
          "** %?\n %T\n")
-        ("j" "Journal" entry (file+datetree "/home/pandaye/.org-gtd/journal.org")
+        ("j" "Journal" entry (file+datetree "/home/pandaye0/.org-gtd/journal.org")
          "* %?\nEntered on %U\n  %i\n")))
 
 ;; key bingings
@@ -167,7 +165,7 @@
 
 (unless (package-installed-p 'all-the-icons)
   (package-install 'all-the-icons)
-  (all-the-icons-install-fonts)
+  (all-the-icons-install-fonts t)
   )
 
 (defalias 'list-buffers 'ibuffer)
@@ -187,9 +185,7 @@
   :ensure t
   :defer t
   :init
-  (add-hook 'c-mode-common-hook 'company-mode)
-  (add-hook 'emacs-lisp-mode-hook 'company-mode)
-  (add-hook 'cmake-mode-hook 'company-mode)
+  (add-hook 'prog-mode-hook 'company-mode)
   :config
   (setq company-minimum-prefix-length 3)
   (setq company-tooltip-align-annotations t)
@@ -198,30 +194,21 @@
   :bind
   (("M-/" . company-complete)))
 
-(unless (package-installed-p 'spacemacs-theme)
-  (package-install 'spacemacs-theme))
-
-(require 'spacemacs-common)
-;; (deftheme spacemacs-dark "Spacemacs theme, the dark version")
-(deftheme spacemacs-light "Spacemacs theme, the light version")
-;; (create-spacemacs-theme 'dark 'spacemacs-dark)
-(create-spacemacs-theme 'light 'spacemacs-light)
-;; (provide-theme 'spacemacs-dark)
-(provide-theme 'spacemacs-light)
-(load-theme 'spacemacs-light t)
-
-;; (use-package flycheck
-;;   :ensure t
-;;   :defer t
-;;   :init
-;;   (global-flycheck-mode t))
+(use-package doom-themes
+  :ensure t
+  :init
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t)
+  (load-theme 'doom-vibrant t)
+  (doom-themes-visual-bell-config)
+  (doom-themes-neotree-config)
+  (doom-themes-org-config))
 
 (use-package elpy
   :ensure t
   :init
-  (setq elpy-rpc-python-command "python3")
   (elpy-enable)
-  (pyvenv-activate "/home/pandaye/MyEnvs")
+  (setq elpy-rpc-python-command "python3")
   (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
   )
 
@@ -260,8 +247,9 @@
 (require 'myscheme)
 
 ;; 要安装的软件包列表
-(setq my-package-list
-      '(rtags
+(setq c/cpp-package-list
+      '(
+        rtags
         company-rtags
         company
         irony
@@ -270,9 +258,10 @@
         flycheck-irony
         flycheck-rtags
         flycheck-irony
-        cmake-mode))
+        cmake-mode
+        ))
 ;; 安装列表中尚未安装的软件包
-(dolist (package my-package-list)
+(dolist (package c/cpp-package-list)
   (unless (package-installed-p package)
     (package-install package)))
 
