@@ -44,6 +44,11 @@
 ;启动窗口时时自动开启窗口半透明效果
 ;; (loop-alpha)
 
+(use-package evil
+  :ensure t
+  :init
+  (evil-mode 1))
+
 (use-package try
   :ensure t)
 

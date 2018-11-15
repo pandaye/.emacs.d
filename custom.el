@@ -14,4 +14,5 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(aw-leading-char-face ((t (:inherit ace-jump-face-foreground :height 3.0))))
- '(flymake-errline ((t (:underline "Red1")))))
+ '(flymake-errline ((t (:underline "Red1"))))
+ '(nlinum-current-line ((t (:inherit linum :inverse-video t :weight bold)))))

@@ -49,6 +49,13 @@
     ;; (loop-alpha)
   #+END_SRC
     
+* Evil
+#+BEGIN_SRC emacs-lisp
+  (use-package evil
+    :ensure t
+    :init
+    (evil-mode 1))
+#+END_SRC
 * better use packages
   try 
   #+BEGIN_SRC emacs-lisp
