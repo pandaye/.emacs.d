@@ -257,12 +257,14 @@
         rtags
         company-rtags
         company
+        ;company-lsp
+        ;lsp-mode
+        ;cquery
         irony
         company-irony
         company-irony-c-headers
         flycheck-irony
-        flycheck-rtags
-        flycheck-irony
+        ;flycheck-rtags
         cmake-mode
         ))
 ;; 安装列表中尚未安装的软件包
@@ -274,7 +276,7 @@
       c-basic-offset 4)
 
 (add-hook 'c-mode-common-hook
-          '(lambda () (setq indent-tabs-mode t)))
+          '(lambda () (setq indent-tabs-mode t)))   
 
 (require 'rtags)
 (require 'company-rtags)
