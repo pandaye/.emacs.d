@@ -21,7 +21,7 @@
   (setq nlinum-delay t) ;; for smooth scrolling
   (setq nlinum-highlight-current-line t)
   :custom-face
-  (nlinum-current-line ((t (:inherit linum :inverse-video t :weight bold)))))
+  (nlinum-current-line ((t (:inherit linum :weight bold ))))) ;:inverse-video t)))))
 
 (use-package hlinum
   :ensure t
@@ -48,6 +48,35 @@
   :ensure t
   :init
   (evil-mode 1))
+
+(use-package doom-themes
+  :ensure t
+  :init
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t)
+  (load-theme 'doom-vibrant t)
+  (doom-themes-visual-bell-config)
+  (doom-themes-neotree-config)
+  (doom-themes-org-config))
+
+;; Setting English Font
+(set-face-attribute 'default nil :font "Hack 12")
+
+;; Chinese Font
+(defun my-font-setting () 
+  (dolist (charset '(kana han symbol cjk-misc bopomofo))
+    (set-fontset-font (frame-parameter nil 'font)
+              charset (font-spec :family "WenQuanYi Micro Hei"))))
+                                 ;:size 24))))
+(add-to-list 'after-make-frame-functions
+             (lambda (new-frame)
+             (select-frame new-frame)
+             (if window-system
+               (my-font-setting))))
+(if window-system
+  (my-font-setting))
+
+(setq face-font-rescale-alist '(("WenQuanYi Micro Hei" . 1.2)))
 
 (use-package try
   :ensure t)
@@ -147,11 +176,11 @@
 (setq org-reverse-note-order t)  ;; note at beginning of file by default.
 (setq org-default-notes-file (concat gtd-path "/inbox.org"))
 (setq org-capture-templates
-      '(("t" "Todo" entry (file+headline "/home/pandaye0/.org-gtd/task.org" "Tasks")
+      '(("t" "Todo" entry (file+headline (concat gtd-path "/task.org") "Tasks")
          "* TODO %?\n  %i\n")
-        ("i" "Idea" entry (file+headline "/home/pandaye0/.org-gtd/note.org" "Idea")
+        ("i" "Idea" entry (file+headline (concat gtd-path "/note.org") "Idea")
          "** %?\n %T\n")
-        ("j" "Journal" entry (file+datetree "/home/pandaye0/.org-gtd/journal.org")
+        ("j" "Journal" entry (file+datetree (concat gtd-path "/journal.org"))
          "* %?\nEntered on %U\n  %i\n")))
 
 ;; key bingings
@@ -186,46 +215,15 @@
        ((t (:inherit ace-jump-face-foreground :height 3.0)))))
     ))
 
-(use-package company
-  :ensure t
-  :defer t
-  :init
-  (add-hook 'prog-mode-hook 'company-mode)
-  :config
-  (setq company-minimum-prefix-length 3)
-  (setq company-tooltip-align-annotations t)
-  (setq company-transformers '(company-sort-by-occurrence))
-  (setq company-idle-delay 0.1)
-  :bind
-  (("M-/" . company-complete)))
-
-(use-package doom-themes
-  :ensure t
-  :init
-  (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t)
-  (load-theme 'doom-vibrant t)
-  (doom-themes-visual-bell-config)
-  (doom-themes-neotree-config)
-  (doom-themes-org-config))
-
-(use-package elpy
-  :ensure t
-  :init
-  (elpy-enable)
-  (setq elpy-rpc-python-command "python3")
-  (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
-  )
-
 (use-package helm
   :ensure t
   :bind (("C-x C-f" . helm-find-files)
          ("M-x" . helm-M-x)))
 
 (require 'helm)
-(require 'helm-config)              ;?
-(require 'helm-eshell)              ;?
-(require 'helm-files)                       ;?
+(require 'helm-config)      ;?
+(require 'helm-eshell)      ;?
+(require 'helm-files)           ;?
 (require 'helm-grep)
 
 ; do not display invisible candidates
@@ -249,79 +247,35 @@
 
 (helm-mode 1)
 
+(use-package company
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'prog-mode-hook 'company-mode)
+  :config
+  (setq company-minimum-prefix-length 3)
+  (setq company-tooltip-align-annotations t)
+  (setq company-transformers '(company-sort-by-occurrence))
+  (setq company-idle-delay 0.1)
+  :bind
+  (("M-/" . company-complete)))
+
+;(require 'lsp-mode)
+;(require 'lsp-clients)
+;(add-hook 'python-mode-hook #'lsp)
+
+(use-package elpy
+  :ensure t
+  :config
+  (setq elpy-rpc-python-command "python3"))
+(elpy-enable)
+
+(use-package flycheck
+  :ensure t
+  :config
+  (add-hook 'prog-mode-hook 'flycheck-mode))
+
 (require 'myscheme)
-
-;; 要安装的软件包列表
-(setq c/cpp-package-list
-      '(
-        rtags
-        company-rtags
-        company
-        ;company-lsp
-        ;lsp-mode
-        ;cquery
-        irony
-        company-irony
-        company-irony-c-headers
-        flycheck-irony
-        ;flycheck-rtags
-        cmake-mode
-        ))
-;; 安装列表中尚未安装的软件包
-(dolist (package c/cpp-package-list)
-  (unless (package-installed-p package)
-    (package-install package)))
-
-(setq c-default-style "linux"
-      c-basic-offset 4)
-
-(add-hook 'c-mode-common-hook
-          '(lambda () (setq indent-tabs-mode t)))   
-
-(require 'rtags)
-(require 'company-rtags)
-(setq rtags-completions-enabled t)
-(eval-after-load 'company
-  '(add-to-list
-    'company-backends 'company-rtags))
-(rtags-enable-standard-keybindings)
-(define-key c-mode-base-map (kbd "M-.")
-  (function rtags-find-symbol-at-point))
-(define-key c-mode-base-map (kbd "M-,")
-  (function rtags-find-references-at-point))
-(define-key c-mode-base-map (kbd "C-.")
-  (function rtags-find-symbol))
-(define-key c-mode-base-map (kbd "C-,")
-  (function rtags-find-references))
-
-(require 'irony)
-(add-hook 'c++-mode-hook 'irony-mode)
-(add-hook 'c-mode-hook 'irony-mode)
-(add-hook 'objc-mode-hook 'irony-mode)
-
-(defun my-irony-mode-hook ()
-  (define-key irony-mode-map [remap completion-at-point]
-    'irony-completion-at-point-async)
-  (define-key irony-mode-map [remap complete-symbol]
-    'irony-completion-at-point-async))
-(add-hook 'irony-mode-hook 'my-irony-mode-hook)
-(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-
-(require 'company-irony)
-(add-hook 'irony-mode-hook 'company-irony-setup-begin-commands)
-(setq company-backends (delete 'company-semantic company-backends))
-
-(require 'company-irony-c-headers)
-(eval-after-load 'company
-  '(add-to-list
-    'company-backends '(company-irony-c-headers company-irony)))
-(setq company-show-numbers            t
-      company-tooltip-limit           10
-      company-dabbrev-downcase        nil)
-
-(require 'flycheck-irony)
-(eval-after-load 'flycheck
-  '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
 
 (use-package graphviz-dot-mode
   :ensure t
@@ -370,48 +324,31 @@
 
 (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
 
-;; Setting English Font
-(set-face-attribute 'default nil :font "Hack 12")
-
-;; Chinese Font
-(defun my-font-setting () 
-  (dolist (charset '(kana han symbol cjk-misc bopomofo))
-    (set-fontset-font (frame-parameter nil 'font)
-              charset (font-spec :family "WenQuanyi Micro Hei"
-                                 :size 24))))
-(add-to-list 'after-make-frame-functions
-             (lambda (new-frame)
-             (select-frame new-frame)
-             (if window-system
-               (my-font-setting))))
-(if window-system
-  (my-font-setting))
-
 (use-package auctex
-  :defer t
-  :ensure auctex
-  :init
-  (setq TeX-auto-save t)
-  (setq TeX-parse-self t)
-  (setq-default TeX-master nil)
-  (add-hook 'LaTeX-mode-hook
-            (lambda ()
-              (turn-on-auto-fill)
-              (LaTeX-math-mode 1)
-              (setq TeX-show-complilation nil)
-              (setq TeX-clean-confirm nil)
-              (setq TeX-save-query nil)
-              (setq TeX-view-program-list '(("Evince" "evince %o")))
-              (setq TeX-view-program-selection
-                    '((output-pdf "Evince")))
-              (setq TeX-engine 'xetex)
-              (TeX-global-PDF-mode t)
-              (add-to-list 'TeX-command-list
-                            '("XeLaTeX" "%'xelatex%(mode)%' %t"
-                                         TeX-run-TeX nil t))
-              (setq TeX-command-default "XeLaTeX"))
-  )
-)
+   :defer t
+   :ensure auctex
+   :init
+   (setq TeX-auto-save t)
+   (setq TeX-parse-self t)
+   (setq-default TeX-master nil)
+   (add-hook 'LaTeX-mode-hook
+             (lambda ()
+               (turn-on-auto-fill)
+               (LaTeX-math-mode 1)
+               (setq TeX-show-complilation nil)
+               (setq TeX-clean-confirm nil)
+               (setq TeX-save-query nil)
+               (setq TeX-view-program-list '(("Evince" "evince %o")))
+               (setq TeX-view-program-selection
+                     '((output-pdf "Evince")))
+               (setq TeX-engine 'xetex)
+               (TeX-global-PDF-mode t)
+               (add-to-list 'TeX-command-list
+                             '("XeLaTeX" "%'xelatex%(mode)%' %t"
+                                          TeX-run-TeX nil t))
+               (setq TeX-command-default "XeLaTeX"))
+   )
+ )
 
 (use-package magit
   :ensure t

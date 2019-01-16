@@ -1,128 +1,166 @@
 #+STARTUP: overview
 #+OPTION: toc:nil
 * interface tweaks
-  Something useful setings to make interface better
-  #+BEGIN_SRC emacs-lisp
-    (setq inhibit-startup-message t)
-    (setq column-number-mode t)
-    (tool-bar-mode -1)
-    (scroll-bar-mode -1)
-    (fset 'yes-or-no-p 'y-or-n-p)
-    (global-hl-line-mode t)
-    ;; (global-linum-mode 1)
-    (global-set-key (kbd "<f9>") 'eshell)
-    (setq-default tab-width 4)
-    (setq ring-bell-function 'ignore)
+界面配置
+#+BEGIN_SRC emacs-lisp
+  (setq inhibit-startup-message t)
+  (setq column-number-mode t)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+  (fset 'yes-or-no-p 'y-or-n-p)
+  (global-hl-line-mode t)
+  ;; (global-linum-mode 1)
+  (global-set-key (kbd "<f9>") 'eshell)
+  (setq-default tab-width 4)
+  (setq ring-bell-function 'ignore)
 
-    (use-package powerline
-      :ensure t
-      :config
-      (powerline-default-theme))
+  (use-package powerline
+    :ensure t
+    :config
+    (powerline-default-theme))
 
-    (use-package nlinum
-      :ensure t
-      :config
-      (setq nlinum-delay t) ;; for smooth scrolling
-      (setq nlinum-highlight-current-line t)
-      :custom-face
-      (nlinum-current-line ((t (:inherit linum :inverse-video t :weight bold)))))
+  (use-package nlinum
+    :ensure t
+    :config
+    (setq nlinum-delay t) ;; for smooth scrolling
+    (setq nlinum-highlight-current-line t)
+    :custom-face
+    (nlinum-current-line ((t (:inherit linum :weight bold ))))) ;:inverse-video t)))))
 
-    (use-package hlinum
-      :ensure t
-      :config
-      (hlinum-activate))
+  (use-package hlinum
+    :ensure t
+    :config
+    (hlinum-activate))
 
-    (add-hook 'prog-mode-hook 'nlinum-mode)
+  (add-hook 'prog-mode-hook 'nlinum-mode)
 
-    (global-set-key (kbd "<f10>") 'loop-alpha)
-    ;当前窗口和非当前窗口时透明度
-    (setq alpha-list '((100 100) (100 100)))
-    (defun loop-alpha ()
-      (interactive)
-      (let ((h (car alpha-list)))
-        ((lambda (a ab)
-           (set-frame-parameter (selected-frame) 'alpha (list a ab))
-           (add-to-list 'default-frame-alist (cons 'alpha (list a ab))))
-         (car h) (car (cdr h)))
-        (setq alpha-list (cdr (append alpha-list (list h))))))
-    ;启动窗口时时自动开启窗口半透明效果
-    ;; (loop-alpha)
-  #+END_SRC
+  (global-set-key (kbd "<f10>") 'loop-alpha)
+  ;当前窗口和非当前窗口时透明度
+  (setq alpha-list '((100 100) (100 100)))
+  (defun loop-alpha ()
+    (interactive)
+    (let ((h (car alpha-list)))
+      ((lambda (a ab)
+         (set-frame-parameter (selected-frame) 'alpha (list a ab))
+         (add-to-list 'default-frame-alist (cons 'alpha (list a ab))))
+       (car h) (car (cdr h)))
+      (setq alpha-list (cdr (append alpha-list (list h))))))
+  ;启动窗口时时自动开启窗口半透明效果
+  ;; (loop-alpha)
+#+END_SRC
     
 * Evil
+使用 vim 键盘快捷键映射
 #+BEGIN_SRC emacs-lisp
   (use-package evil
     :ensure t
     :init
     (evil-mode 1))
 #+END_SRC
+* theme
+主题配置，使用 doom 主题
+#+BEGIN_SRC emacs-lisp 
+  (use-package doom-themes
+    :ensure t
+    :init
+    (setq doom-themes-enable-bold t
+          doom-themes-enable-italic t)
+    (load-theme 'doom-vibrant t)
+    (doom-themes-visual-bell-config)
+    (doom-themes-neotree-config)
+    (doom-themes-org-config))
+#+END_SRC
+
+* font
+#+BEGIN_SRC emacs-lisp
+  ;; Setting English Font
+  (set-face-attribute 'default nil :font "Hack 12")
+  
+  ;; Chinese Font
+  (defun my-font-setting () 
+    (dolist (charset '(kana han symbol cjk-misc bopomofo))
+      (set-fontset-font (frame-parameter nil 'font)
+                charset (font-spec :family "WenQuanYi Micro Hei"))))
+                                   ;:size 24))))
+  (add-to-list 'after-make-frame-functions
+               (lambda (new-frame)
+               (select-frame new-frame)
+               (if window-system
+                 (my-font-setting))))
+  (if window-system
+    (my-font-setting))
+  
+  (setq face-font-rescale-alist '(("WenQuanYi Micro Hei" . 1.2)))
+#+END_SRC
+
 * better use packages
-  try 
-  #+BEGIN_SRC emacs-lisp
-    (use-package try
-      :ensure t)  
-  #+END_SRC
+一些实用的配置
+try 
+#+BEGIN_SRC emacs-lisp
+  (use-package try
+    :ensure t)  
+#+END_SRC
 
-  which-key  
-  #+BEGIN_SRC emacs-lisp
-    (use-package which-key
-      :ensure t
-      :config (which-key-mode))  
-  #+END_SRC
+which-key  
+#+BEGIN_SRC emacs-lisp
+  (use-package which-key
+    :ensure t
+    :config (which-key-mode))  
+#+END_SRC
 
-  smoth-scrolling
-  #+BEGIN_SRC emacs-lisp
-    (use-package smooth-scrolling
-      :ensure t
-      :config
-      (setq smooth-scroll-margin 3)
-      (smooth-scrolling-mode 1))
-  #+END_SRC
+smoth-scrolling
+#+BEGIN_SRC emacs-lisp
+  (use-package smooth-scrolling
+    :ensure t
+    :config
+    (setq smooth-scroll-margin 3)
+    (smooth-scrolling-mode 1))
+#+END_SRC
 
-  rainbow-delimiters
-  #+BEGIN_SRC emacs-lisp
-    (use-package rainbow-delimiters
-      :ensure t
-      :init
-      (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
-      (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode))
-  #+END_SRC
+rainbow-delimiters
+#+BEGIN_SRC emacs-lisp
+  (use-package rainbow-delimiters
+    :ensure t
+    :init
+    (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
+    (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode))
+#+END_SRC
 
 * Org-mode
 通用设置
-  #+BEGIN_SRC emacs-lisp
-    (use-package org-bullets
-      :ensure t
-      :config
-      (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
-      (add-hook 'org-mode-hook (lambda () (setq indent-tabs-mode nil))))
+#+BEGIN_SRC emacs-lisp
+  (use-package org-bullets
+    :ensure t
+    :config
+    (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+    (add-hook 'org-mode-hook (lambda () (setq indent-tabs-mode nil))))
 
-    (defun turn-on-org-show-all-inline-images ()
-      (org-display-inline-images t t))
+  (defun turn-on-org-show-all-inline-images ()
+    (org-display-inline-images t t))
 
-    (add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
-    (add-hook 'org-mode-hook 'turn-on-org-show-all-inline-images)
+  (add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
+  (add-hook 'org-mode-hook 'turn-on-org-show-all-inline-images)
 
-    (use-package ob-ipython
-      :ensure t)
+  (use-package ob-ipython
+    :ensure t)
 
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((emacs-lisp . t)
-       (python . t)
-       (ipython . t)
-       (dot . t)
-       (plantuml . t)
-       ))
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (python . t)
+     (ipython . t)
+     (dot . t)
+     (plantuml . t)
+     ))
 
-    (add-hook 'org-mode-hook 'org-indent-mode)
-    (add-hook 'org-mode-hook (lambda ()
-                               (define-key org-mode-map
-                                 (kbd "<f5>") 'org-revert-all-org-buffers)))
+  (add-hook 'org-mode-hook 'org-indent-mode)
+  (add-hook 'org-mode-hook (lambda ()
+                             (define-key org-mode-map
+                               (kbd "<f5>") 'org-revert-all-org-buffers)))
 
-    (setq org-export-with-sub-superscripts (quote {}))
-    (setq org-src-fontify-natively t)
-  #+END_SRC
+  (setq org-export-with-sub-superscripts (quote {}))
+  (setq org-src-fontify-natively t)
+#+END_SRC
 
 配置 GTD
 #+BEGIN_SRC emacs-lisp
@@ -173,11 +211,11 @@
     (setq org-reverse-note-order t)  ;; note at beginning of file by default.
     (setq org-default-notes-file (concat gtd-path "/inbox.org"))
     (setq org-capture-templates
-          '(("t" "Todo" entry (file+headline "/home/pandaye0/.org-gtd/task.org" "Tasks")
+          '(("t" "Todo" entry (file+headline (concat gtd-path "/task.org") "Tasks")
              "* TODO %?\n  %i\n")
-            ("i" "Idea" entry (file+headline "/home/pandaye0/.org-gtd/note.org" "Idea")
+            ("i" "Idea" entry (file+headline (concat gtd-path "/note.org") "Idea")
              "** %?\n %T\n")
-            ("j" "Journal" entry (file+datetree "/home/pandaye0/.org-gtd/journal.org")
+            ("j" "Journal" entry (file+datetree (concat gtd-path "/journal.org"))
              "* %?\nEntered on %U\n  %i\n")))
 
     ;; key bingings
@@ -190,42 +228,77 @@
 * Project Tree
 安装 NeoTree
 #+BEGIN_SRC emacs-lisp
-    (use-package neotree
-      :ensure t
-      :init
-      (global-set-key [f8] 'neotree-toggle)
-      (global-set-key [f7] 'neotree-find)
-      (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
-      )
+  (use-package neotree
+    :ensure t
+    :init
+    (global-set-key [f8] 'neotree-toggle)
+    (global-set-key [f7] 'neotree-find)
+    (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
+    )
 
-    (unless (package-installed-p 'all-the-icons)
-      (package-install 'all-the-icons)
-      (all-the-icons-install-fonts t)
-      )
+  (unless (package-installed-p 'all-the-icons)
+    (package-install 'all-the-icons)
+    (all-the-icons-install-fonts t)
+    )
 #+END_SRC
 
 * buffer and window
-  buffer 
-  #+BEGIN_SRC emacs-lisp
-    (defalias 'list-buffers 'ibuffer)  
-  #+END_SRC
+buffer 
+#+BEGIN_SRC emacs-lisp
+  (defalias 'list-buffers 'ibuffer)  
+#+END_SRC
   
-  window
-  #+BEGIN_SRC emacs-lisp
-    (winner-mode 1)
-    (use-package ace-window
-      :ensure t
-      :init
-      (progn
-        (global-set-key [remap other-window] 'ace-window)
-        (custom-set-faces
-         '(aw-leading-char-face
-           ((t (:inherit ace-jump-face-foreground :height 3.0)))))
-        ))  
-  #+END_SRC
+window
+#+BEGIN_SRC emacs-lisp
+  (winner-mode 1)
+  (use-package ace-window
+    :ensure t
+    :init
+    (progn
+      (global-set-key [remap other-window] 'ace-window)
+      (custom-set-faces
+       '(aw-leading-char-face
+         ((t (:inherit ace-jump-face-foreground :height 3.0)))))
+      ))  
+#+END_SRC
+
+* helm
+#+BEGIN_SRC emacs-lisp
+  (use-package helm
+    :ensure t
+    :bind (("C-x C-f" . helm-find-files)
+           ("M-x" . helm-M-x)))
+
+  (require 'helm)
+  (require 'helm-config)      ;?
+  (require 'helm-eshell)      ;?
+  (require 'helm-files)           ;?
+  (require 'helm-grep)
+
+  ; do not display invisible candidates
+  (setq helm-quick-update t)
+  ; open helm buffer inside current window, not occupy whole other window
+  (setq helm-split-window-in-side-p t)
+  ; fuzzy matching buffer names when non--nil
+  (setq helm-buffers-fuzzy-matching t)
+  ; move to end or beginning of source when reaching top or bottom of source.
+  (setq helm-move-to-line-cycle-in-source nil)
+  ; search for library in `require' and `declare-function' sexp.
+  (setq helm-ff-search-library-in-sexp t)
+  ; scroll 8 lines other window using M-<next>/M-<prior>
+  (setq helm-scroll-amount 8)
+  (setq helm-ff-file-name-history-use-recentf t)
+
+  (use-package helm-swoop
+    :ensure t
+    :bind (("C-s" . helm-swoop)
+           ("C-r" . helm-swoop)))
+
+  (helm-mode 1)
+#+END_SRC
 
 * company
-
+通用补全插件
 #+BEGIN_SRC emacs-lisp
   (use-package company
     :ensure t
@@ -240,256 +313,104 @@
     :bind
     (("M-/" . company-complete)))
 #+END_SRC
-
-#+BEGIN_QUOTE
-~company-idle-delay~ 设置在elpy中无效，如要取消，可以修改 ~elpy.el~
+需要说明的是，如果使用 elpy 作为 Python 开发环境，那么 ~company-idle-delay~ 设置在elpy中无效，如要取消，可以修改 ~elpy.el~
 并清除 ~elpy.elc~ 
-#+END_QUOTE
-  
-* theme
-  #+BEGIN_SRC emacs-lisp 
-    (use-package doom-themes
-      :ensure t
-      :init
-      (setq doom-themes-enable-bold t
-            doom-themes-enable-italic t)
-      (load-theme 'doom-vibrant t)
-      (doom-themes-visual-bell-config)
-      (doom-themes-neotree-config)
-      (doom-themes-org-config))
-  #+END_SRC
-
-* python
-使用 ~elpy~
-
-首先安装依赖：
-#+BEGIN_SRC shell
-  # Either of these
-  pip install rope
-  pip install jedi
-  # flake8 for code checks
-  pip install flake8
-  # and autopep8 for automatic PEP8 formatting
-  pip install autopep8
-  # and yapf for code formatting
-  pip install yapf
+ 
+* lsp
+Python Language Server 补全有点慢，暂且弃用
+#+BEGIN_SRC emacs-lisp
+  ;(require 'lsp-mode)
+  ;(require 'lsp-clients)
+  ;(add-hook 'python-mode-hook #'lsp)
 #+END_SRC
-
-#+Begin_SRC emacs-lisp
+* Python
+#+BEGIN_SRC emacs-lisp
   (use-package elpy
     :ensure t
-    :init
-    (elpy-enable)
-    (setq elpy-rpc-python-command "python3")
-    (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
-    )
+    :config
+    (setq elpy-rpc-python-command "python3"))
+  (elpy-enable)
 #+END_SRC
-需要手动安装 py-autopep8
-
-* helm
-  #+BEGIN_SRC emacs-lisp
-    (use-package helm
-      :ensure t
-      :bind (("C-x C-f" . helm-find-files)
-             ("M-x" . helm-M-x)))
-
-    (require 'helm)
-    (require 'helm-config)		;?
-    (require 'helm-eshell)		;?
-    (require 'helm-files)			;?
-    (require 'helm-grep)
-
-    ; do not display invisible candidates
-    (setq helm-quick-update t)
-    ; open helm buffer inside current window, not occupy whole other window
-    (setq helm-split-window-in-side-p t)
-    ; fuzzy matching buffer names when non--nil
-    (setq helm-buffers-fuzzy-matching t)
-    ; move to end or beginning of source when reaching top or bottom of source.
-    (setq helm-move-to-line-cycle-in-source nil)
-    ; search for library in `require' and `declare-function' sexp.
-    (setq helm-ff-search-library-in-sexp t)
-    ; scroll 8 lines other window using M-<next>/M-<prior>
-    (setq helm-scroll-amount 8)
-    (setq helm-ff-file-name-history-use-recentf t)
-
-    (use-package helm-swoop
-      :ensure t
-      :bind (("C-s" . helm-swoop)
-             ("C-r" . helm-swoop)))
-
-    (helm-mode 1)
-  #+END_SRC
-
+* flycheck
+代码检查
+#+BEGIN_SRC emacs-lisp
+  (use-package flycheck
+    :ensure t
+    :config
+    (add-hook 'prog-mode-hook 'flycheck-mode))
+#+END_SRC
 * scheme
   #+BEGIN_SRC emacs-lisp
     (require 'myscheme)
   #+END_SRC
 
-* c-cpp
-
-#+BEGIN_SRC emacs-lisp
-  ;; 要安装的软件包列表
-  (setq c/cpp-package-list
-        '(
-          rtags
-          company-rtags
-          company
-          ;company-lsp
-          ;lsp-mode
-          ;cquery
-          irony
-          company-irony
-          company-irony-c-headers
-          flycheck-irony
-          ;flycheck-rtags
-          cmake-mode
-          ))
-  ;; 安装列表中尚未安装的软件包
-  (dolist (package c/cpp-package-list)
-    (unless (package-installed-p package)
-      (package-install package)))
-
-  (setq c-default-style "linux"
-        c-basic-offset 4)
-
-  (add-hook 'c-mode-common-hook
-            '(lambda () (setq indent-tabs-mode t)))   
-
-  (require 'rtags)
-  (require 'company-rtags)
-  (setq rtags-completions-enabled t)
-  (eval-after-load 'company
-    '(add-to-list
-      'company-backends 'company-rtags))
-  (rtags-enable-standard-keybindings)
-  (define-key c-mode-base-map (kbd "M-.")
-    (function rtags-find-symbol-at-point))
-  (define-key c-mode-base-map (kbd "M-,")
-    (function rtags-find-references-at-point))
-  (define-key c-mode-base-map (kbd "C-.")
-    (function rtags-find-symbol))
-  (define-key c-mode-base-map (kbd "C-,")
-    (function rtags-find-references))
-
-  (require 'irony)
-  (add-hook 'c++-mode-hook 'irony-mode)
-  (add-hook 'c-mode-hook 'irony-mode)
-  (add-hook 'objc-mode-hook 'irony-mode)
-
-  (defun my-irony-mode-hook ()
-    (define-key irony-mode-map [remap completion-at-point]
-      'irony-completion-at-point-async)
-    (define-key irony-mode-map [remap complete-symbol]
-      'irony-completion-at-point-async))
-  (add-hook 'irony-mode-hook 'my-irony-mode-hook)
-  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-
-  (require 'company-irony)
-  (add-hook 'irony-mode-hook 'company-irony-setup-begin-commands)
-  (setq company-backends (delete 'company-semantic company-backends))
-
-  (require 'company-irony-c-headers)
-  (eval-after-load 'company
-    '(add-to-list
-      'company-backends '(company-irony-c-headers company-irony)))
-  (setq company-show-numbers            t
-        company-tooltip-limit           10
-        company-dabbrev-downcase        nil)
-
-  (require 'flycheck-irony)
-  (eval-after-load 'flycheck
-    '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
-
-#+END_SRC
-
 * graphviz
 dot 插件
-  #+BEGIN_SRC emacs-lisp
-    (use-package graphviz-dot-mode
-      :ensure t
-      :init
-      (add-to-list 'org-src-lang-modes '("dot" . graphviz-dot)))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package graphviz-dot-mode
+    :ensure t
+    :init
+    (add-to-list 'org-src-lang-modes '("dot" . graphviz-dot)))
+#+END_SRC
 
 PlantUML mode
-  #+BEGIN_SRC emacs-lisp
-    (use-package plantuml-mode
-      :ensure t
-      :init
-      (setq plantuml-jar-path
-            (expand-file-name "~/.emacs.d/plantuml.jar"))
-      (setq org-plantuml-jar-path
-            (expand-file-name "~/.emacs.d/plantuml.jar"))
-      (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
-      (add-to-list 'org-src-lang-modes '("plantuml" . plantuml)))
-    (use-package flycheck-plantuml
-      :ensure t)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package plantuml-mode
+    :ensure t
+    :init
+    (setq plantuml-jar-path
+          (expand-file-name "~/.emacs.d/plantuml.jar"))
+    (setq org-plantuml-jar-path
+          (expand-file-name "~/.emacs.d/plantuml.jar"))
+    (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
+    (add-to-list 'org-src-lang-modes '("plantuml" . plantuml)))
+  (use-package flycheck-plantuml
+    :ensure t)
+#+END_SRC
 
 * markdown
-  #+BEGIN_SRC emacs-lisp
-    (use-package markdown-mode
-      :ensure t
-      :commands (markdown-mode gfm-mode)
-      :mode (("README\\.md\\'" . gfm-mode)
-             ("\\.md\\'" . markdown-mode)
-             ("\\.markdown\\'" . markdown-mode))
-      :init
-      ;; 配置输出指令
-      (setq markdown-command
-            "pandoc -f markdown -t html -s -c ~/.emacs.d/markdown/style.css --mathjax --highlight-style pygments"))
+#+BEGIN_SRC emacs-lisp
+  (use-package markdown-mode
+    :ensure t
+    :commands (markdown-mode gfm-mode)
+    :mode (("README\\.md\\'" . gfm-mode)
+           ("\\.md\\'" . markdown-mode)
+           ("\\.markdown\\'" . markdown-mode))
+    :init
+    ;; 配置输出指令
+    (setq markdown-command
+          "pandoc -f markdown -t html -s -c ~/.emacs.d/markdown/style.css --mathjax --highlight-style pygments"))
 
-    (use-package ox-gfm
-      :ensure ox-gfm)
-  #+END_SRC
+  (use-package ox-gfm
+    :ensure ox-gfm)
+#+END_SRC
 
 * yasnippet 
-  #+BEGIN_SRC emacs-lisp
-    (use-package yasnippet
-      :ensure t
-      :init
-      (yas-global-mode 1)
-      :config
-      (yas-reload-all)
-      (add-hook 'prog-mode-hook #'yas-minor-mode)
-      (define-key yas-minor-mode-map [(tab)] nil)
-      (define-key yas-minor-mode-map (kbd "TAB") nil)
-      (define-key yas-minor-mode-map (kbd "<tab>") nil)
-      (define-key yas-minor-mode-map [C-tab] 'yas-expand))
-    (use-package yasnippet-snippets
-      :ensure t)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package yasnippet
+    :ensure t
+    :init
+    (yas-global-mode 1)
+    :config
+    (yas-reload-all)
+    (add-hook 'prog-mode-hook #'yas-minor-mode)
+    (define-key yas-minor-mode-map [(tab)] nil)
+    (define-key yas-minor-mode-map (kbd "TAB") nil)
+    (define-key yas-minor-mode-map (kbd "<tab>") nil)
+    (define-key yas-minor-mode-map [C-tab] 'yas-expand))
+  (use-package yasnippet-snippets
+    :ensure t)
+#+END_SRC
 
 * emacs-lisp
-  #+BEGIN_SRC emacs-lisp
-    (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
-  #+END_SRC
-
-* font
-  #+BEGIN_SRC emacs-lisp
-    ;; Setting English Font
-    (set-face-attribute 'default nil :font "Hack 12")
-
-    ;; Chinese Font
-    (defun my-font-setting () 
-      (dolist (charset '(kana han symbol cjk-misc bopomofo))
-        (set-fontset-font (frame-parameter nil 'font)
-                  charset (font-spec :family "WenQuanyi Micro Hei"
-                                     :size 24))))
-    (add-to-list 'after-make-frame-functions
-                 (lambda (new-frame)
-                 (select-frame new-frame)
-                 (if window-system
-                   (my-font-setting))))
-    (if window-system
-      (my-font-setting))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
+#+END_SRC
 
 * LaTeX
 使用 AuCTex 插件
 #+BEGIN_SRC emacs-lisp
-  (use-package auctex
+ (use-package auctex
     :defer t
     :ensure auctex
     :init
