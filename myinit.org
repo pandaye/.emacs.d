@@ -19,20 +19,12 @@
     :config
     (powerline-default-theme))
 
-  (use-package nlinum
-    :ensure t
-    :config
-    (setq nlinum-delay t) ;; for smooth scrolling
-    (setq nlinum-highlight-current-line t)
-    :custom-face
-    (nlinum-current-line ((t (:inherit linum :weight bold ))))) ;:inverse-video t)))))
-
   (use-package hlinum
     :ensure t
     :config
     (hlinum-activate))
 
-  (add-hook 'prog-mode-hook 'nlinum-mode)
+  (add-hook 'prog-mode-hook #'display-line-numbers-mode)
 
   (global-set-key (kbd "<f10>") 'loop-alpha)
   ;当前窗口和非当前窗口时透明度
@@ -45,18 +37,13 @@
          (add-to-list 'default-frame-alist (cons 'alpha (list a ab))))
        (car h) (car (cdr h)))
       (setq alpha-list (cdr (append alpha-list (list h))))))
-  ;启动窗口时时自动开启窗口半透明效果
+  ;;启动窗口时时自动开启窗口半透明效果
   ;; (loop-alpha)
+  ;;启动时窗口大小
+  (add-to-list 'default-frame-alist '(width . 140))
+  (add-to-list 'default-frame-alist '(length . 100))
 #+END_SRC
     
-* Evil
-使用 vim 键盘快捷键映射
-#+BEGIN_SRC emacs-lisp
-  (use-package evil
-    :ensure t
-    :init
-    (evil-mode 1))
-#+END_SRC
 * theme
 主题配置，使用 doom 主题
 #+BEGIN_SRC emacs-lisp 
@@ -67,7 +54,7 @@
           doom-themes-enable-italic t)
     (load-theme 'doom-vibrant t)
     (doom-themes-visual-bell-config)
-    (doom-themes-neotree-config)
+    ;(doom-themes-neotree-config)
     (doom-themes-org-config))
 #+END_SRC
 
@@ -77,19 +64,9 @@
   (set-face-attribute 'default nil :font "Hack 12")
   
   ;; Chinese Font
-  (defun my-font-setting () 
-    (dolist (charset '(kana han symbol cjk-misc bopomofo))
-      (set-fontset-font (frame-parameter nil 'font)
-                charset (font-spec :family "WenQuanYi Micro Hei"))))
-                                   ;:size 24))))
-  (add-to-list 'after-make-frame-functions
-               (lambda (new-frame)
-               (select-frame new-frame)
-               (if window-system
-                 (my-font-setting))))
-  (if window-system
-    (my-font-setting))
-  
+  (dolist (charset '(kana han symbol cjk-misc bopomofo))
+    (set-fontset-font (frame-parameter nil 'font)
+                      charset (font-spec :family "WenQuanYi Micro Hei")))
   (setq face-font-rescale-alist '(("WenQuanYi Micro Hei" . 1.2)))
 #+END_SRC
 
@@ -129,12 +106,6 @@ rainbow-delimiters
 * Org-mode
 通用设置
 #+BEGIN_SRC emacs-lisp
-  (use-package org-bullets
-    :ensure t
-    :config
-    (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
-    (add-hook 'org-mode-hook (lambda () (setq indent-tabs-mode nil))))
-
   (defun turn-on-org-show-all-inline-images ()
     (org-display-inline-images t t))
 
@@ -164,65 +135,67 @@ rainbow-delimiters
 
 配置 GTD
 #+BEGIN_SRC emacs-lisp
-    (setq org-use-fast-todo-selection t)
-    (setq org-todo-keywords
-          (quote ((sequence "TODO(t!)" "NEXT(n)" "|" "DONE(d@/!)")
-                  (sequence "PROJECT(p)" "|" "DONE(d!/!)" "CANCELLED(c@/!)")
-                  (sequence "WAITING(w@/!)" "HOLD(h)" "|" "CANCELLED(c@/!)")
-                  (sequence "SOMEDAY(s)"))))
+  (setq org-use-fast-todo-selection t)
+  (setq org-todo-keywords
+        (quote ((sequence "TODO(t!)" "NEXT(n)" "|" "DONE(d@/!)")
+                (sequence "PROJECT(p)" "|" "DONE(d!/!)" "CANCELLED(c@/!)")
+                (sequence "WAITING(w@/!)" "HOLD(h)" "|" "CANCELLED(c@/!)")
+                (sequence "SOMEDAY(s)"))))
 
-    ;; Easy basic searches. Get a quick view of nextactions, etc
-    (setq org-agenda-custom-commands
-          '(("w" todo "WAITING" nil)
-            ("n" todo "NEXT" nil)
-            ("d" "Agenda + Next Actions" ((agenda) (todo "NEXT")))))
+  ;; Easy basic searches. Get a quick view of nextactions, etc
+  (setq org-agenda-custom-commands
+        '(("w" todo "WAITING" nil)
+          ("n" todo "NEXT" nil)
+          ("d" "Agenda + Next Actions" ((agenda) (todo "NEXT")))))
 
-    ;; I use org's tag feature to implement contexts.
-    (setq org-tag-alist '(("办公" . ?s) ;; company studio office
-                          ("工程项目" . ?p) ;; difference task at company
-                          ("家里" . ?h) ;; home
-                          ("邮件" . ?m) ;; mail somebody
-                          ("乱谈" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
-                          ("计算机" . ?c)
-                          ("阅读" . ?r)
-                          ("玄学" . ?x))) ;; reading
+  ;; I use org's tag feature to implement contexts.
+  (setq org-tag-alist '(("@STUD" . ?s) ;; company studio office
+                        ("@PROT" . ?p) ;; difference task at company
+                        ("@LIFE" . ?h) ;; home
+                        ("@MAIL" . ?m) ;; mail somebody
+                        ("@THIK" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
+                        ("@NOTE" . ?x))) ;; reading
 
-    (setq org-archive-location "%s_archive::* Archive")
 
-    (setq gtd-path (expand-file-name "~/.org-gtd"))
-    (defvar org-gtd-file
-      (concat gtd-path "/inbox.org"))
-    (defun gtd ()
-      "Open the GTD file."
-      (interactive)
-      (find-file org-gtd-file))
+  (setq gtd-path (expand-file-name "~/.org-gtd"))
+  (defvar org-gtd-file
+    (concat gtd-path "/inbox.org"))
+  (defun gtd ()
+    "Open the GTD file."
+    (interactive)
+    (find-file org-gtd-file))
 
-    (defvar org-gtd-other-files)
-    (setf org-gtd-other-files
-          (list (concat gtd-path "/project.org")
-                (concat gtd-path "/note.org")
-                (concat gtd-path "/task.org")
-                (concat gtd-path "/trash.org")
-                (concat gtd-path "/finished.org")))
-    (setf org-agenda-files (cons org-gtd-file org-gtd-other-files))
-    (setq org-agenda-prefix-format "  %-17:c%?-12t% s")
-    (setq org-refile-use-outline-path 'file)
-    (setq org-refile-targets '((org-agenda-files :level . 1)))
-    (setq org-reverse-note-order t)  ;; note at beginning of file by default.
-    (setq org-default-notes-file (concat gtd-path "/inbox.org"))
-    (setq org-capture-templates
-          '(("t" "Todo" entry (file+headline (concat gtd-path "/task.org") "Tasks")
-             "* TODO %?\n  %i\n")
-            ("i" "Idea" entry (file+headline (concat gtd-path "/note.org") "Idea")
-             "** %?\n %T\n")
-            ("j" "Journal" entry (file+datetree (concat gtd-path "/journal.org"))
-             "* %?\nEntered on %U\n  %i\n")))
+  (defvar org-gtd-other-files)
+  (setf org-gtd-other-files
+        (list (concat gtd-path "/project.org")
+              (concat gtd-path "/note.org")
+              (concat gtd-path "/task.org")
+              (concat gtd-path "/trash.org")
+              (concat gtd-path "/finished.org")))
+  (setf org-agenda-files (cons org-gtd-file org-gtd-other-files))
+  (setq org-agenda-prefix-format "  %-17:c%?-12t% s")
+  (setq org-refile-use-outline-path 'file)
+  (setq org-refile-targets '((org-agenda-files :level . 1)))
+  (setq org-reverse-note-order t)  ;; note at beginning of file by default.
+  (setq org-default-notes-file (concat gtd-path "/inbox.org"))
+  (setq todofile (concat gtd-path "/task.org"))
+  (setq notefile (concat gtd-path "/note.org"))
+  (setq journalfile (concat gtd-path "/journal.org"))
+  (setq orgarchive (concat gtd-path "/archive.org"))
+  (setq org-archive-location (concat orgarchive "::* Archive"))
+  (setq org-capture-templates
+        '(("t" "Todo" entry (file+headline todofile)
+           "* TODO %?\n  %i\n")
+          ("i" "Idea" entry (file+headline notefile "Idea")
+           "** %?\n %T\n")
+          ("j" "Journal" entry (file+datetree journalfile)
+           "* %?\nEntered on %U\n  %i\n")))
 
-    ;; key bingings
-    (global-set-key "\C-cl" 'org-store-link)
-    (global-set-key "\C-ca" 'org-agenda)
-    (global-set-key "\C-cg" 'gtd)
-    (global-set-key "\C-cc" 'org-capture)
+  ;; key bingings
+  (global-set-key "\C-cl" 'org-store-link)
+  (global-set-key "\C-ca" 'org-agenda)
+  (global-set-key "\C-cg" 'gtd)
+  (global-set-key "\C-cc" 'org-capture)
 #+END_SRC
 
 * Project Tree
@@ -272,7 +245,7 @@ window
   (require 'helm)
   (require 'helm-config)      ;?
   (require 'helm-eshell)      ;?
-  (require 'helm-files)           ;?
+  (require 'helm-files)       ;?
   (require 'helm-grep)
 
   ; do not display invisible candidates
@@ -294,6 +267,11 @@ window
     :bind (("C-s" . helm-swoop)
            ("C-r" . helm-swoop)))
 
+  (use-package helm-xref
+    :ensure t
+    :config
+    (setq xref-show-xrefs-function 'helm-xref-show-xrefs))
+
   (helm-mode 1)
 #+END_SRC
 
@@ -308,6 +286,9 @@ window
     :config
     (setq company-minimum-prefix-length 3)
     (setq company-tooltip-align-annotations t)
+    (setq company-show-numbers t)
+    (setq company-tooltip-limit 10)
+    (setq company-dabbrev-downcase nil)
     (setq company-transformers '(company-sort-by-occurrence))
     (setq company-idle-delay 0.1)
     :bind
@@ -319,10 +300,17 @@ window
 * lsp
 Python Language Server 补全有点慢，暂且弃用
 #+BEGIN_SRC emacs-lisp
-  ;(require 'lsp-mode)
-  ;(require 'lsp-clients)
-  ;(add-hook 'python-mode-hook #'lsp)
+  (use-package lsp-mode
+    :ensure t
+    :commands lsp)
+  (use-package company-lsp
+    :ensure t
+    :commands company-lsp)
+  (use-package lsp-ui
+    :ensure t
+    :commands lsp-ui)
 #+END_SRC
+
 * Python
 #+BEGIN_SRC emacs-lisp
   (use-package elpy
@@ -331,14 +319,30 @@ Python Language Server 补全有点慢，暂且弃用
     (setq elpy-rpc-python-command "python3"))
   (elpy-enable)
 #+END_SRC
+
+* C&C++
+#+BEGIN_SRC emacs-lisp
+  (setq c-default-style "linux"
+        c-basic-offset 4)
+
+  (add-hook 'c-mode-common-hook
+            '(lambda () (setq indent-tabs-mode t)))
+
+  (use-package ccls
+    :ensure t
+    :hook ((c-mode c++-mode objc-mode) .
+           (lambda () (require 'ccls) (lsp))))
+#+END_SRC
+
 * flycheck
 代码检查
 #+BEGIN_SRC emacs-lisp
-  (use-package flycheck
-    :ensure t
-    :config
-    (add-hook 'prog-mode-hook 'flycheck-mode))
+  ;(use-package flycheck
+  ;  :ensure t
+  ;  :config
+  ;  (add-hook 'prog-mode-hook 'flycheck-mode))
 #+END_SRC
+
 * scheme
   #+BEGIN_SRC emacs-lisp
     (require 'myscheme)
@@ -410,35 +414,41 @@ PlantUML mode
 * LaTeX
 使用 AuCTex 插件
 #+BEGIN_SRC emacs-lisp
- (use-package auctex
-    :defer t
-    :ensure auctex
-    :init
-    (setq TeX-auto-save t)
-    (setq TeX-parse-self t)
-    (setq-default TeX-master nil)
-    (add-hook 'LaTeX-mode-hook
-              (lambda ()
-                (turn-on-auto-fill)
-                (LaTeX-math-mode 1)
-                (setq TeX-show-complilation nil)
-                (setq TeX-clean-confirm nil)
-                (setq TeX-save-query nil)
-                (setq TeX-view-program-list '(("Evince" "evince %o")))
-                (setq TeX-view-program-selection
-                      '((output-pdf "Evince")))
-                (setq TeX-engine 'xetex)
-                (TeX-global-PDF-mode t)
-                (add-to-list 'TeX-command-list
-                              '("XeLaTeX" "%'xelatex%(mode)%' %t"
-                                           TeX-run-TeX nil t))
-                (setq TeX-command-default "XeLaTeX"))
-    )
-  )
+  (use-package auctex
+     :defer t
+     :ensure auctex
+     :init
+     (setq TeX-auto-save t)
+     (setq TeX-parse-self t)
+     (setq-default TeX-master nil)
+     (add-hook 'LaTeX-mode-hook
+               (lambda ()
+                 (turn-on-auto-fill)
+                 (LaTeX-math-mode 1)
+                 (setq TeX-show-complilation nil)
+                 (setq TeX-clean-confirm nil)
+                 (setq TeX-save-query nil)
+                 (setq TeX-view-program-list '(("Evince" "evince %o")))
+                 (setq TeX-view-program-selection
+                       '((output-pdf "Evince")))
+                 (setq TeX-engine 'xetex)
+                 (TeX-global-PDF-mode t)
+                 (add-to-list 'TeX-command-list
+                               '("XeLaTeX" "%'xelatex%(mode)%' %t"
+                                            TeX-run-TeX nil t))
+                 (setq TeX-command-default "XeLaTeX"))
+     )
+     :config
+     (setq TeX-fold-env-spec-list
+           (quote ((”[figure]” (”figure”))
+                   (”[table]” (”table”))
+                   (”[itemize]”(”itemize”))
+                   (”[overpic]”(”overpic”)))))
+   )
 #+END_SRC
 
 * Git
-使用 magit
+使用 Magit
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :ensure t
@@ -447,3 +457,12 @@ PlantUML mode
     (global-set-key (kbd "C-x M-g") 'magit-dispatch-popup))
 #+END_SRC
 
+* Mail
+使用 WanderLust 邮件客户端
+#+BEGIN_SRC emacs-lisp
+  ;; wanderlust
+  (autoload 'wl "wl" "Wanderlust" t)
+  (autoload 'wl-other-frame "wl" "Wanderlust on new frame." t)
+  (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+  (require 'wl-spam)
+#+END_SRC

@@ -1,4 +1,3 @@
-
 (setq inhibit-startup-message t)
 (setq column-number-mode t)
 (tool-bar-mode -1)
@@ -15,20 +14,12 @@
   :config
   (powerline-default-theme))
 
-(use-package nlinum
-  :ensure t
-  :config
-  (setq nlinum-delay t) ;; for smooth scrolling
-  (setq nlinum-highlight-current-line t)
-  :custom-face
-  (nlinum-current-line ((t (:inherit linum :weight bold ))))) ;:inverse-video t)))))
-
 (use-package hlinum
   :ensure t
   :config
   (hlinum-activate))
 
-(add-hook 'prog-mode-hook 'nlinum-mode)
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
 
 (global-set-key (kbd "<f10>") 'loop-alpha)
 ;当前窗口和非当前窗口时透明度
@@ -41,13 +32,11 @@
        (add-to-list 'default-frame-alist (cons 'alpha (list a ab))))
      (car h) (car (cdr h)))
     (setq alpha-list (cdr (append alpha-list (list h))))))
-;启动窗口时时自动开启窗口半透明效果
+;;启动窗口时时自动开启窗口半透明效果
 ;; (loop-alpha)
-
-(use-package evil
-  :ensure t
-  :init
-  (evil-mode 1))
+;;启动时窗口大小
+(add-to-list 'default-frame-alist '(width . 140))
+(add-to-list 'default-frame-alist '(length . 100))
 
 (use-package doom-themes
   :ensure t
@@ -56,26 +45,16 @@
         doom-themes-enable-italic t)
   (load-theme 'doom-vibrant t)
   (doom-themes-visual-bell-config)
-  (doom-themes-neotree-config)
+  ;(doom-themes-neotree-config)
   (doom-themes-org-config))
 
 ;; Setting English Font
 (set-face-attribute 'default nil :font "Hack 12")
 
 ;; Chinese Font
-(defun my-font-setting () 
-  (dolist (charset '(kana han symbol cjk-misc bopomofo))
-    (set-fontset-font (frame-parameter nil 'font)
-              charset (font-spec :family "WenQuanYi Micro Hei"))))
-                                 ;:size 24))))
-(add-to-list 'after-make-frame-functions
-             (lambda (new-frame)
-             (select-frame new-frame)
-             (if window-system
-               (my-font-setting))))
-(if window-system
-  (my-font-setting))
-
+(dolist (charset '(kana han symbol cjk-misc bopomofo))
+  (set-fontset-font (frame-parameter nil 'font)
+                    charset (font-spec :family "WenQuanYi Micro Hei")))
 (setq face-font-rescale-alist '(("WenQuanYi Micro Hei" . 1.2)))
 
 (use-package try
@@ -96,12 +75,6 @@
   :init
   (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
   (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode))
-
-(use-package org-bullets
-  :ensure t
-  :config
-  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
-  (add-hook 'org-mode-hook (lambda () (setq indent-tabs-mode nil))))
 
 (defun turn-on-org-show-all-inline-images ()
   (org-display-inline-images t t))
@@ -143,16 +116,13 @@
         ("d" "Agenda + Next Actions" ((agenda) (todo "NEXT")))))
 
 ;; I use org's tag feature to implement contexts.
-(setq org-tag-alist '(("办公" . ?s) ;; company studio office
-                      ("工程项目" . ?p) ;; difference task at company
-                      ("家里" . ?h) ;; home
-                      ("邮件" . ?m) ;; mail somebody
-                      ("乱谈" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
-                      ("计算机" . ?c)
-                      ("阅读" . ?r)
-                      ("玄学" . ?x))) ;; reading
+(setq org-tag-alist '(("@STUD" . ?s) ;; company studio office
+                      ("@PROT" . ?p) ;; difference task at company
+                      ("@LIFE" . ?h) ;; home
+                      ("@MAIL" . ?m) ;; mail somebody
+                      ("@THIK" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
+                      ("@NOTE" . ?x))) ;; reading
 
-(setq org-archive-location "%s_archive::* Archive")
 
 (setq gtd-path (expand-file-name "~/.org-gtd"))
 (defvar org-gtd-file
@@ -175,12 +145,17 @@
 (setq org-refile-targets '((org-agenda-files :level . 1)))
 (setq org-reverse-note-order t)  ;; note at beginning of file by default.
 (setq org-default-notes-file (concat gtd-path "/inbox.org"))
+(setq todofile (concat gtd-path "/task.org"))
+(setq notefile (concat gtd-path "/note.org"))
+(setq journalfile (concat gtd-path "/journal.org"))
+(setq orgarchive (concat gtd-path "/archive.org"))
+(setq org-archive-location (concat orgarchive "::* Archive"))
 (setq org-capture-templates
-      '(("t" "Todo" entry (file+headline (concat gtd-path "/task.org") "Tasks")
+      '(("t" "Todo" entry (file+headline todofile)
          "* TODO %?\n  %i\n")
-        ("i" "Idea" entry (file+headline (concat gtd-path "/note.org") "Idea")
+        ("i" "Idea" entry (file+headline notefile "Idea")
          "** %?\n %T\n")
-        ("j" "Journal" entry (file+datetree (concat gtd-path "/journal.org"))
+        ("j" "Journal" entry (file+datetree journalfile)
          "* %?\nEntered on %U\n  %i\n")))
 
 ;; key bingings
@@ -223,7 +198,7 @@
 (require 'helm)
 (require 'helm-config)      ;?
 (require 'helm-eshell)      ;?
-(require 'helm-files)           ;?
+(require 'helm-files)       ;?
 (require 'helm-grep)
 
 ; do not display invisible candidates
@@ -245,6 +220,11 @@
   :bind (("C-s" . helm-swoop)
          ("C-r" . helm-swoop)))
 
+(use-package helm-xref
+  :ensure t
+  :config
+  (setq xref-show-xrefs-function 'helm-xref-show-xrefs))
+
 (helm-mode 1)
 
 (use-package company
@@ -255,14 +235,23 @@
   :config
   (setq company-minimum-prefix-length 3)
   (setq company-tooltip-align-annotations t)
+  (setq company-show-numbers t)
+  (setq company-tooltip-limit 10)
+  (setq company-dabbrev-downcase nil)
   (setq company-transformers '(company-sort-by-occurrence))
   (setq company-idle-delay 0.1)
   :bind
   (("M-/" . company-complete)))
 
-;(require 'lsp-mode)
-;(require 'lsp-clients)
-;(add-hook 'python-mode-hook #'lsp)
+(use-package lsp-mode
+  :ensure t
+  :commands lsp)
+(use-package company-lsp
+  :ensure t
+  :commands company-lsp)
+(use-package lsp-ui
+  :ensure t
+  :commands lsp-ui)
 
 (use-package elpy
   :ensure t
@@ -270,10 +259,21 @@
   (setq elpy-rpc-python-command "python3"))
 (elpy-enable)
 
-(use-package flycheck
+(setq c-default-style "linux"
+      c-basic-offset 4)
+
+(add-hook 'c-mode-common-hook
+          '(lambda () (setq indent-tabs-mode t)))
+
+(use-package ccls
   :ensure t
-  :config
-  (add-hook 'prog-mode-hook 'flycheck-mode))
+  :hook ((c-mode c++-mode objc-mode) .
+         (lambda () (require 'ccls) (lsp))))
+
+;(use-package flycheck
+;  :ensure t
+;  :config
+;  (add-hook 'prog-mode-hook 'flycheck-mode))
 
 (require 'myscheme)
 
@@ -348,6 +348,12 @@
                                           TeX-run-TeX nil t))
                (setq TeX-command-default "XeLaTeX"))
    )
+   :config
+   (setq TeX-fold-env-spec-list
+         (quote ((”[figure]” (”figure”))
+                 (”[table]” (”table”))
+                 (”[itemize]”(”itemize”))
+                 (”[overpic]”(”overpic”)))))
  )
 
 (use-package magit
@@ -355,3 +361,9 @@
   :init
   (global-set-key (kbd "C-x g") 'magit-status)
   (global-set-key (kbd "C-x M-g") 'magit-dispatch-popup))
+
+;; wanderlust
+(autoload 'wl "wl" "Wanderlust" t)
+(autoload 'wl-other-frame "wl" "Wanderlust on new frame." t)
+(autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+(require 'wl-spam)
