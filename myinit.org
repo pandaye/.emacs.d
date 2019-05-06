@@ -1,3 +1,4 @@
+
 #+STARTUP: overview
 #+OPTION: toc:nil
 * interface tweaks
@@ -100,7 +101,9 @@ rainbow-delimiters
     :ensure t
     :init
     (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
-    (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode))
+    (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
+    (add-hook 'racket-mode-hook 'rainbow-delimiters-mode)
+  )
 #+END_SRC
 
 * Org-mode
@@ -154,7 +157,8 @@ rainbow-delimiters
                         ("@LIFE" . ?h) ;; home
                         ("@MAIL" . ?m) ;; mail somebody
                         ("@THIK" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
-                        ("@NOTE" . ?x))) ;; reading
+                        ("@NOTE" . ?x)
+                        ("@QUAT" . ?q))) ;; quastion
 
 
   (setq gtd-path (expand-file-name "~/.org-gtd"))
@@ -294,8 +298,6 @@ window
     :bind
     (("M-/" . company-complete)))
 #+END_SRC
-需要说明的是，如果使用 elpy 作为 Python 开发环境，那么 ~company-idle-delay~ 设置在elpy中无效，如要取消，可以修改 ~elpy.el~
-并清除 ~elpy.elc~ 
  
 * lsp
 Python Language Server 补全有点慢，暂且弃用
@@ -308,7 +310,8 @@ Python Language Server 补全有点慢，暂且弃用
     :commands company-lsp)
   (use-package lsp-ui
     :ensure t
-    :commands lsp-ui)
+    :commands lsp-ui-mode
+    :hook lsp-mode)
 #+END_SRC
 
 * Python
@@ -328,24 +331,32 @@ Python Language Server 补全有点慢，暂且弃用
   (add-hook 'c-mode-common-hook
             '(lambda () (setq indent-tabs-mode t)))
 
-  (use-package ccls
-    :ensure t
-    :hook ((c-mode c++-mode objc-mode) .
-           (lambda () (require 'ccls) (lsp))))
+  ;; (use-package ccls
+  ;;   :ensure t
+  ;;   :hook ((c-mode c++-mode objc-mode) .
+  ;;          (lambda () (require 'ccls) (lsp))))
 #+END_SRC
 
 * flycheck
 代码检查
 #+BEGIN_SRC emacs-lisp
-  ;(use-package flycheck
-  ;  :ensure t
-  ;  :config
-  ;  (add-hook 'prog-mode-hook 'flycheck-mode))
+  ;; (use-package flycheck
+  ;;   :ensure t
+  ;;   :config
+  ;;   (add-hook 'prog-mode-hook 'flycheck-mode))
 #+END_SRC
 
 * scheme
   #+BEGIN_SRC emacs-lisp
     (require 'myscheme)
+    (use-package racket-mode
+      :ensure t
+      :config
+      (setq racket-racket-program "racket")
+      (setq racket-raco-program "raco")
+      :bind
+      (:map racket-mode-map
+            ("C-x C-j" . racket-run)))
   #+END_SRC
 
 * graphviz
@@ -424,13 +435,14 @@ PlantUML mode
      (add-hook 'LaTeX-mode-hook
                (lambda ()
                  (turn-on-auto-fill)
+                 (turn-on-reftex)
                  (LaTeX-math-mode 1)
                  (setq TeX-show-complilation nil)
                  (setq TeX-clean-confirm nil)
                  (setq TeX-save-query nil)
-                 (setq TeX-view-program-list '(("Evince" "evince %o")))
+                 (setq TeX-view-program-list '(("Okular" "okular %o")))
                  (setq TeX-view-program-selection
-                       '((output-pdf "Evince")))
+                       '((output-pdf "Okular")))
                  (setq TeX-engine 'xetex)
                  (TeX-global-PDF-mode t)
                  (add-to-list 'TeX-command-list
@@ -440,10 +452,10 @@ PlantUML mode
      )
      :config
      (setq TeX-fold-env-spec-list
-           (quote ((”[figure]” (”figure”))
-                   (”[table]” (”table”))
-                   (”[itemize]”(”itemize”))
-                   (”[overpic]”(”overpic”)))))
+           (quote (("[figure]" ("figure"))
+                   ("[table]" ("table"))
+                   ("[itemize]" ("itemize"))
+                   ("[overpic]" ("overpic")))))
    )
 #+END_SRC
 

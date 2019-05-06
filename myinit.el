@@ -74,7 +74,9 @@
   :ensure t
   :init
   (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode))
+  (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'racket-mode-hook 'rainbow-delimiters-mode)
+)
 
 (defun turn-on-org-show-all-inline-images ()
   (org-display-inline-images t t))
@@ -121,7 +123,8 @@
                       ("@LIFE" . ?h) ;; home
                       ("@MAIL" . ?m) ;; mail somebody
                       ("@THIK" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
-                      ("@NOTE" . ?x))) ;; reading
+                      ("@NOTE" . ?x)
+                      ("@QUAT" . ?q))) ;; quastion
 
 
 (setq gtd-path (expand-file-name "~/.org-gtd"))
@@ -276,6 +279,14 @@
 ;  (add-hook 'prog-mode-hook 'flycheck-mode))
 
 (require 'myscheme)
+(use-package racket-mode
+  :ensure t
+  :config
+  (setq racket-racket-program "racket")
+  (setq racket-raco-program "raco")
+  :bind
+  (:map racket-mode-map
+        ("C-x C-j" . racket-run)))
 
 (use-package graphviz-dot-mode
   :ensure t
@@ -334,13 +345,14 @@
    (add-hook 'LaTeX-mode-hook
              (lambda ()
                (turn-on-auto-fill)
+               (turn-on-reftex)
                (LaTeX-math-mode 1)
                (setq TeX-show-complilation nil)
                (setq TeX-clean-confirm nil)
                (setq TeX-save-query nil)
-               (setq TeX-view-program-list '(("Evince" "evince %o")))
+               (setq TeX-view-program-list '(("Okular" "okular %o")))
                (setq TeX-view-program-selection
-                     '((output-pdf "Evince")))
+                     '((output-pdf "Okular")))
                (setq TeX-engine 'xetex)
                (TeX-global-PDF-mode t)
                (add-to-list 'TeX-command-list
@@ -350,10 +362,10 @@
    )
    :config
    (setq TeX-fold-env-spec-list
-         (quote ((”[figure]” (”figure”))
-                 (”[table]” (”table”))
-                 (”[itemize]”(”itemize”))
-                 (”[overpic]”(”overpic”)))))
+         (quote (("[figure]" ("figure"))
+                 ("[table]" ("table"))
+                 ("[itemize]" ("itemize"))
+                 ("[overpic]" ("overpic")))))
  )
 
 (use-package magit
