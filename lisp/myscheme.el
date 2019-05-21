@@ -35,12 +35,14 @@
 
 (defun scheme-send-last-sexp-split-window ()
   (interactive)
+  (message "sexp sended!")
   (scheme-split-window)
   (scheme-send-last-sexp))
 
 
 (defun scheme-send-definition-split-window ()
   (interactive)
+  (message "definition sended")
   (scheme-split-window)
   (scheme-send-definition))
 

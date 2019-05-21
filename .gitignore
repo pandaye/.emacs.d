@@ -14,3 +14,5 @@ irony/
 url/
 games/
 cnfonts/
+.lsp-session*
+transient/

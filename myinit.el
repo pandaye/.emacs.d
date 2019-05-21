@@ -248,35 +248,26 @@
 
 (use-package lsp-mode
   :ensure t
-  :commands lsp)
+  :commands lsp
+  :hook
+  ((python-mode . lsp-mode)
+   (c-or-c++-mode . lsp-mode)))
 (use-package company-lsp
   :ensure t
   :commands company-lsp)
 (use-package lsp-ui
   :ensure t
-  :commands lsp-ui)
-
-(use-package elpy
-  :ensure t
-  :config
-  (setq elpy-rpc-python-command "python3"))
-(elpy-enable)
+  :commands lsp-ui-mode
+  :hook
+  ((lsp-mode . lsp-ui-mode))
+  :bind
+  ("s-i" . lsp-ui-imenu))
 
 (setq c-default-style "linux"
       c-basic-offset 4)
 
 (add-hook 'c-mode-common-hook
           '(lambda () (setq indent-tabs-mode t)))
-
-(use-package ccls
-  :ensure t
-  :hook ((c-mode c++-mode objc-mode) .
-         (lambda () (require 'ccls) (lsp))))
-
-;(use-package flycheck
-;  :ensure t
-;  :config
-;  (add-hook 'prog-mode-hook 'flycheck-mode))
 
 (require 'myscheme)
 (use-package racket-mode
@@ -339,6 +330,7 @@
    :defer t
    :ensure auctex
    :init
+   (require 'advance-words-count)
    (setq TeX-auto-save t)
    (setq TeX-parse-self t)
    (setq-default TeX-master nil)
@@ -375,6 +367,8 @@
   (global-set-key (kbd "C-x M-g") 'magit-dispatch-popup))
 
 ;; wanderlust
+(unless (package-installed-p 'wanderlust)
+  (package-install 'wanderlust))
 (autoload 'wl "wl" "Wanderlust" t)
 (autoload 'wl-other-frame "wl" "Wanderlust on new frame." t)
 (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)

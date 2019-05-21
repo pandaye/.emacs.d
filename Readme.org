@@ -12,9 +12,21 @@
 git clone https://github.com/pandaye/.emacs.d.git
 #+END_SRC
 
+然后启动 Emacs，第一次启动会自动安装所有包，若是出现错误，多半是字体没装，默认字体是 Hack。其他情况关掉重开应该就好了。
+
 ** 其他的一些说明
 
-正确启用 C/C++ 以及 Python 语言的的补全等功能需要外部环境支持。C/C++ 语言的 LSP 使用 ccls，需要手动安装，并使其可以直接调用。
+C/C++ 以及 Python 的补全均使用 lsp。
+
+安装 python language server (pyls)：
+#+BEGIN_SRC shell
+pip install 'python-language-server[all]'
+#+END_SRC
+
+C/C++ 使用 clangd，在 openSUSE 下可以安转 clang 与 llvm
+#+BEGIN_SRC shell
+sudo zypper install clang llvm
+#+END_SRC
 
 具体的配置参考 ~myinit.org~
 

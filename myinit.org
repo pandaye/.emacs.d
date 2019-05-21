@@ -1,4 +1,3 @@
-
 #+STARTUP: overview
 #+OPTION: toc:nil
 * interface tweaks
@@ -300,30 +299,30 @@ window
 #+END_SRC
  
 * lsp
-Python Language Server 补全有点慢，暂且弃用
 #+BEGIN_SRC emacs-lisp
   (use-package lsp-mode
     :ensure t
-    :commands lsp)
+    :commands lsp
+    :hook
+    ((python-mode . lsp-mode)
+     (c-or-c++-mode . lsp-mode)))
   (use-package company-lsp
     :ensure t
     :commands company-lsp)
   (use-package lsp-ui
     :ensure t
     :commands lsp-ui-mode
-    :hook lsp-mode)
+    :hook
+    ((lsp-mode . lsp-ui-mode))
+    :bind
+    ("s-i" . lsp-ui-imenu))
 #+END_SRC
 
 * Python
-#+BEGIN_SRC emacs-lisp
-  (use-package elpy
-    :ensure t
-    :config
-    (setq elpy-rpc-python-command "python3"))
-  (elpy-enable)
-#+END_SRC
+补全使用 lsp 内置 pyls
 
 * C&C++
+补全索引使用 lsp 内置 clangd
 #+BEGIN_SRC emacs-lisp
   (setq c-default-style "linux"
         c-basic-offset 4)
@@ -331,19 +330,6 @@ Python Language Server 补全有点慢，暂且弃用
   (add-hook 'c-mode-common-hook
             '(lambda () (setq indent-tabs-mode t)))
 
-  ;; (use-package ccls
-  ;;   :ensure t
-  ;;   :hook ((c-mode c++-mode objc-mode) .
-  ;;          (lambda () (require 'ccls) (lsp))))
-#+END_SRC
-
-* flycheck
-代码检查
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package flycheck
-  ;;   :ensure t
-  ;;   :config
-  ;;   (add-hook 'prog-mode-hook 'flycheck-mode))
 #+END_SRC
 
 * scheme
@@ -429,6 +415,7 @@ PlantUML mode
      :defer t
      :ensure auctex
      :init
+     (require 'advance-words-count)
      (setq TeX-auto-save t)
      (setq TeX-parse-self t)
      (setq-default TeX-master nil)
@@ -473,6 +460,8 @@ PlantUML mode
 使用 WanderLust 邮件客户端
 #+BEGIN_SRC emacs-lisp
   ;; wanderlust
+  (unless (package-installed-p 'wanderlust)
+    (package-install 'wanderlust))
   (autoload 'wl "wl" "Wanderlust" t)
   (autoload 'wl-other-frame "wl" "Wanderlust on new frame." t)
   (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
