@@ -1,18 +1,18 @@
 #+STARTUP: showall
 
-* 简单的 Emacs 配置
+* 潘大爷的 Emacs 配置
 
-简单可用的 emacs 配置，使用 DOOM 主题，基本支持 C/C++、Python、Scheme、LaTeX
+面向编程新手的 emacs 配置，使用 DOOM 主题，基本支持 C/C++、Python、Scheme、LaTeX
 
 ** 安装
 
-先备份自己的 .emacs.d 配置，然后使用 Git 克隆仓库到本地
+先备份自己的 .emacs.d/ 或者 .emacs 配置，然后使用 Git 克隆仓库到本地
 
 #+BEGIN_SRC shell
 git clone https://github.com/pandaye/.emacs.d.git
 #+END_SRC
 
-然后启动 Emacs，第一次启动会自动安装所有包，若是出现错误，多半是字体没装，默认字体是 Hack。其他情况关掉重开应该就好了。
+启动 Emacs，第一次启动会自动安装所有包，若是出现错误，多半是字体没装，默认字体是 Hack。其他情况关掉重开应该就好了。
 
 ** 其他的一些说明
 
@@ -23,12 +23,12 @@ C/C++ 以及 Python 的补全均使用 lsp。
 pip install 'python-language-server[all]'
 #+END_SRC
 
-C/C++ 使用 clangd，在 openSUSE 下可以安转 clang 与 llvm
+C/C++ 使用 clangd，在 openSUSE 下可以安转 clang 与 llvm 以获得 clangd
 #+BEGIN_SRC shell
 sudo zypper install clang llvm
 #+END_SRC
 
-具体的配置参考 ~myinit.org~
+配置主要在 ~myinit.org~ ，很容易看懂。
 
 Have a lot fun..
 
