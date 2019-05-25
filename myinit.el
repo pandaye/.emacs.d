@@ -91,7 +91,7 @@
  'org-babel-load-languages
  '((emacs-lisp . t)
    (python . t)
-   (ipython . t)
+   (scheme . t)
    (dot . t)
    (plantuml . t)
    ))
@@ -103,6 +103,10 @@
 
 (setq org-export-with-sub-superscripts (quote {}))
 (setq org-src-fontify-natively t)
+
+(setq org-babel-python-command "python3")
+
+(setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
 
 (setq org-use-fast-todo-selection t)
 (setq org-todo-keywords
@@ -118,13 +122,13 @@
         ("d" "Agenda + Next Actions" ((agenda) (todo "NEXT")))))
 
 ;; I use org's tag feature to implement contexts.
-(setq org-tag-alist '(("@STUD" . ?s) ;; company studio office
-                      ("@PROT" . ?p) ;; difference task at company
-                      ("@LIFE" . ?h) ;; home
-                      ("@MAIL" . ?m) ;; mail somebody
-                      ("@THIK" . ?l) ;; breakfast lunchtime dinner onway etc. (rest)
-                      ("@NOTE" . ?x)
-                      ("@QUAT" . ?q))) ;; quastion
+(setq org-tag-alist '(("@Study" . ?s) ;; company studio office
+                      ("@Project" . ?p) ;; difference task at company
+                      ("@Life" . ?l) ;; home
+                      ("@Mail" . ?m) ;; mail somebody
+                      ("@Record" . ?r) ;; breakfast lunchtime dinner onway etc. (rest)
+                      ("@Note" . ?n)
+                      ("@Question" . ?q))) ;; quastion
 
 
 (setq gtd-path (expand-file-name "~/.org-gtd"))
@@ -141,7 +145,8 @@
             (concat gtd-path "/note.org")
             (concat gtd-path "/task.org")
             (concat gtd-path "/trash.org")
-            (concat gtd-path "/finished.org")))
+            (concat gtd-path "/finished.org")
+            (concat gtd-path "/record.org")))
 (setf org-agenda-files (cons org-gtd-file org-gtd-other-files))
 (setq org-agenda-prefix-format "  %-17:c%?-12t% s")
 (setq org-refile-use-outline-path 'file)
@@ -154,12 +159,14 @@
 (setq orgarchive (concat gtd-path "/archive.org"))
 (setq org-archive-location (concat orgarchive "::* Archive"))
 (setq org-capture-templates
-      '(("t" "Todo" entry (file+headline todofile)
-         "* TODO %?\n  %i\n")
+      '(("t" "Todo" entry (file todofile)
+         "* TODO %?\nSCHEDULED: %t\n")
         ("i" "Idea" entry (file+headline notefile "Idea")
          "** %?\n %T\n")
         ("j" "Journal" entry (file+datetree journalfile)
-         "* %?\nEntered on %U\n  %i\n")))
+         "* %?\nEntered on %U\n  %i\n")
+        ("w" "Web" entry (file+headline "" "Web")
+         "** %U %^{Title}\n%x")))
 
 ;; key bingings
 (global-set-key "\C-cl" 'org-store-link)
@@ -309,6 +316,9 @@
 
 (use-package ox-gfm
   :ensure ox-gfm)
+
+(use-package yaml-mode
+  :ensure t)
 
 (use-package yasnippet
   :ensure t
