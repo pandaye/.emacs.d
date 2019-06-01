@@ -43,7 +43,7 @@
   :init
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t)
-  (load-theme 'doom-vibrant t)
+  (load-theme 'doom-one-light t)
   (doom-themes-visual-bell-config)
   ;(doom-themes-neotree-config)
   (doom-themes-org-config))
@@ -106,7 +106,7 @@
 
 (setq org-babel-python-command "python3")
 
-(setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
+(setq org-format-latex-options (plist-put org-format-latex-options :scale 1.7))
 
 (setq org-use-fast-todo-selection t)
 (setq org-todo-keywords

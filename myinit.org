@@ -52,7 +52,7 @@
     :init
     (setq doom-themes-enable-bold t
           doom-themes-enable-italic t)
-    (load-theme 'doom-vibrant t)
+    (load-theme 'doom-one-light t)
     (doom-themes-visual-bell-config)
     ;(doom-themes-neotree-config)
     (doom-themes-org-config))
@@ -72,20 +72,18 @@
 
 * better use packages
 一些实用的配置
-try 
+** try 
 #+BEGIN_SRC emacs-lisp
   (use-package try
     :ensure t)  
 #+END_SRC
-
-which-key  
+** which-key  
 #+BEGIN_SRC emacs-lisp
   (use-package which-key
     :ensure t
     :config (which-key-mode))  
 #+END_SRC
-
-smoth-scrolling
+** smoth-scrolling
 #+BEGIN_SRC emacs-lisp
   (use-package smooth-scrolling
     :ensure t
@@ -93,8 +91,7 @@ smoth-scrolling
     (setq smooth-scroll-margin 3)
     (smooth-scrolling-mode 1))
 #+END_SRC
-
-rainbow-delimiters
+** rainbow-delimiters
 #+BEGIN_SRC emacs-lisp
   (use-package rainbow-delimiters
     :ensure t
@@ -142,7 +139,7 @@ ob-python 设置 python 解释器为 python3
 
 设置内嵌 LaTeX 代码预览图缩放，默认太小
 #+BEGIN_SRC emacs-lisp
-  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.7))
 #+END_SRC
 
 配置 GTD
@@ -290,7 +287,6 @@ window
 
   (helm-mode 1)
 #+END_SRC
-
 * company
 通用补全插件
 #+BEGIN_SRC emacs-lisp
