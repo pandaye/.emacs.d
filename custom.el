@@ -21,4 +21,5 @@
  '(flycheck-warning ((t (:underline "#FCCE7B"))))
  '(flymake-error ((t (:underline "#ff665c"))))
  '(flymake-warning ((t (:underline nil))))
+ '(lsp-ui-sideline-current-symbol ((t (:foreground "black" :box (:line-width -1 :color "gray") :weight ultra-bold :height 0.99))))
  '(wl-highlight-summary-displaying-face ((t (:underline nil :weight ultra-bold)))))
