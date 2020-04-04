@@ -1,6 +1,6 @@
 #+STARTUP: overview
 #+OPTION: toc:nil
-* interface tweaks
+* interface
 界面配置
 #+BEGIN_SRC emacs-lisp
   (setq inhibit-startup-message t)
@@ -9,7 +9,6 @@
   (scroll-bar-mode -1)
   (fset 'yes-or-no-p 'y-or-n-p)
   (global-hl-line-mode t)
-  ;; (global-linum-mode 1)
   (global-set-key (kbd "<f9>") 'eshell)
   (setq-default tab-width 4)
   (setq ring-bell-function 'ignore)
@@ -52,9 +51,8 @@
     :init
     (setq doom-themes-enable-bold t
           doom-themes-enable-italic t)
-    (load-theme 'doom-one-light t)
+    (load-theme 'doom-one t)
     (doom-themes-visual-bell-config)
-    ;(doom-themes-neotree-config)
     (doom-themes-org-config))
 #+END_SRC
 
@@ -66,8 +64,8 @@
   ;; Chinese Font
   (dolist (charset '(kana han symbol cjk-misc bopomofo))
     (set-fontset-font (frame-parameter nil 'font)
-                      charset (font-spec :family "WenQuanYi Micro Hei")))
-  (setq face-font-rescale-alist '(("WenQuanYi Micro Hei" . 1.2)))
+                      charset (font-spec :family "Noto Sans CJK SC")))
+  (setq face-font-rescale-alist '(("Noto Sans CJK SC" . 1.2)))
 #+END_SRC
 
 * better use packages
@@ -77,12 +75,14 @@
   (use-package try
     :ensure t)  
 #+END_SRC
+
 ** which-key  
 #+BEGIN_SRC emacs-lisp
   (use-package which-key
     :ensure t
     :config (which-key-mode))  
 #+END_SRC
+
 ** smoth-scrolling
 #+BEGIN_SRC emacs-lisp
   (use-package smooth-scrolling
@@ -91,6 +91,7 @@
     (setq smooth-scroll-margin 3)
     (smooth-scrolling-mode 1))
 #+END_SRC
+
 ** rainbow-delimiters
 #+BEGIN_SRC emacs-lisp
   (use-package rainbow-delimiters
@@ -213,7 +214,7 @@ ob-python 设置 python 解释器为 python3
   (global-set-key "\C-cc" 'org-capture)
 #+END_SRC
 
-* Project Tree
+* project Tree
 安装 NeoTree
 #+BEGIN_SRC emacs-lisp
   (use-package neotree
@@ -289,6 +290,7 @@ window
 
   (helm-mode 1)
 #+END_SRC
+
 * company
 通用补全插件
 #+BEGIN_SRC emacs-lisp
@@ -313,13 +315,10 @@ window
 #+BEGIN_SRC emacs-lisp
   (use-package lsp-mode
     :ensure t
-    :commands lsp
-    :hook
-    ((python-mode . lsp-mode)
-     (c-or-c++-mode . lsp-mode)))
-  (use-package company-lsp
-    :ensure t
-    :commands company-lsp)
+    :commands lsp)
+  ;(use-package company-lsp
+  ;  :ensure t
+  ;  :commands company-lsp)
   (use-package lsp-ui
     :ensure t
     :commands lsp-ui-mode
@@ -329,9 +328,8 @@ window
     ("s-i" . lsp-ui-imenu))
 #+END_SRC
 
-* Python
-补全使用 lsp 内置 pyls
-
+* python
+补全使用 lsp
 * C&C++
 补全索引使用 lsp 内置 clangd
 #+BEGIN_SRC emacs-lisp
@@ -356,30 +354,6 @@ window
             ("C-x C-j" . racket-run)))
   #+END_SRC
 
-* graphviz
-dot 插件
-#+BEGIN_SRC emacs-lisp
-  (use-package graphviz-dot-mode
-    :ensure t
-    :init
-    (add-to-list 'org-src-lang-modes '("dot" . graphviz-dot)))
-#+END_SRC
-
-PlantUML mode
-#+BEGIN_SRC emacs-lisp
-  (use-package plantuml-mode
-    :ensure t
-    :init
-    (setq plantuml-jar-path
-          (expand-file-name "~/.emacs.d/plantuml.jar"))
-    (setq org-plantuml-jar-path
-          (expand-file-name "~/.emacs.d/plantuml.jar"))
-    (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
-    (add-to-list 'org-src-lang-modes '("plantuml" . plantuml)))
-  (use-package flycheck-plantuml
-    :ensure t)
-#+END_SRC
-
 * markdown
 #+BEGIN_SRC emacs-lisp
   (use-package markdown-mode
@@ -402,6 +376,7 @@ PlantUML mode
   (use-package yaml-mode
     :ensure t)
 #+END_SRC
+
 * yasnippet 
 #+BEGIN_SRC emacs-lisp
   (use-package yasnippet
@@ -483,3 +458,4 @@ PlantUML mode
   (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
   (require 'wl-spam)
 #+END_SRC
+
