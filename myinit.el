@@ -1,29 +1,11 @@
-(defun eshell-split-window ()
-  (interactive)
-  (cond
-   ((= 1 (count-windows))
-    (delete-other-windows)
-    (split-window-vertically (floor (* 0.68 (window-height))))
-    (other-window 1)
-    (switch-to-buffer "eshell")
-    (other-window 1))
-   ((not (find "eshell"
-               (mapcar (lambda (w) (buffer-name (window-buffer w)))
-                       (window-list))
-               :test 'equal))
-    (other-window 1)
-    (switch-to-buffer "eshell")
-    (other-window -1)))
-  (eshell)
-  (message "open eshell"))
-
 (setq inhibit-startup-message t)
 (setq column-number-mode t)
+(menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (fset 'yes-or-no-p 'y-or-n-p)
 (global-hl-line-mode t)
-(global-set-key (kbd "<f9>") #'eshell-split-windows)
+(global-set-key (kbd "<f9>") 'eshell)
 (setq-default tab-width 4)
 (setq ring-bell-function 'ignore)
 
@@ -66,13 +48,14 @@
   (doom-themes-org-config))
 
 ;; Setting English Font
-(set-face-attribute 'default nil :font "Hack 12")
+
+(set-face-attribute 'default nil :font "Fira Mono 13")
 
 ;; Chinese Font
 (dolist (charset '(kana han symbol cjk-misc bopomofo))
   (set-fontset-font (frame-parameter nil 'font)
                     charset (font-spec :family "Noto Sans CJK SC")))
-(setq face-font-rescale-alist '(("Noto Sans CJK SC" . 1.2)))
+; (setq face-font-rescale-alist '(("Noto Sans CJK SC" . 1.2)))
 
 (use-package try
   :ensure t)

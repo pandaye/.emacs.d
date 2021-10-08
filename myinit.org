@@ -5,6 +5,7 @@
 #+BEGIN_SRC emacs-lisp
   (setq inhibit-startup-message t)
   (setq column-number-mode t)
+  (menu-bar-mode -1)
   (tool-bar-mode -1)
   (scroll-bar-mode -1)
   (fset 'yes-or-no-p 'y-or-n-p)
@@ -59,13 +60,14 @@
 * font
 #+BEGIN_SRC emacs-lisp
   ;; Setting English Font
-  (set-face-attribute 'default nil :font "Hack 12")
-  
+
+  (set-face-attribute 'default nil :font "Fira Mono 13")
+
   ;; Chinese Font
   (dolist (charset '(kana han symbol cjk-misc bopomofo))
     (set-fontset-font (frame-parameter nil 'font)
                       charset (font-spec :family "Noto Sans CJK SC")))
-  (setq face-font-rescale-alist '(("Noto Sans CJK SC" . 1.2)))
+  ; (setq face-font-rescale-alist '(("Noto Sans CJK SC" . 1.2)))
 #+END_SRC
 
 * better use packages
