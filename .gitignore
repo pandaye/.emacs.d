@@ -17,3 +17,5 @@ cnfonts/
 .lsp-session*
 transient/
 custom/
+config.el
+myinit.el

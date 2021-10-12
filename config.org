@@ -1,0 +1,1014 @@
+* Package Manager
+** Proxy
+Set http(s) proxy for Emacs. /You might not need it, or need to change it./
+#+begin_src emacs-lisp
+  ;;; -*- lexical-binding: t -*-
+  ;(setenv "https_proxy" "http://127.0.0.1:7890")
+  ;(setenv "http_proxy" "http://127.0.0.1:7890")
+#+end_src
+
+** Use Package
+[[https://github.com/jwiegley/use-package][Use Package]] allows you to isolate package configuration in your .emacs file in a way that is both performance-oriented and, well, tidy.
+
+The ~:ensure~ keyword causes the package(s) to be installed automatically if not already present on your system, it won't affect local packages. Enable ~:ensure t~ to be global for all packages.
+#+begin_src emacs-lisp
+(require 'use-package-ensure)
+(setq use-package-always-ensure t)
+#+end_src
+
+* Basic UI
+** Color Theme
+*** Doom-themes
+#+BEGIN_SRC emacs-lisp 
+  (use-package doom-themes
+    :ensure t
+    :init
+    (setq doom-themes-enable-bold t
+          doom-themes-enable-italic t)
+    (load-theme 'doom-one t)
+    (doom-themes-visual-bell-config)
+    (doom-themes-org-config))
+#+END_SRC
+*** Emacs Lisp
+[[https://github.com/Fanael/highlight-defined][highlight-defined]] is an Emacs minor mode that highlights defined Emacs Lisp symbols in source code.
+
+Currently it recognizes Lisp function, built-in function, macro, face and variable names.
+#+begin_src emacs-lisp
+  (use-package highlight-defined
+    :config
+    (add-hook 'emacs-lisp-mode-hook 'highlight-defined-mode))
+
+  (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
+#+end_src
+
+*** Markup Face
+**** Org Mode
+#+begin_src emacs-lisp
+(set-face-foreground 'org-meta-line "Gray")
+(set-face-foreground 'org-drawer "Gray")
+(set-face-foreground 'org-document-info-keyword "Gray")
+(set-face-foreground 'org-date "Gray")
+
+;; (set-face-foreground 'org-level-1 "#006eee")
+(set-face-foreground 'org-level-2 "#874bf8")
+(set-face-foreground 'org-level-3 "dark cyan")
+(set-face-foreground 'org-level-4 "violet red")
+(set-face-foreground 'org-level-5 "SpringGreen4")
+(set-face-foreground 'org-level-6 "orange red")
+(set-face-foreground 'org-level-7 "light sea green")
+(set-face-foreground 'org-level-8 "chocolate")
+#+end_src
+
+**** Markdown
+
+*** Terminal Face
+
+** Title Bar
+Show icon and full path in title bar.
+#+begin_src emacs-lisp
+(setq frame-title-format
+    '(:eval
+       (if buffer-file-name
+           (abbreviate-file-name buffer-file-name)
+           "%b")))
+#+end_src
+
+** Cursor
+Set default cursor type to bar.
+#+begin_src emacs-lisp
+(setq-default cursor-type 'bar) 
+#+end_src
+
+Disable cursor in inactive window.
+#+begin_src emacs-lisp
+(setq-default cursor-in-non-selected-windows nil)
+#+end_src
+
+** Fringe
+#+begin_src emacs-lisp
+(set-face-attribute 'fringe nil :background nil)
+#+end_src
+
+Disable ugly [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Fringe-Bitmaps.html
+][bitmap]] in fringe.
+#+begin_src emacs-lisp
+(define-fringe-bitmap 'left-arrow [])
+(define-fringe-bitmap 'left-curly-arrow [])
+(define-fringe-bitmap 'left-triangle [])
+#+end_src
+
+Display … and ↩ for truncation and wrap.
+#+begin_src emacs-lisp
+(defface fallback '((t :family "Fira Code Light"
+                       :foreground "gray")) "Fallback")
+(set-display-table-slot standard-display-table 'truncation
+                        (make-glyph-code ?… 'fallback))
+(set-display-table-slot standard-display-table 'wrap
+                        (make-glyph-code ?↩ 'fallback))
+#+end_src
+
+** Scroll Bar
+# TODO: Scroll bar background and width
+Disable scroll bar.
+#+begin_src emacs-lisp
+(scroll-bar-mode 0)
+#+end_src
+
+** Modeline
+Use customized [[https://github.com/manateelazycat/awesome-tray][awesome tray]].
+# TODO: add org-mode-line-clock
+# TODO: add selection
+#+begin_src emacs-lisp
+(use-package awesome-tray
+  :load-path "~/.config/emacs/elisp"
+  :custom-face
+  (header-line ((t (:background "grey90" :foreground "grey20" :box nil))))
+  (mode-line ((t (:foreground "dim gray" :underline t :height 0.1))))
+  (mode-line-inactive ((t (:inherit mode-line))))
+  :config
+  (setq-default mode-line-format '(""))
+  (awesome-tray-mode 1))
+#+end_src
+
+* Basic UX
+** Scroll
+Smooth scrolling.
+#+begin_src emacs-lisp
+(setq scroll-up-aggressively 0.01
+      scroll-down-aggressively 0.01
+      scroll-margin 0
+      scroll-conservatively 5
+      redisplay-skip-fontification-on-input t)
+#+end_src
+
+** Messages
+Disable these messages by setting command-error-function to a function that ignores unused signals.
+https://emacs.stackexchange.com/a/20039/19518
+#+begin_src emacs-lisp
+(defun filter-command-error-function (data context caller)
+  "Ignore the buffer-read-only, beginning-of-line, end-of-line, beginning-of-buffer, end-of-buffer signals; pass the rest to the default handler."
+  (when (not (memq (car data) '(buffer-read-only
+                                beginning-of-line
+                                end-of-line
+                                beginning-of-buffer
+                                end-of-buffer)))
+    (command-error-default-function data context caller)))
+
+(setq command-error-function #'filter-command-error-function)
+#+end_src
+
+Disable unhelpful mesages in minibuffer.
+https://superuser.com/a/1025827/1114552
+#+begin_src emacs-lisp
+(defun suppress-messages (old-fun &rest args)
+  (cl-flet ((silence (&rest args1) (ignore)))
+    (advice-add 'message :around #'silence)
+    (unwind-protect
+         (apply old-fun args)
+      (advice-remove 'message #'silence))))
+
+(advice-add 'org-cycle :around #'suppress-messages)
+#+end_src
+
+** Dired
+Hide all the information about files and folders except their names.
+#+begin_src emacs-lisp
+(add-hook 'dired-mode-hook (lambda () (dired-hide-details-mode)))
+#+end_src
+
+** Which Key
+[[https://github.com/justbur/emacs-which-key][which-key]] displays available keybindings in popup.
+#+begin_src emacs-lisp
+(use-package which-key
+  :config
+  (which-key-mode))
+#+end_src
+
+** Ivy
+[[https://github.com/abo-abo/swiper][Ivy]] is a generic completion front-end.
+#+begin_src emacs-lisp
+(use-package counsel
+  :bind
+  (("M-x" . counsel-M-x)
+   ("s-f" . swiper)
+   ("s-F" . counsel-rg))
+  :config
+  (use-package flx)
+  (use-package amx)
+
+  (ivy-mode 1)
+  (add-to-list 'ivy-more-chars-alist '(counsel-rg . 1))
+  (setq ivy-use-virtual-buffers t)
+  (setq ivy-count-format "(%d/%d) ")
+  (setq ivy-initial-inputs-alist nil)
+  (setq ivy-re-builders-alist
+        '((swiper     . ivy--regex-plus)
+          (counsel-rg . ivy--regex-plus)
+          (t          . ivy--regex-fuzzy))))
+#+end_src
+
+*** Ivy Rich
+[[https://github.com/Yevgnen/ivy-rich][ivy-rich]] adds description to the command in =M-x=.
+#+begin_src emacs-lisp
+(use-package ivy-rich)
+(ivy-rich-mode 1)
+#+end_src
+
+* Window Management
+** Session
+[[https://github.com/iqbalansari/restart-emacs][restart-emacs]] offers a command =restart-emacs=.
+#+begin_src emacs-lisp
+(use-package restart-emacs)
+#+end_src
+
+Associate [[https://github.com/willbchang/alfred-open-in-editor][alfred-open-in-editor]] to open folder in a new frame by ~emacsclient~.
+#+begin_src emacs-lisp
+(server-start)
+#+end_src
+
+** Frame
+*** Keybindings
+| Keybindings         | Features                     |
+|---------------------+------------------------------|
+| =Command + Q=         | Quit Emacs                   |
+| =Command + N=         | Create new window            |
+| =Command + `=         | Change to other frame        |
+| =Shift + Command + W= | Close current window         |
+| =Ctrl + Command + F=  | Set/Unset window full screen |
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "s-n") 'new-empty-frame)
+
+(defun new-empty-frame ()
+  "Create a new frame with a new empty buffer. With org-mode and evil-mode enabled."
+  (interactive)
+  (let ((buffer (generate-new-buffer "untitled")))
+    (set-buffer buffer)
+    (org-mode)
+    (evil-mode 1)
+    (display-buffer buffer '(display-buffer-pop-up-frame . nil))))
+#+end_src
+
+** Buffer
+*** Keybindings
+| Keybindings | Features              |
+|-------------+-----------------------|
+| ~Command + F~ | Find File in Project  |
+| ~Command + W~ | Close Current Buffer  |
+| ~Command + [~ | Go to previous Buffer |
+| ~Command + ]~ | Go to next Buffer     |
+| ~Command + T~ | Create New Buffer     |
+| ~Command + S~ | Save Buffer           |
+| ~Command + R~ | Revert Buffer         |
+| ~Command + ,~ | Open Preferences      |
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "s-t") 'new-empty-buffer)
+(global-set-key (kbd "s-r") 'revert-buffer-no-confirm)
+#+end_src
+
+# http://ergoemacs.org/emacs/emacs_new_empty_buffer.html
+#+begin_src emacs-lisp
+(defun new-empty-buffer ()
+  "Create a new empty buffer.
+New buffer will be named “untitled” or “untitled<2>”, “untitled<3>”, etc."
+  (interactive)
+  (let (($buffer (generate-new-buffer "untitled")))
+    (switch-to-buffer $buffer)
+    (funcall initial-major-mode)
+    (setq buffer-offer-save t)
+    $buffer))
+
+(defun revert-buffer-no-confirm ()
+  "Revert buffer without confirmation."
+  (interactive)
+  (save-buffer t)
+  (revert-buffer t t)
+  (message "Reverted `%s'" (buffer-name)))
+#+end_src
+
+*** Behaviors
+# TODO: Set init and fallback buffer to untitle instead of *scratch*.
+Save files automatically.
+#+begin_src emacs-lisp
+(auto-save-visited-mode 1)
+#+end_src
+
+Save file silently.
+#+begin_src emacs-lisp
+(setq save-silently t)
+#+end_src
+
+Ensure files end with newline.
+#+begin_src emacs-lisp
+(setq require-final-newline t)
+#+end_src
+
+Revert (update) buffers automatically when underlying files are changed externally.
+#+begin_src emacs-lisp
+(global-auto-revert-mode t)
+#+end_src
+
+Set initial buffer mode to org-mode.
+#+begin_src emacs-lisp
+(setq-default initial-major-mode 'org-mode)
+#+end_src
+
+Save cursor position for each file.
+#+begin_src emacs-lisp
+(save-place-mode t)
+#+end_src
+
+Cancel partially typed or accidental command.
+#+begin_src emacs-lisp
+(define-key key-translation-map (kbd "ESC") (kbd "C-g"))
+#+end_src
+
+# FIX: Not working.
+Ask =y= or =n= instead of =yes= or =no=. Use ~return~ to act ~y~.
+#+begin_src emacs-lisp
+(fset 'yes-or-no-p 'y-or-n-p)
+(define-key y-or-n-p-map (kbd "RET") 'act)
+#+end_src
+
+Disable the ring bell when scroll beyond the document.
+#+begin_src emacs-lisp
+(setq ring-bell-function 'ignore)
+#+end_src
+
+# TODO: No * and magit buffers after Cmd + W.
+Ignore buffers start with ~*~ and ~magit:~ while moving to previous or next buffer.
+# https://emacs.stackexchange.com/a/27770/29493
+#+begin_src emacs-lisp
+(set-frame-parameter (selected-frame) 'buffer-predicate
+  (lambda (buf) (not (string-match-p "^\\(magit:\\|*\\)" (buffer-name buf)))))
+#+end_src
+
+Disable automatic backup~ file.
+#+begin_src emacs-lisp
+(setq make-backup-files nil)
+#+end_src
+
+*** Find File in Project
+[[https://github.com/redguardtoo/find-file-in-project][Find file in project]] can quick access to project files in Emacs.
+#+begin_src emacs-lisp
+(use-package find-file-in-project
+  :bind
+  ("s-p" . find-file-in-project)
+  :custom
+  (ffip-use-rust-fd t))
+#+end_src
+
+* Word Processing
+# TODO: company for elisp, especially for completion emacs functions/variables
+# TODO: Edit comment or string/docstring or code block inside them in separate buffer with your favorite mode https://github.com/twlz0ne/separedit.el
+** Basic Features
+*** Displaying Text
+**** Font
+English font refer to early-init.el ~default-frame-alist~.
+**** Keybindings
+
+| Keybindings | Features            |
+|-------------+---------------------|
+| =Command + += | Increase text scale |
+| =Command + -= | Decrease text scale |
+| =Command + 0= | Reset text scale    |
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "s-0") 'text-scale-reset)
+(global-set-key (kbd "s-=") 'text-scale-increase)
+(global-set-key (kbd "s--") 'text-scale-decrease)
+
+(defun text-scale-reset ()
+  (interactive)
+  (text-scale-set 0))
+#+end_src
+
+**** Behaviors
+Improve the readability by increasing line spacing.
+#+begin_src emacs-lisp
+(setq-default line-spacing 0.1)
+#+end_src
+
+Highlight urls and make them clickable.
+#+begin_src emacs-lisp
+;; This will work until emacs 28.1
+;; (global-goto-address-mode 1)
+(add-hook 'text-mode-hook 'goto-address-mode)
+#+end_src
+
+Highlight paired brackets, includes (), [], {} and so on...
+#+begin_src emacs-lisp
+(show-paren-mode 1)
+(require 'paren)
+(set-face-background 'show-paren-match (face-background 'default))
+(set-face-foreground 'show-paren-match "#e2416c")
+(set-face-attribute 'show-paren-match nil :weight 'extra-bold)
+#+end_src
+
+*** Moving Cursor
+**** Keybindings
+Make =Command/Option + ArrowKey= behaves like MacOS app.
+
+| Keybindings   | Features                          |
+|---------------+-----------------------------------|
+| =Command + ↑= | Move to the top of the file       |
+| =Command + ↓= | Move to the bottom of the file    |
+| =Command + ←= | Move to the beginning of the line |
+| =Command + →= | Move to the end of the line       |
+| =Command + L= | Go to line                        |
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "s-l") 'goto-line)
+#+end_src
+
+*** Searching Text
+**** Keybindings
+| Keybindings         | Features                      |
+|---------------------+-------------------------------|
+| =Command + F=         | Search text in Buffer         |
+| =Shift + Command + F= | Search text in current folder |
+
+*** Selecting Text
+**** Keybindings
+| Keybindings                    | Features                               |       |
+|--------------------------------+----------------------------------------+-------|
+| =Command + A=                    | Select all the content in current file |       |
+| =Shift + ↑=         | Select one line up                     | MacOS |
+| =Shift + ↓=         | Select one line down                   | MacOS |
+| =Shift + ←=         | Select one character left              | MacOS |
+| =Shift + →=         | Select one character right             | MacOS |
+| =Shift + Option + ←= | Select one word left                   | MacOS |
+| =Shift + Option + →= | Select one word right                  | MacOS |
+| =Shift + Command + ↑= | Select to ttop of the file             | MacOS |
+| =Shift + Command + ↓= | Select to bottom of the file           | MacOS |
+| =Shift + Command + ←= | Select to t`he beginning of the line   | MacOS |
+| =Shift + Command + →= | Select to the end of the line          | MacOS |
+
+**** Behaviors
+Highlight region(selection) with pink color.
+#+begin_src emacs-lisp
+(set-face-attribute 'region nil :background "#f5cce1")
+#+end_src
+
+*** Editing Text
+**** Keybindings
+| Keybindings                   | Features                                         |
+|-------------------------------+--------------------------------------------------|
+| =Command + C=                 | Copy text                                        |
+| =Command + X=                 | Cut text                                         |
+| =Command + V=                 | Paste text                                       |
+| =Command + Return=            | Force newline                                    |
+| =Command + Backspace=         | Delete current line from cursor to the beginning |
+| =Command + Shift + Backspace= | Delete whole line entirely                       |
+| =Command + /=                 | Comment/Uncomment line(s)                        |
+
+
+# TODO:
+# 1. Comment on empty line, it adds (e.g.) and put the cursor behind
+# 2. Comment one line, it adds before and forward one line
+# 3. Comment on region, it add and move to the next line of the region
+# 4. Cannot uncomment inside org mode code block
+**** Behaviors
+Auto pair brackets, quotes etc.
+#+begin_src emacs-lisp
+(electric-pair-mode 1)
+#+end_src
+
+Do not indent on newlines.
+#+begin_src emacs-lisp
+(electric-indent-mode -1)
+#+end_src
+
+Overwrite selection on pasting.
+#+begin_src emacs-lisp
+(delete-selection-mode 1)
+#+end_src
+
+Indent with 2 space.
+#+begin_src emacs-lisp
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 2)
+(setq indent-line-function 'insert-tab)
+#+end_src
+
+**** Undo
+***** Config
+Increase undo limit.
+#+begin_src emacs-lisp
+;; default is 160000
+(setq undo-limit 800000)
+;; default is 240000
+(setq undo-strong-limit 12000000)
+;; default is 24000000
+(setq undo-outer-limit 120000000)
+#+end_src
+
+***** Undo Fu
+[[https://gitlab.com/ideasman42/emacs-undo-fu][Undo Fu]] is a simple, stable linear undo with redo.
+#+begin_src emacs-lisp
+(use-package undo-fu
+  :bind
+  (("s-z" . undo-fu-only-undo)
+   ("s-Z" . undo-fu-only-redo)))
+#+end_src
+
+[[https://gitlab.com/ideasman42/emacs-undo-fu-session][Undo fu session]] writes undo/redo information upon file save which is restored where possible when the file is loaded again.
+#+begin_src emacs-lisp
+(use-package undo-fu-session
+  :config
+  (setq undo-fu-session-incompatible-files '("/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'"))
+  (global-undo-fu-session-mode))
+#+end_src
+ 
+** Evil Mode
+[[https://github.com/emacs-evil/evil][Evil]] is an extensible vi layer for Emacs. It emulates the main features of Vim, and provides facilities for writing custom extensions.
+*** Config
+#+begin_src emacs-lisp
+(use-package evil
+  :bind
+  (:map evil-normal-state-map
+        ("j"   . evil-next-visual-line)
+        ("k"   . evil-previous-visual-line)
+        ("u"   . undo-fu-only-undo)
+        ("C-r" . undo-fu-only-redo)
+   :map evil-motion-state-map
+        ("RET" . nil))
+  :init
+  (setq evil-want-keybinding nil)
+  ;; Set Evil cursor color and styles in different situations.
+  (setq evil-emacs-state-cursor 'bar)
+  (setq evil-normal-state-cursor '(box "deep pink"))
+  (setq evil-insert-state-cursor '(bar "deep pink"))
+  (setq evil-visual-state-cursor '(hollow "deep pink"))
+  (setq evil-operator-state-cursor '(evil-half-cursor "deep pink"))
+  (setq evil-replace-state-cursor '(hbar "deep pink"))
+  :config
+  (evil-mode 1)
+  :custom
+  ;; Do not echo the state in minibuffer.
+  (evil-echo-state nil)
+  ;; Use native keybindings on insert state.
+  (evil-disable-insert-state-bindings t)
+  ;; Records changes to separate undo instead of a big one in insert state.
+  (evil-want-fine-undo t))
+#+end_src
+
+*** Evil Collection
+[[https://github.com/emacs-evil/evil-collection][evil-collection]], which provides evil-friendly bindings for many modes.
+#+begin_src emacs-lisp
+(use-package evil-collection
+  :after evil
+  :config
+  (setq evil-collection-mode-list '(dired magit which-key))
+  (evil-collection-init))
+#+end_src
+
+*** Evil Surround
+[[https://github.com/emacs-evil/evil-surround][evil-surround]] makes surround text with paired symbols easily.
+#+begin_src emacs-lisp
+(use-package evil-surround
+  :after evil
+  :config
+  (global-evil-surround-mode 1)
+  ;; Use non-spaced pairs when surrounding with an opening brace.
+  (evil-add-to-alist 'evil-surround-pairs-alist
+                      ?\( '("(" . ")")
+                      ?\[ '("[" . "]")
+                      ?\{ '("{" . "}")))
+#+end_src
+
+*** Evil Snip
+[[https://github.com/hlissner/evil-snipe][Evil Snip]] enables incremental highlighting, repeat searches with =f=, =F=, =t= and =T=.
+#+begin_src emacs-lisp
+(use-package evil-snipe
+  :config
+  (evil-snipe-override-mode +1))
+#+end_src
+
+*** Evil Goggles
+[[https://github.com/edkolev/evil-goggles][Evil Goggles]] displays visual hint on evil edit operations.
+#+begin_src emacs-lisp
+(use-package evil-goggles
+  :config
+  (evil-goggles-mode)
+
+  ;; optionally use diff-mode's faces; as a result, deleted text
+  ;; optionally use diff-mode's faces; as a result, deleted text
+  ;; will be highlighed with `diff-removed` face which is typically
+  ;; some red color (as defined by the color theme)
+  ;; other faces such as `diff-added` will be used for other actions
+  (evil-goggles-use-diff-faces))
+#+end_src
+
+
+*** Avy
+[[https://github.com/abo-abo/avy][Avy]] is for jumping to visible text using a char-based decision tree.
+#+begin_src emacs-lisp
+(use-package avy
+  :bind 
+  (:map evil-normal-state-map
+        ("gf" . avy-goto-char)
+        ("gs" . avy-goto-char-2)
+        ("gl" . avy-goto-line)))
+#+end_src
+  
+** Sudo Edit
+[[https://github.com/nflath/sudo-edit][Sudo Edit]] can edit read only file.
+#+begin_src emacs-lisp
+(use-package sudo-edit)
+#+end_src
+
+** Large File
+[[https://github.com/m00natic/vlfi/][vlf]] can make you view large files in Emacs.
+#+begin_src emacs-lisp
+(use-package vlf
+  :custom
+  (vlf-application 'dont-ask))
+#+end_src
+
+** Multiple Cursor
+https://github.com/hlissner/evil-multiedit
+https://github.com/gabesoft/evil-mc
+https://github.com/syl20bnr/evil-iedit-state
+https://github.com/magnars/multiple-cursors.el
+
+** Keybinding References
+*Keybinding Values*:
+| Meaning | Emacs Key Value | MacOS Key             |
+|---------+-----------------+-----------------------|
+| Control | =C=             | =Control(Ctrl)=       |
+| Meta    | =M=             | =Option(Alt)=         |
+| Super   | =s=             | =Command=             |
+| Shift   | =S=             | =Shift=               |
+| -       | =s-z=           | =Command + Z=         |
+| -       | =s-Z=           | =Command + Shift + Z= |
+
+*Keybinding Functions*: [[https://www.masteringemacs.org/article/mastering-key-bindings-emacs][Reference]]
+- =(define-key KEYMAP KEY DEF)=: Defines a key against a keyboard map. Use this if you want to change a keymap that isn’t the current buffer map.
+- =(local-set-key KEY COMMAND)=: Binds a key to the local keymap used by the active buffer, unlike define-key which takes an explicit keymap to bind a key against.
+- =(local-unset-key KEY)=: Removes KEY from the active, local keymap.
+- =(global-set-key KEY COMMAND)=: Binds a key to the global keymap, making it available in all buffers (with a caveat – see below.)
+- =(global-unset-key KEY)=: Removes KEY from the global keymap
+
+*Keybinding Value Styles*:
+- =(kbd "s-Z")=
+- ~"s-Z"~
+- ~[s-Z]~
+  
+* Markup Language
+** Org Mode
+*** Config
+# FIX: Make not*Bold*AtAll work!
+#      https://stackoverflow.com/a/24540651/9984029
+#      https://emacs-china.org/t/orgmode/9740
+# FIX: new line with unexpected 2 space indent.
+# TODO: Do not truncate org table
+#       https://github.com/misohena/phscroll
+[[https://orgmode.org/][Org]] is a highly flexible structured plain text file format.
+#+begin_src emacs-lisp
+(use-package org
+  :hook
+  ;; Enable headline and subcontent in the indented view.
+  ((org-mode . org-indent-mode)
+   (org-mode . prettify-symbols-mode))
+  :bind
+  (:map org-mode-map
+        ("<M-S-left>"  . nil)
+        ("<M-S-right>" . nil)
+        ("<M-left>"    . left-word)
+        ("<M-right>"   . right-word)
+        ("<C-S-right>" . org-shiftmetaright)
+        ("<C-S-left>"  . org-shiftmetaleft)
+        ("<C-right>"   . org-metaright)
+        ("<C-left>"    . org-metaleft))
+  :init
+  ;; Enable shift selection in insert and visual mode.
+  (add-hook 'evil-insert-state-entry-hook
+            (lambda()
+              (setq org-support-shift-select 'always)))
+  (add-hook 'evil-normal-state-entry-hook
+            (lambda()
+              (setq org-support-shift-select nil)))
+  (add-hook 'evil-visual-state-entry-hook
+            (lambda()
+              (setq org-support-shift-select 'always)))
+  :custom
+  ;; Fold all contents on opening a org file.
+  (org-startup-folded t)
+  ;; Disable reindent on every time editing code block.
+  (org-src-preserve-indentation nil)
+  (org-edit-src-content-indentation 0)
+  ;; Use return to open link.
+  (org-return-follows-link t)
+  ;; Always display images.
+  (org-startup-with-inline-images t)
+  ;; Do not display image actual width, set to 500px by default.
+  (org-image-actual-width 500)
+  ;; Turncate lines
+  (org-startup-truncated nil)
+  ;; Export org to pdf through latex, support Chinese.
+  (org-latex-pdf-process '("xelatex -interaction nonstopmode %f" "xelatex -interaction nonstopmode %f"))
+  :config
+  (setq-default prettify-symbols-alist
+                '(("<-" . ?←)
+                  ("->" . ?→)
+                  ("=>" . ?⇒)
+                  ("/=" . ?≠)
+                  ("!=" . ?≠)
+                  ("==" . ?≡)
+                  ("<=" . ?≤)
+                  (">=" . ?≥)))
+  (setq prettify-symbols-unprettify-at-point 'right-edge))
+#+end_src
+
+*** Org Superstar
+[[https://github.com/integral-dw/org-superstar-mode][Org Superstar]] prettifies headings and plain lists in Org mode.
+#+begin_src emacs-lisp
+(use-package org-superstar
+  :hook
+  (org-mode . org-superstar-mode)
+  :config
+  (setq org-hide-leading-stars t)
+  :custom
+  ;; Change org headlines' style to ›.
+  (org-superstar-headline-bullets-list '("›"))
+  ;; Change org unordered list styles.
+  (org-superstar-prettify-item-bullets t)
+  (org-superstar-item-bullet-alist '((?* . ?•)
+                                     (?+ . ?•)
+                                     (?- . ?•))))
+#+end_src
+
+*** Org Appear
+[[https://github.com/awth13/org-appear][Org Appear]] toggles visibility of hidden Org mode element parts upon entering and leaving an element.
+#+begin_src emacs-lisp
+(use-package org-appear
+  :hook
+  (org-mode . org-appear-mode)
+  :init
+  ;; Instant toggle raw format on insert mode, 1 second delay on normal mode.
+  (add-hook 'evil-insert-state-entry-hook (lambda() (setq org-appear-delay 0)))
+  (add-hook 'evil-normal-state-entry-hook (lambda() (setq org-appear-delay 1)))
+  :config
+  ;; Hide emphasis makers.
+  (setq org-hide-emphasis-markers t)
+  ;; Prettify things like \pi, sub/super script.
+  (setq org-pretty-entities t)
+  ;; Hide keywords like #+TITLE:
+  (setq org-hidden-keywords '(title email date author))
+  :custom
+  (org-appear-delay 0)
+  (org-appear-autolinks t)
+  (org-appear-autoentities t)
+  (org-appear-autokeywords t)
+  (org-appear-autosubmarkers t))
+#+end_src
+
+*** Org Fragtog
+[[https://github.com/io12/org-fragtog][Org Fragtog]] automatically toggle Org mode LaTeX fragment previews as the cursor enters and exits them.
+$r_{xx} =  \frac{\Sigma(X - \bar{X})(Y - \bar{Y})}{NS_{x}_{}S_{y}}$
+#+begin_src emacs-lisp
+(use-package org-fragtog
+  :hook
+  (org-mode . org-fragtog-mode)
+  :config
+  (setq org-startup-with-latex-preview t)
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.0))
+  :custom
+  (org-fragtog-preview-delay 1.0))
+#+end_src
+
+*** Org Surround Markup
+Surround selection with org mode markup.
+https://github.com/alphapapa/unpackaged.el#surround-region-with-emphasis-or-syntax-characters
+#+begin_src emacs-lisp
+;;;###autoload
+(defmacro org-surround-markup (&rest keys)
+  "Define and bind interactive commands for each of KEYS that surround the region or insert text.
+Commands are bound in `org-mode-map' to each of KEYS.  If the
+region is active, commands surround it with the key character,
+otherwise call `org-self-insert-command'."
+  `(progn
+     ,@(cl-loop for key in keys
+                for name = (intern (concat "unpackaged/org-maybe-surround-" key))
+                for docstring = (format "If region is active, surround it with \"%s\", otherwise call `org-self-insert-command'." key)
+                collect `(defun ,name ()
+                           ,docstring
+                           (interactive)
+                           (if (region-active-p)
+                               (let ((beg (region-beginning))
+                                     (end (region-end)))
+                                 (save-excursion
+                                   (goto-char end)
+                                   (insert ,key)
+                                   (goto-char beg)
+                                   (insert ,key)))
+                             (call-interactively #'org-self-insert-command)))
+                collect `(define-key org-mode-map (kbd ,key) #',name))))
+
+(org-surround-markup "~" "=" "*" "/" "+")
+#+end_src
+
+** Markdown Mode
+[[https://github.com/jrblevin/markdown-mode][Markdown]] allows you to write using an easy-to-read, easy-to-write plain text format.
+#+begin_src emacs-lisp
+(use-package markdown-mode
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init (setq markdown-command "multimarkdown"))
+#+end_src
+  
+* Data Format
+** YAML
+[[https://yaml.org/][YAML]] is a human friendly data serialization language for all programming languages.
+#+begin_src emacs-lisp
+(use-package yaml-mode
+  :mode
+  (("\\.yaml\\'" . yaml-mode)
+   ("\\.yml\\'" . yaml-mode)))
+#+end_src
+
+** JSON
+[[https://json.org][JSON]] (JavaScript Object Notation) is a lightweight data-interchange format. 
+#+begin_src emacs-lisp
+(use-package json-mode)
+#+end_src
+
+* Terminal Emulator
+** Exec Path From Shell
+# FIX: git XDG path not working.
+[[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] ensures environment variables inside Emacs look the same as in the user's shell.
+#+begin_src emacs-lisp
+(use-package exec-path-from-shell
+  :config
+  (exec-path-from-shell-initialize))
+#+end_src
+
+** Vterm
+*** Config
+# FIX: Word wrap is not normal
+[[https://github.com/akermu/emacs-libvterm][Vterm]] is fully capable, fast, and it can seamlessly handle large outputs.
+#+begin_src emacs-lisp
+(use-package vterm
+  :bind (:map vterm-mode-map
+         ("s-k"       . vterm-clear)
+         ("<s-left>"  . vterm-send-C-a)
+         ("<s-right>" . vterm-send-C-e)
+         ("C-c"       . vterm-send-C-c))
+  :custom
+  (vterm-always-compile-module t)
+  :custom-face
+  (term-color-blue ((t (:background "blue2" :foreground "#006eee"))))
+  (term-color-red ((t (:background "red3" :foreground "red"))))
+  (term-color-yellow ((t (:background "yellow3" :foreground "orange"))))
+  :init
+  ;; Toggle vterm open and hide with Control + `
+  (defun vterm-split-window-below ()
+    (interactive)
+    (vterm)
+    (split-window-below -12)
+    (previous-buffer)
+    (other-window 1))
+
+  (defun vterm-toggle ()
+    (interactive)
+    (if (eq major-mode 'vterm-mode)
+        (delete-window)
+      (vterm-split-window-below)))
+
+  (bind-key (kbd "C-`") 'vterm-toggle)
+  :config
+  ;; Disable evil mode for vterm.
+  (evil-set-initial-state 'vterm-mode 'emacs)
+  ;; Close vterm buffer without confriming.
+  (setq kill-buffer-query-functions nil))
+#+end_src
+* Version Control
+** Magit
+[[https://github.com/magit/magit][Magit]] is an interface for [[https://git-scm.com/][Git]] inside Emacs.
+#+begin_src emacs-lisp
+(use-package magit
+  :bind
+  ("s-k" . magit)
+  :custom
+  (magit-diff-refine-hunk t)
+  ;; Disable ulgy bitmap in fringe in magit mode.
+  (magit-section-visibility-indicator nil))
+#+end_src
+
+** Diff HL
+[[https://github.com/dgutov/diff-hl][diff-hl]] highlights uncommitted changes in the left fringe.
+#+begin_src emacs-lisp
+(use-package diff-hl
+  :init
+  (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
+  (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
+  :config
+  (global-diff-hl-mode)
+  ;; Highlight changes on editing.
+  (diff-hl-flydiff-mode)
+  ;; Makes fringe and margin react to mouse clicks to show the curresponding hunk.
+  (diff-hl-show-hunk-mouse-mode)
+  :custom
+  (diff-hl-draw-borders nil)
+  :custom-face
+  (diff-hl-change ((t (:background "#8fe9e3"))))
+  (diff-hl-insert ((t (:background "#80f1a4"))))
+  (diff-hl-delete ((t (:background "#f5cce1")))))
+#+end_src
+
+* Chinese Optimization
+# TODO: Slipt word https://github.com/cireu/jieba.el or use https://developer.apple.com/documentation/corefoundation/cfstringtokenizer-rf8
+** Font
+# FIX: Bold is too Bold.
+Use macOS's default Chinese font for Chinese characters in Emacs.
+According to:  https://support.apple.com/en-us/guide/pages/tanfbd4156e/mac
+#+begin_src emacs-lisp
+(dolist (charset '(kana han symbol cjk-misc bopomofo))
+  (set-fontset-font (frame-parameter nil 'font)
+                    charset (font-spec :family "PingFang SC")))
+#+end_src
+
+** Display
+Break lines normally for Chinese characters in visual line mode.
+#+begin_src emacs-lisp
+;; This will work until emacs 28.1
+;; (setq word-wrap-by-category t)
+#+end_src
+
+# FIX: Performance is lack.
+# FIX: Not align on org indent mode.
+[[https://github.com/casouri/valign][valign]] can properly align tables containing variable-pitch font, CJK characters and images.
+#+begin_src emacs-lisp
+(use-package valign
+  :hook
+  (org-mode . valign-mode)
+  (markdown-mode . valign-mode)
+  :config
+  (setq valign-fancy-bar 1))
+#+end_src
+
+** Search
+[[https://github.com/cute-jumper/pinyinlib.el][Pinyinlib]] is a elisp library for converting first letter of Pinyin to Simplified/Traditional Chinese characters.
+#+begin_src emacs-lisp
+(use-package pinyinlib)
+#+end_src
+
+[[https://github.com/laishulu/evil-pinyin][evil-pinyin]]: Search Chinese characters with the first letter of Pinyin.
+#+begin_src emacs-lisp
+(use-package evil-pinyin
+  :config
+  (evil-select-search-module 'evil-search-module 'evil-search)
+  (global-evil-pinyin-mode))
+#+end_src
+
+[[https://github.com/pengpengxp/swiper/wiki/ivy-support-chinese-pinyin][ivy-support-chinese-pinyin]] Support Chinese pinyin match, start with !.
+#+begin_src emacs-lisp
+(load-file "~/.config/emacs/elisp/ivy-chinese-pinyin.el")
+#+end_src
+
+
+[[https://github.com/cute-jumper/ace-pinyin][ace-pinyin]] make you jump to Chinese character by pinyin with avy.
+#+begin_src emacs-lisp
+(use-package ace-pinyin
+  :config
+  (ace-pinyin-global-mode +1))
+#+end_src
+
+** Input Method
+[[https://github.com/laishulu/emacs-smart-input-source][sis]] can auto switch to English input method and save the previous input method when entering Evil normal mode, restore the saved input method when switching back to Evil insert mode.
+# FIX: Check evil state and set input method when refousing Emacs.
+#+begin_src emacs-lisp
+(use-package sis
+  :config
+  (sis-ism-lazyman-config
+   "com.apple.keylayout.ABC"
+   "im.rime.inputmethod.Squirrel.Rime")
+  (sis-global-respect-mode t)
+  (sis-global-context-mode t)
+  ;; Improve typing fluency experience.
+  (set-language-environment "UTF-8"))
+#+end_src
+
+** Keybindings
+Make keybindings work under Chinese input method.
+
+| Keybindings | Chinese Keybindings | Features              |
+|-------------+---------------------+-----------------------|
+| ~Command + [~ | ~Command + 】~        | Go to previous Buffer |
+| ~Command + ]~ | ~Command + 【~        | Go to next Buffer     |
+| ~Command + ,~ | ~Command + ，~        | Open config file      |
+| ~Command + ,~ | ~Command + 。~        | Reload init file |
+| ~Control + ·~ | ~Control + `~         | Toggle vterm          |
+
+#+begin_src emacs-lisp
+(define-key key-translation-map (kbd "s-【") (kbd "s-["))
+(define-key key-translation-map (kbd "s-】") (kbd "s-]"))
+(define-key key-translation-map (kbd "s-，") (kbd "s-,"))
+(define-key key-translation-map (kbd "s-。") (kbd "s-."))
+(define-key key-translation-map (kbd "C-·") (kbd "C-`"))
+#+end_src
+

@@ -24,7 +24,7 @@
 	     (expand-file-name "lisp" user-emacs-directory))
 
 ;; my init setting
-(org-babel-load-file (expand-file-name "~/.emacs.d/myinit.org"))
+(org-babel-load-file (expand-file-name "myinit.org" user-emacs-directory))
 
 (provide 'init)
 ;;; init.el ends here

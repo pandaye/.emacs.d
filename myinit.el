@@ -1,8 +1,8 @@
 (setq inhibit-startup-message t)
 (setq column-number-mode t)
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
+(menu-bar-mode 0)
+(tool-bar-mode 0)
+(scroll-bar-mode 0)
 (fset 'yes-or-no-p 'y-or-n-p)
 (global-hl-line-mode t)
 (global-set-key (kbd "<f9>") 'eshell)
@@ -34,9 +34,19 @@
     (setq alpha-list (cdr (append alpha-list (list h))))))
 ;;启动窗口时时自动开启窗口半透明效果
 ;; (loop-alpha)
-;;启动时窗口大小
-(add-to-list 'default-frame-alist '(width . 140))
-(add-to-list 'default-frame-alist '(length . 100))
+
+(set-face-attribute 'fringe nil :background nil)
+
+(define-fringe-bitmap 'left-arrow [])
+(define-fringe-bitmap 'left-curly-arrow [])
+(define-fringe-bitmap 'left-triangle [])
+
+(defface fallback '((t :family "Fira Code Light"
+                       :foreground "gray")) "Fallback")
+(set-display-table-slot standard-display-table 'truncation
+                        (make-glyph-code ?… 'fallback))
+(set-display-table-slot standard-display-table 'wrap
+                        (make-glyph-code ?↩ 'fallback))
 
 (use-package doom-themes
   :ensure t
@@ -64,11 +74,16 @@
   :ensure t
   :config (which-key-mode))
 
-(use-package smooth-scrolling
-  :ensure t
-  :config
-  (setq smooth-scroll-margin 3)
-  (smooth-scrolling-mode 1))
+;; (use-package smooth-scrolling
+;;   :ensure t
+;;   :config
+;;   (setq smooth-scroll-margin 3)
+;;   (smooth-scrolling-mode 1))
+(setq scroll-up-aggressively 0.01
+      scroll-down-aggressively 0.01
+      scroll-margin 3
+      scroll-conservatively 5
+      redisplay-skip-fontification-on-input t)
 
 (use-package rainbow-delimiters
   :ensure t
@@ -357,6 +372,24 @@
   :init
   (global-set-key (kbd "C-x g") 'magit-status)
   (global-set-key (kbd "C-x M-g") 'magit-dispatch-popup))
+
+(use-package diff-hl
+  :ensure t
+  :init
+  (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
+  (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
+  :config
+  (global-diff-hl-mode)
+  ;; Highlight changes on editing.
+  (diff-hl-flydiff-mode)
+  ;; Makes fringe and margin react to mouse clicks to show the curresponding hunk.
+  (diff-hl-show-hunk-mouse-mode)
+  :custom
+  (diff-hl-draw-borders nil)
+  :custom-face
+  (diff-hl-change ((t (:background "#e9cd43"))))
+  (diff-hl-insert ((t (:background "#03e94f"))))
+  (diff-hl-delete ((t (:background "#f5597e")))))
 
 ;; wanderlust
 (unless (package-installed-p 'wanderlust)
