@@ -23,13 +23,6 @@
 
 ** 编辑界面
 程序文本一向以行计数，显示行号是编辑器的重要一项，下面设置显示行号并高亮当前行，
-| 这是一个表格       |            |
-|--------------------+------------|
-| 看看               |            |
-| 是不是对齐的       | 再加一列   |
-| ~hello world~      | 也能对齐， |
-| 但是 ～            | ~h`w~      |
-
 #+BEGIN_SRC emacs-lisp
   (setq column-number-mode t)
   (global-hl-line-mode t)
@@ -173,15 +166,6 @@ Org mode 是使用 Emacs 的一个重要原因
   (use-package ob-ipython
     :ensure t)
 
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (python . t)
-     (scheme . t)
-     (dot . t)
-     (plantuml . t)
-     ))
-
   (add-hook 'org-mode-hook 'org-indent-mode)
   (setq org-export-with-sub-superscripts (quote {}))
   (setq org-src-fontify-natively t)
@@ -204,7 +188,6 @@ Org mode 是使用 Emacs 的一个重要原因
     )
 #+END_SRC
 
-* Buffer and window
 * Helm
 #+BEGIN_SRC emacs-lisp
   (use-package helm
