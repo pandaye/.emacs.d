@@ -228,13 +228,13 @@ Associate [[https://github.com/willbchang/alfred-open-in-editor][alfred-open-in-
 
 ** Frame
 *** Keybindings
-| Keybindings         | Features                     |
-|---------------------+------------------------------|
-| =Command + Q=         | Quit Emacs                   |
-| =Command + N=         | Create new window            |
-| =Command + `=         | Change to other frame        |
-| =Shift + Command + W= | Close current window         |
-| =Ctrl + Command + F=  | Set/Unset window full screen |
+| Keybindings           | Features                     |
+|-----------------------+------------------------------|
+| ~Command + Q~         | Quit Emacs                   |
+| ~Command + N~         | Create new window            |
+| ~Command + `~         | Change to other frame        |
+| ~Shift + Command + W~ | Close current window         |
+| ~Ctrl + Command + F~  | Set/Unset window full screen |
 
 #+begin_src emacs-lisp
 (global-set-key (kbd "s-n") 'new-empty-frame)
@@ -251,22 +251,24 @@ Associate [[https://github.com/willbchang/alfred-open-in-editor][alfred-open-in-
 
 ** Buffer
 *** Keybindings
-| Keybindings | Features              |
-|-------------+-----------------------|
-| ~Command + F~ | Find File in Project  |
-| ~Command + W~ | Close Current Buffer  |
-| ~Command + [~ | Go to previous Buffer |
-| ~Command + ]~ | Go to next Buffer     |
-| ~Command + T~ | Create New Buffer     |
-| ~Command + S~ | Save Buffer           |
-| ~Command + R~ | Revert Buffer         |
-| ~Command + ,~ | Open Preferences      |
+| Keybindings   | Features               |
+|               |                        |
+|---------------+------------------------|
+| ~Command + F~ | Find File in Project   |
+| ~Command + W~ | Close Current Buffer   |
+| ~Command + [~ | Go to previous Buffer  |
+| ~Command + ]~ | Go to next Buffer      |
+| ~Command + T~ | Create New Buffer      |
+| ~Command + S~ | Save Buffer            |
+| ~Command + R~ | Revert Buffer          |
+| ~Command + ,~ | Open Preferences       |
+| 卧槽          | 终于解决了，就是有点丑 |
+|               |                        |
 
 #+begin_src emacs-lisp
-(global-set-key (kbd "s-t") 'new-empty-buffer)
-(global-set-key (kbd "s-r") 'revert-buffer-no-confirm)
+  (global-set-key (kbd "s-t") 'new-empty-buffer)
+  (global-set-key (kbd "s-r") 'revert-buffer-no-confirm)
 #+end_src
-
 # http://ergoemacs.org/emacs/emacs_new_empty_buffer.html
 #+begin_src emacs-lisp
 (defun new-empty-buffer ()
@@ -368,11 +370,11 @@ Disable automatic backup~ file.
 English font refer to early-init.el ~default-frame-alist~.
 **** Keybindings
 
-| Keybindings | Features            |
-|-------------+---------------------|
-| =Command + += | Increase text scale |
-| =Command + -= | Decrease text scale |
-| =Command + 0= | Reset text scale    |
+| Keybindings   | Features            |
+|---------------+---------------------|
+| ~Command + +~ | Increase text scale |
+| ~Command + -~ | Decrease text scale |
+| ~Command + 0~ | Reset text scale    |
 
 #+begin_src emacs-lisp
 (global-set-key (kbd "s-0") 'text-scale-reset)
@@ -431,19 +433,19 @@ Make =Command/Option + ArrowKey= behaves like MacOS app.
 
 *** Selecting Text
 **** Keybindings
-| Keybindings                    | Features                               |       |
-|--------------------------------+----------------------------------------+-------|
-| =Command + A=                    | Select all the content in current file |       |
-| =Shift + ↑=         | Select one line up                     | MacOS |
-| =Shift + ↓=         | Select one line down                   | MacOS |
-| =Shift + ←=         | Select one character left              | MacOS |
-| =Shift + →=         | Select one character right             | MacOS |
-| =Shift + Option + ←= | Select one word left                   | MacOS |
-| =Shift + Option + →= | Select one word right                  | MacOS |
-| =Shift + Command + ↑= | Select to ttop of the file             | MacOS |
-| =Shift + Command + ↓= | Select to bottom of the file           | MacOS |
-| =Shift + Command + ←= | Select to t`he beginning of the line   | MacOS |
-| =Shift + Command + →= | Select to the end of the line          | MacOS |
+| Keybindings           | Features                               |       |
+|-----------------------+----------------------------------------+-------|
+| ~Command + A~         | Select all the content in current file |       |
+| ~Shift + ↑~           | Select one line up                     | MacOS |
+| ~Shift + ↓~           | Select one line down                   | MacOS |
+| ~Shift + ←~           | Select one character left              | MacOS |
+| ~Shift + →~           | Select one character right             | MacOS |
+| ~Shift + Option + ←~  | Select one word left                   | MacOS |
+| ~Shift + Option + →~  | Select one word right                  | MacOS |
+| ~Shift + Command + ↑~ | Select to ttop of the file             | MacOS |
+| ~Shift + Command + ↓~ | Select to bottom of the file           | MacOS |
+| ~Shift + Command + ←~ | Select to t`he beginning of the line   | MacOS |
+| ~Shift + Command + →~ | Select to the end of the line          | MacOS |
 
 **** Behaviors
 Highlight region(selection) with pink color.
@@ -453,15 +455,15 @@ Highlight region(selection) with pink color.
 
 *** Editing Text
 **** Keybindings
-| Keybindings                   | Features                                         |
-|-------------------------------+--------------------------------------------------|
-| =Command + C=                 | Copy text                                        |
-| =Command + X=                 | Cut text                                         |
-| =Command + V=                 | Paste text                                       |
-| =Command + Return=            | Force newline                                    |
-| =Command + Backspace=         | Delete current line from cursor to the beginning |
-| =Command + Shift + Backspace= | Delete whole line entirely                       |
-| =Command + /=                 | Comment/Uncomment line(s)                        |
+| Keybindings                 | Features                                         |
+|-----------------------------+--------------------------------------------------|
+| Command + C                 | Copy text                                        |
+| Command + X                 | Cut text                                         |
+| Command + V                 | Paste text                                       |
+| Command + Return            | Force newline                                    |
+| Command + Backspace         | Delete current line from cursor to the beginning |
+| Command + Shift + Backspace | Delete whole line entirely                       |
+| Command + /                 | Comment/Uncomment line(s)                        |
 
 
 # TODO:

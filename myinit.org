@@ -1,69 +1,72 @@
-#+STARTUP: overview
-#+OPTION: toc:nil
-* interface
-界面配置
+* Package Management
+对于一个可扩展的工具，包管理是首要的，有关包管理初始化的内容放在了 init.el 中，这里仅仅设置了自动下载
+** Use Package
+对所有 use-package 管理的包开启 ~:ensure~ 确保自动安装
+#+begin_src emacs-lisp
+  (require 'use-package-ensure)
+  (setq use-package-always-ensure t)
+#+end_src
+
+* Makeup Interface
+然后开始设置一个让人有兴趣一直用下去的外观
+** 整体外观
+首先去掉一些没有用的影响整体观感的部分，因为 Emacs 作为一款程序员喜欢的编辑器，大部分情况下都使用快捷键工作，所以菜单等等并不需要，另外状态很重要，所以需要一个靠谱的 modeline
 #+BEGIN_SRC emacs-lisp
-  (setq inhibit-startup-message t)
-  (setq column-number-mode t)
   (menu-bar-mode 0)
   (tool-bar-mode 0)
   (scroll-bar-mode 0)
-  (fset 'yes-or-no-p 'y-or-n-p)
-  (global-hl-line-mode t)
-  (global-set-key (kbd "<f9>") 'eshell)
-  (setq-default tab-width 4)
-  (setq ring-bell-function 'ignore)
-
   (use-package powerline
     :ensure t
     :config
     (powerline-default-theme))
+#+END_SRC
 
+** 编辑界面
+程序文本一向以行计数，显示行号是编辑器的重要一项，下面设置显示行号并高亮当前行，
+| 这是一个表格       |            |
+|--------------------+------------|
+| 看看               |            |
+| 是不是对齐的       | 再加一列   |
+| ~hello world~      | 也能对齐， |
+| 但是 ～            | ~h`w~      |
+
+#+BEGIN_SRC emacs-lisp
+  (setq column-number-mode t)
+  (global-hl-line-mode t)
+  (add-hook 'prog-mode-hook #'display-line-numbers-mode)
+  ;; 设置默认 Tab 宽度
+  (setq-default tab-width 4)
+  ;; 高亮行号
   (use-package hlinum
     :ensure t
     :config
     (hlinum-activate))
-
-  (add-hook 'prog-mode-hook #'display-line-numbers-mode)
-
-  (global-set-key (kbd "<f10>") 'loop-alpha)
-  ;当前窗口和非当前窗口时透明度
-  (setq alpha-list '((100 100) (100 100)))
-  (defun loop-alpha ()
-    (interactive)
-    (let ((h (car alpha-list)))
-      ((lambda (a ab)
-         (set-frame-parameter (selected-frame) 'alpha (list a ab))
-         (add-to-list 'default-frame-alist (cons 'alpha (list a ab))))
-       (car h) (car (cdr h)))
-      (setq alpha-list (cdr (append alpha-list (list h))))))
-  ;;启动窗口时时自动开启窗口半透明效果
-  ;; (loop-alpha)
 #+END_SRC
 
-** Fringe
+** 边缘
 #+begin_src emacs-lisp
-(set-face-attribute 'fringe nil :background nil)
+  (set-face-attribute 'fringe nil :background nil)
 #+end_src
 
 Disable ugly [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Fringe-Bitmaps.html
 ][bitmap]] in fringe.
 #+begin_src emacs-lisp
-(define-fringe-bitmap 'left-arrow [])
-(define-fringe-bitmap 'left-curly-arrow [])
-(define-fringe-bitmap 'left-triangle [])
+  (define-fringe-bitmap 'left-arrow [])
+  (define-fringe-bitmap 'left-curly-arrow [])
+  (define-fringe-bitmap 'left-triangle [])
 #+end_src
 
 Display … and ↩ for truncation and wrap.
 #+begin_src emacs-lisp
-(defface fallback '((t :family "Fira Code Light"
-                       :foreground "gray")) "Fallback")
-(set-display-table-slot standard-display-table 'truncation
-                        (make-glyph-code ?… 'fallback))
-(set-display-table-slot standard-display-table 'wrap
-                        (make-glyph-code ?↩ 'fallback))
+  (defface fallback '((t :family "Fira Code Light"
+                         :foreground "gray")) "Fallback")
+  (set-display-table-slot standard-display-table 'truncation
+                          (make-glyph-code ?… 'fallback))
+  (set-display-table-slot standard-display-table 'wrap
+                          (make-glyph-code ?↩ 'fallback))
 #+end_src
-* theme
+
+** 主题
 主题配置，使用 doom 主题
 #+BEGIN_SRC emacs-lisp 
   (use-package doom-themes
@@ -72,32 +75,38 @@ Display … and ↩ for truncation and wrap.
     (setq doom-themes-enable-bold t
           doom-themes-enable-italic t)
     (load-theme 'doom-one t)
-    (doom-themes-visual-bell-config)
-    (doom-themes-org-config))
+    (doom-themes-visual-bell-config))
 #+END_SRC
 
-* font
+** 字体
+主字体在 early-init.el 中设置了，这里仅涉及中文字体
 #+BEGIN_SRC emacs-lisp
-  ;; Setting English Font
-
-  (set-face-attribute 'default nil :font "Fira Mono 13")
+  ;; Default Font
+  ; (set-face-attribute 'default nil :font "Fira Mono 13")
 
   ;; Chinese Font
   (dolist (charset '(kana han symbol cjk-misc bopomofo))
     (set-fontset-font (frame-parameter nil 'font)
-                      charset (font-spec :family "Noto Sans CJK SC")))
-  ; (setq face-font-rescale-alist '(("Noto Sans CJK SC" . 1.2)))
+                      charset (font-spec :family "Sarasa Mono SC")))
+  ;; (setq face-font-rescale-alist '(("Noto Sans CJK SC" . 1.2)))
 #+END_SRC
+Valign 方案听说能完美解决表格编排，不过和 org-indent-mode 一起用有问题，暂时不用，使用换字体的方案
+#+begin_src emacs-lisp
+  ;; (use-package valign
+  ;;   :config
+  ;;   (setq valign-fancy-bar nil))
+  (when (display-graphic-p) (set-face-attribute 'org-table nil :family "M+ 1m" :height 120 :weight 'bold))
+#+end_src
 
-* better use packages
+* Better Use
 一些实用的配置
-** try 
+** try package
 #+BEGIN_SRC emacs-lisp
   (use-package try
     :ensure t)  
 #+END_SRC
 
-** which-key  
+** which-key
 #+BEGIN_SRC emacs-lisp
   (use-package which-key
     :ensure t
@@ -107,16 +116,35 @@ Display … and ↩ for truncation and wrap.
 ** scrolling
 Smooth scrolling
 #+BEGIN_SRC emacs-lisp
-  ;; (use-package smooth-scrolling
-  ;;   :ensure t
-  ;;   :config
-  ;;   (setq smooth-scroll-margin 3)
-  ;;   (smooth-scrolling-mode 1))
-  (setq scroll-up-aggressively 0.01
-        scroll-down-aggressively 0.01
-        scroll-margin 3
-        scroll-conservatively 5
-        redisplay-skip-fontification-on-input t)
+  (use-package smooth-scrolling
+    :ensure t
+    :config
+    (setq smooth-scroll-margin 3)
+    (smooth-scrolling-mode 1))
+  ;; (setq scroll-up-aggressively 0.01
+  ;;       scroll-down-aggressively 0.01
+  ;;       scroll-margin 0
+  ;;       scroll-conservatively 5
+  ;;       redisplay-skip-fontification-on-input t)
+#+END_SRC
+
+** buffer
+#+BEGIN_SRC emacs-lisp
+  (defalias 'list-buffers 'ibuffer)  
+#+END_SRC
+
+** window
+#+BEGIN_SRC emacs-lisp
+  (winner-mode 1)
+  (use-package ace-window
+    :ensure t
+    :init
+    (progn
+      (global-set-key [remap other-window] 'ace-window)
+      (custom-set-faces
+       '(aw-leading-char-face
+         ((t (:inherit ace-jump-face-foreground :height 3.0)))))
+      ))  
 #+END_SRC
 
 ** rainbow-delimiters
@@ -131,8 +159,9 @@ Smooth scrolling
 #+END_SRC
 
 * Org-mode
-通用设置
-#+BEGIN_SRC emacs-lisp
+Org mode 是使用 Emacs 的一个重要原因
+** Base Config
+#+begin_src emacs-lisp
   (defun turn-on-org-show-all-inline-images ()
     (org-display-inline-images t t))
 
@@ -154,94 +183,11 @@ Smooth scrolling
      ))
 
   (add-hook 'org-mode-hook 'org-indent-mode)
-  (add-hook 'org-mode-hook (lambda ()
-                             (define-key org-mode-map
-                               (kbd "<f5>") 'org-revert-all-org-buffers)))
-
   (setq org-export-with-sub-superscripts (quote {}))
   (setq org-src-fontify-natively t)
-#+END_SRC
+#+end_src
 
-ob-python 设置 python 解释器为 python3
-#+BEGIN_SRC emacs-lisp
-  (setq org-babel-python-command "python3")
-#+END_SRC
-
-设置内嵌 LaTeX 代码预览图缩放，默认太小
-#+BEGIN_SRC emacs-lisp
-  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.7))
-#+END_SRC
-
-配置 GTD
-#+BEGIN_SRC emacs-lisp
-  (setq org-use-fast-todo-selection t)
-  (setq org-todo-keywords
-        (quote ((sequence "TODO(t!)" "NEXT(n)" "|" "DONE(d@/!)")
-                (sequence "PROJECT(p)" "|" "DONE(d!/!)" "CANCELLED(c@/!)")
-                (sequence "WAITING(w@/!)" "HOLD(h)" "|" "CANCELLED(c@/!)")
-                (sequence "SOMEDAY(s)"))))
-
-  ;; Easy basic searches. Get a quick view of nextactions, etc
-  (setq org-agenda-custom-commands
-        '(("w" todo "WAITING" nil)
-          ("n" todo "NEXT" nil)
-          ("d" "Agenda + Next Actions" ((agenda) (todo "NEXT")))))
-
-  ;; I use org's tag feature to implement contexts.
-  (setq org-tag-alist '(("@Study" . ?s) ;; company studio office
-                        ("@Project" . ?p) ;; difference task at company
-                        ("@Life" . ?l) ;; home
-                        ("@Mail" . ?m) ;; mail somebody
-                        ("@Record" . ?r) ;; breakfast lunchtime dinner onway etc. (rest)
-                        ("@Note" . ?n)
-                        ("@Question" . ?q))) ;; quastion
-
-
-  (setq gtd-path (expand-file-name "~/.org-gtd"))
-  (defvar org-gtd-file
-    (concat gtd-path "/inbox.org"))
-  (defun gtd ()
-    "Open the GTD file."
-    (interactive)
-    (find-file org-gtd-file))
-
-  (defvar org-gtd-other-files)
-  (setf org-gtd-other-files
-        (list (concat gtd-path "/project.org")
-              (concat gtd-path "/note.org")
-              (concat gtd-path "/task.org")
-              (concat gtd-path "/trash.org")
-              (concat gtd-path "/finished.org")
-              (concat gtd-path "/record.org")))
-  (setf org-agenda-files (cons org-gtd-file org-gtd-other-files))
-  (setq org-agenda-prefix-format "  %-17:c%?-12t% s")
-  (setq org-refile-use-outline-path 'file)
-  (setq org-refile-targets '((org-agenda-files :level . 1)))
-  (setq org-reverse-note-order t)  ;; note at beginning of file by default.
-  (setq org-default-notes-file (concat gtd-path "/inbox.org"))
-  (setq todofile (concat gtd-path "/task.org"))
-  (setq notefile (concat gtd-path "/note.org"))
-  (setq journalfile (concat gtd-path "/journal.org"))
-  (setq orgarchive (concat gtd-path "/archive.org"))
-  (setq org-archive-location (concat orgarchive "::* Archive"))
-  (setq org-capture-templates
-        '(("t" "Todo" entry (file todofile)
-           "* TODO %?\nSCHEDULED: %t\n")
-          ("i" "Idea" entry (file+headline notefile "Idea")
-           "** %?\n %T\n")
-          ("j" "Journal" entry (file+datetree journalfile)
-           "* %?\nEntered on %U\n  %i\n")
-          ("w" "Web" entry (file+headline "" "Web")
-           "** %U %^{Title}\n%x")))
-
-  ;; key bingings
-  (global-set-key "\C-cl" 'org-store-link)
-  (global-set-key "\C-ca" 'org-agenda)
-  (global-set-key "\C-cg" 'gtd)
-  (global-set-key "\C-cc" 'org-capture)
-#+END_SRC
-
-* project Tree
+* Project Tree
 安装 NeoTree
 #+BEGIN_SRC emacs-lisp
   (use-package neotree
@@ -258,27 +204,8 @@ ob-python 设置 python 解释器为 python3
     )
 #+END_SRC
 
-* buffer and window
-buffer 
-#+BEGIN_SRC emacs-lisp
-  (defalias 'list-buffers 'ibuffer)  
-#+END_SRC
-  
-window
-#+BEGIN_SRC emacs-lisp
-  (winner-mode 1)
-  (use-package ace-window
-    :ensure t
-    :init
-    (progn
-      (global-set-key [remap other-window] 'ace-window)
-      (custom-set-faces
-       '(aw-leading-char-face
-         ((t (:inherit ace-jump-face-foreground :height 3.0)))))
-      ))  
-#+END_SRC
-
-* helm
+* Buffer and window
+* Helm
 #+BEGIN_SRC emacs-lisp
   (use-package helm
     :ensure t
@@ -318,7 +245,7 @@ window
   (helm-mode 1)
 #+END_SRC
 
-* company
+* Complete
 通用补全插件
 #+BEGIN_SRC emacs-lisp
   (use-package company
@@ -338,7 +265,7 @@ window
     (("M-/" . company-complete)))
 #+END_SRC
  
-* lsp
+* Lsp
 #+BEGIN_SRC emacs-lisp
   (use-package lsp-mode
     :ensure t
@@ -355,9 +282,10 @@ window
     ("s-i" . lsp-ui-imenu))
 #+END_SRC
 
-* python
+* Program Langrage
+** Python
 补全使用 lsp
-* C&C++
+** C&C++
 补全索引使用 lsp 内置 clangd
 #+BEGIN_SRC emacs-lisp
   (setq c-default-style "linux"
@@ -368,7 +296,7 @@ window
 
 #+END_SRC
 
-* scheme
+** Scheme
   #+BEGIN_SRC emacs-lisp
     (require 'myscheme)
     (use-package racket-mode
@@ -380,8 +308,13 @@ window
       (:map racket-mode-map
             ("C-x C-j" . racket-run)))
   #+END_SRC
+** Emacs-lisp
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
+#+END_SRC
 
-* markdown
+* Marked Language 
+** markdown
 #+BEGIN_SRC emacs-lisp
   (use-package markdown-mode
     :ensure t
@@ -398,13 +331,13 @@ window
     :ensure ox-gfm)
 #+END_SRC
 
-* yaml
+* Other Language Support
 #+BEGIN_SRC emacs-lisp
   (use-package yaml-mode
     :ensure t)
 #+END_SRC
 
-* yasnippet 
+* Yasnippet 
 #+BEGIN_SRC emacs-lisp
   (use-package yasnippet
     :ensure t
@@ -419,11 +352,6 @@ window
     (define-key yas-minor-mode-map [C-tab] 'yas-expand))
   (use-package yasnippet-snippets
     :ensure t)
-#+END_SRC
-
-* emacs-lisp
-#+BEGIN_SRC emacs-lisp
-  (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
 #+END_SRC
 
 * LaTeX
@@ -496,15 +424,7 @@ diff-hl highlights uncommitted changes in the left fringe.
     (diff-hl-delete ((t (:background "#f5597e")))))
 #+end_src
 
-* Mail
-使用 WanderLust 邮件客户端
+* Eshell
 #+BEGIN_SRC emacs-lisp
-  ;; wanderlust
-  (unless (package-installed-p 'wanderlust)
-    (package-install 'wanderlust))
-  (autoload 'wl "wl" "Wanderlust" t)
-  (autoload 'wl-other-frame "wl" "Wanderlust on new frame." t)
-  (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
-  (require 'wl-spam)
+  (global-set-key (kbd "<f9>") 'eshell)
 #+END_SRC
-
