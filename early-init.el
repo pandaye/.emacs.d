@@ -55,7 +55,9 @@
                             (left-fringe    . 3)
                             (right-fringe   . 0)
                             (font . "Fira Mono 13")
-                            (vertical-scroll-bars . nil)))
+                            (vertical-scroll-bars . nil)
+                            (internal-border-width . 5)))
+
 ;;启动时窗口大小
 (add-to-list 'default-frame-alist '(width . 140))
 (add-to-list 'default-frame-alist '(length . 100))
