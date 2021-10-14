@@ -41,8 +41,7 @@
   (set-face-attribute 'fringe nil :background nil)
 #+end_src
 
-Disable ugly [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Fringe-Bitmaps.html
-][bitmap]] in fringe.
+Disable ugly [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Fringe-Bitmaps.html][bitmap]] in fringe.
 #+begin_src emacs-lisp
   (define-fringe-bitmap 'left-arrow [])
   (define-fringe-bitmap 'left-curly-arrow [])
@@ -107,7 +106,7 @@ Valign 方案听说能完美解决表格编排，不过和 org-indent-mode 一�
 #+END_SRC
 
 ** scrolling
-Smooth scrolling
+平滑滚动
 #+BEGIN_SRC emacs-lisp
   (use-package smooth-scrolling
     :ensure t
@@ -121,7 +120,7 @@ Smooth scrolling
   ;;       redisplay-skip-fontification-on-input t)
 #+END_SRC
 
-** buffer
+** buffer management
 #+BEGIN_SRC emacs-lisp
   (defalias 'list-buffers 'ibuffer)  
 #+END_SRC
@@ -179,13 +178,7 @@ Org mode 是使用 Emacs 的一个重要原因
     :init
     (global-set-key [f8] 'neotree-toggle)
     (global-set-key [f7] 'neotree-find)
-    (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
-    )
-
-  (unless (package-installed-p 'all-the-icons)
-    (package-install 'all-the-icons)
-    (all-the-icons-install-fonts t)
-    )
+    (setq neo-theme 'arrow))
 #+END_SRC
 
 * Helm
