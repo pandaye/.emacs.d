@@ -80,14 +80,14 @@ Display … and ↩ for truncation and wrap.
   (dolist (charset '(kana han symbol cjk-misc bopomofo))
     (set-fontset-font (frame-parameter nil 'font)
                       charset (font-spec :family "Sarasa Mono SC")))
-  ;; (setq face-font-rescale-alist '(("Noto Sans CJK SC" . 1.2)))
+  (setq face-font-rescale-alist '(("Sarasa Mono SC" . 1.2)))
 #+END_SRC
 Valign 方案听说能完美解决表格编排，不过和 org-indent-mode 一起用有问题，暂时不用，使用换字体的方案
 #+begin_src emacs-lisp
   ;; (use-package valign
   ;;   :config
   ;;   (setq valign-fancy-bar nil))
-  (when (display-graphic-p) (set-face-attribute 'org-table nil :family "M+ 1m" :height 120 :weight 'bold))
+  ;; (when (display-graphic-p) (set-face-attribute 'org-table nil :family "M+ 1m" :height 120 :weight 'bold))
 #+end_src
 
 * Better Use
@@ -149,6 +149,17 @@ Valign 方案听说能完美解决表格编排，不过和 org-indent-mode 一�
     (add-hook 'racket-mode-hook 'rainbow-delimiters-mode)
   )
 #+END_SRC
+** lisp edit
+Paredit YYDS
+#+begin_src emacs-lisp 
+  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+  (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+  (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+  (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+  (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+  (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+#+end_src
 
 * Org-mode
 Org mode 是使用 Emacs 的一个重要原因
@@ -225,7 +236,6 @@ Org mode 是使用 Emacs 的一个重要原因
 通用补全插件
 #+BEGIN_SRC emacs-lisp
   (use-package company
-    :ensure t
     :defer t
     :init
     (add-hook 'prog-mode-hook 'company-mode)
@@ -246,9 +256,6 @@ Org mode 是使用 Emacs 的一个重要原因
   (use-package lsp-mode
     :ensure t
     :commands lsp)
-  ;(use-package company-lsp
-  ;  :ensure t
-  ;  :commands company-lsp)
   (use-package lsp-ui
     :ensure t
     :commands lsp-ui-mode

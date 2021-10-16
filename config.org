@@ -426,10 +426,11 @@ Make =Command/Option + ArrowKey= behaves like MacOS app.
 
 *** Searching Text
 **** Keybindings
-| Keybindings         | Features                      |
-|---------------------+-------------------------------|
-| =Command + F=         | Search text in Buffer         |
-| =Shift + Command + F= | Search text in current folder |
+| Keybindings                  | Features                      |
+|------------------------------+-------------------------------|
+| =Command + F=                | Search text in Buffer         |
+| =Shift + Command + F=        | Search text in current folder |
+| 最完美的方案还是最初的。。。 | 淦                            |
 
 *** Selecting Text
 **** Keybindings
