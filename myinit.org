@@ -254,20 +254,21 @@ Org mode 是使用 Emacs 的一个重要原因
 * Lsp
 #+BEGIN_SRC emacs-lisp
   (use-package lsp-mode
-    :ensure t
+    :init
+    (setq lsp-keymap-prefix "C-c l")
+    :hook ((python-mode .lsp)
+           (cc-mode . lsp))
     :commands lsp)
   (use-package lsp-ui
-    :ensure t
     :commands lsp-ui-mode
-    :hook
-    ((lsp-mode . lsp-ui-mode))
     :bind
     ("s-i" . lsp-ui-imenu))
+  (use-package helm-lsp
+    :commands helm-lsp-workspace-symbol)
 #+END_SRC
 
 * Program Langrage
 ** Python
-补全使用 lsp
 ** C&C++
 补全索引使用 lsp 内置 clangd
 #+BEGIN_SRC emacs-lisp
@@ -291,6 +292,7 @@ Org mode 是使用 Emacs 的一个重要原因
       (:map racket-mode-map
             ("C-x C-j" . racket-run)))
   #+END_SRC
+ 
 ** Emacs-lisp
 #+BEGIN_SRC emacs-lisp
   (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
