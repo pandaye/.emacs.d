@@ -194,16 +194,14 @@ Org mode 是使用 Emacs 的一个重要原因
 
 * Helm
 #+BEGIN_SRC emacs-lisp
-  (use-package helm
-    :ensure t
-    :bind (("C-x C-f" . helm-find-files)
-           ("M-x" . helm-M-x)))
+  (use-package helm)
 
   (require 'helm)
   (require 'helm-config)      ;?
   (require 'helm-eshell)      ;?
   (require 'helm-files)       ;?
   (require 'helm-grep)
+  (require 'helm-xref)
 
   ; do not display invisible candidates
   (setq helm-quick-update t)
@@ -220,14 +218,16 @@ Org mode 是使用 Emacs 的一个重要原因
   (setq helm-ff-file-name-history-use-recentf t)
 
   (use-package helm-swoop
-    :ensure t
     :bind (("C-s" . helm-swoop)
            ("C-r" . helm-swoop)))
 
-  (use-package helm-xref
-    :ensure t
-    :config
-    (setq xref-show-xrefs-function 'helm-xref-show-xrefs))
+  (define-key global-map [remap find-file] #'helm-find-files)
+  (define-key global-map [remap execute-extended-command] #'helm-M-x)
+  (define-key global-map [remap switch-to-buffer] #'helm-mini)
+
+  ;; (use-package helm-xref
+  ;;   :config
+  ;;   (setq xref-show-xrefs-function 'helm-xref-show-xrefs))
 
   (helm-mode 1)
 #+END_SRC
@@ -255,22 +255,28 @@ Org mode 是使用 Emacs 的一个重要原因
 #+BEGIN_SRC emacs-lisp
   (use-package lsp-mode
     :init
+    ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
     (setq lsp-keymap-prefix "C-c l")
-    :hook ((python-mode .lsp)
-           (cc-mode . lsp))
+    :hook ((python-mode . lsp)
+           (c++-mode . lsp)
+           (c-mode . lsp)
+           (lsp-mode . lsp-enable-which-key-integration))
     :commands lsp)
+
+  ;; optionally
   (use-package lsp-ui
     :commands lsp-ui-mode
-    :bind
-    ("s-i" . lsp-ui-imenu))
-  (use-package helm-lsp
-    :commands helm-lsp-workspace-symbol)
+    :config
+    (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+    (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references))
+
+  (use-package helm-lsp :commands helm-lsp-workspace-symbol)
 #+END_SRC
 
 * Program Langrage
 ** Python
 ** C&C++
-补全索引使用 lsp 内置 clangd
+补全索引使用 lsp ccls
 #+BEGIN_SRC emacs-lisp
   (setq c-default-style "linux"
         c-basic-offset 4)
@@ -278,6 +284,10 @@ Org mode 是使用 Emacs 的一个重要原因
   (add-hook 'c-mode-common-hook
             '(lambda () (setq indent-tabs-mode t)))
 
+  ;; (use-package ccls
+  ;;   :hook ((c-mode c++-mode objc-mode cuda-mode) .
+  ;;          (lambda () (require 'ccls) (lsp)))
+  ;;   :config (setq ccls-executable "/usr/bin/ccls"))
 #+END_SRC
 
 ** Scheme
