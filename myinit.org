@@ -181,7 +181,7 @@ Org mode 是使用 Emacs 的一个重要原因
   (setq org-src-fontify-natively t)
 #+end_src
 
-* Project Tree
+* File Tree
 安装 NeoTree
 #+BEGIN_SRC emacs-lisp
   (use-package neotree
@@ -191,6 +191,16 @@ Org mode 是使用 Emacs 的一个重要原因
     (global-set-key [f7] 'neotree-find)
     (setq neo-theme 'arrow))
 #+END_SRC
+
+* Project Navigate
+使用 projectile
+#+begin_src  emacs-lisp
+  (use-package projectile
+    :init
+    (projectile-mode +1)
+    :bind (:map projectile-mode-map
+                ("C-c p" . projectile-command-map)))
+#+end_src
 
 * Helm
 #+BEGIN_SRC emacs-lisp
@@ -257,8 +267,7 @@ Org mode 是使用 Emacs 的一个重要原因
     :init
     ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
     (setq lsp-keymap-prefix "C-c l")
-    :hook ((python-mode . lsp)
-           (c++-mode . lsp)
+    :hook ((c++-mode . lsp)
            (c-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
     :commands lsp)
@@ -275,6 +284,14 @@ Org mode 是使用 Emacs 的一个重要原因
 
 * Program Langrage
 ** Python
+#+begin_src emacs-lisp
+  (use-package lsp-python-ms
+    :init (setq lsp-python-ms-auto-install-server t)
+    :hook (python-mode . (lambda ()
+                            (require 'lsp-python-ms)
+                            (lsp))))
+#+end_src
+
 ** C&C++
 补全索引使用 lsp ccls
 #+BEGIN_SRC emacs-lisp
@@ -330,6 +347,10 @@ Org mode 是使用 Emacs 的一个重要原因
 #+BEGIN_SRC emacs-lisp
   (use-package yaml-mode
     :ensure t)
+
+  (use-package cmake-mode
+    :hook
+    ((cmake-mode . lsp)))
 #+END_SRC
 
 * Yasnippet 

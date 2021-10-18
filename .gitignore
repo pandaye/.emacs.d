@@ -22,3 +22,5 @@ myinit.el
 package-quickstart.el
 amx-items
 places
+*.eld
+*.cache
