@@ -149,6 +149,7 @@ Valign 方案听说能完美解决表格编排，不过和 org-indent-mode 一�
     (add-hook 'racket-mode-hook 'rainbow-delimiters-mode)
   )
 #+END_SRC
+
 ** lisp edit
 Paredit YYDS
 #+begin_src emacs-lisp 
@@ -259,6 +260,9 @@ Org mode 是使用 Emacs 的一个重要原因
     (setq company-idle-delay 0.1)
     :bind
     (("M-/" . company-complete)))
+
+  (use-package company-box
+    :hook (company-mode . company-box-mode))
 #+END_SRC
  
 * Lsp
@@ -270,7 +274,8 @@ Org mode 是使用 Emacs 的一个重要原因
     :hook ((c++-mode . lsp)
            (c-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
-    :commands lsp)
+    :commands lsp
+  )
 
   ;; optionally
   (use-package lsp-ui
@@ -397,15 +402,16 @@ Org mode 是使用 Emacs 的一个重要原因
                  (add-to-list 'TeX-command-list
                                '("XeLaTeX" "%'xelatex%(mode)%' %t"
                                             TeX-run-TeX nil t))
-                 (setq TeX-command-default "XeLaTeX"))
+                 (setq TeX-command-default "XeLaTeX")
+                 (setq lsp-tex-server 'texlab)
+                 (lsp))
      )
      :config
      (setq TeX-fold-env-spec-list
            (quote (("[figure]" ("figure"))
                    ("[table]" ("table"))
                    ("[itemize]" ("itemize"))
-                   ("[overpic]" ("overpic")))))
-   )
+                   ("[overpic]" ("overpic"))))))
 #+END_SRC
 
 * Version Control
