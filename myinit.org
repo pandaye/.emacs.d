@@ -301,10 +301,10 @@ Org mode 是使用 Emacs 的一个重要原因
 补全索引使用 lsp ccls
 #+BEGIN_SRC emacs-lisp
   (setq c-default-style "linux"
-        c-basic-offset 4)
+        c-basic-offset 2)
 
-  (add-hook 'c-mode-common-hook
-            '(lambda () (setq indent-tabs-mode t)))
+  ;; (add-hook 'c-mode-common-hook
+  ;;           '(lambda () (setq indent-tabs-mode t)))
 
   ;; (use-package ccls
   ;;   :hook ((c-mode c++-mode objc-mode cuda-mode) .
