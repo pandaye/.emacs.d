@@ -30,7 +30,6 @@
   (setq-default tab-width 4)
   ;; 高亮行号
   (use-package hlinum
-    :ensure t
     :config
     (hlinum-activate))
 #+END_SRC
