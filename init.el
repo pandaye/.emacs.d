@@ -6,9 +6,8 @@
 ;;; Code:
 (setq package-enable-at-startup nil)
 (setq package-archives
-      '(("gnu" . "https://elpa.emacs-china.org/gnu/")
-        ("melpa" . "https://elpa.emacs-china.org/melpa/")
-        ("marmalade" . "https://elpa.emacs-china.org/marmalade/")))
+      '(("gnu" . "http://elpa.emacs-china.org/gnu/")
+        ("melpa" . "http://elpa.emacs-china.org/melpa/")))
 (package-initialize)
 
 (setq custom-file (locate-user-emacs-file "custom.el"))

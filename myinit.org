@@ -210,7 +210,8 @@ Org mode 是使用 Emacs 的一个重要原因
   (require 'helm-eshell)      ;?
   (require 'helm-files)       ;?
   (require 'helm-grep)
-  (require 'helm-xref)
+  (use-package helm-xref
+    :ensure t)
 
   ; do not display invisible candidates
   (setq helm-quick-update t)
@@ -269,7 +270,9 @@ Org mode 是使用 Emacs 的一个重要原因
     :init
     ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
     (setq lsp-keymap-prefix "C-c l")
-    :hook ((c++-mode . lsp)
+    (setq lsp-python-server 'pyls)
+    :hook ((python-mode . lsp)
+           (c++-mode . lsp)
            (c-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
     :commands lsp
@@ -290,14 +293,6 @@ Org mode 是使用 Emacs 的一个重要原因
 
 * Program Langrage
 ** Python
-#+begin_src emacs-lisp
-  (use-package lsp-python-ms
-    :init (setq lsp-python-ms-auto-install-server t)
-    :hook (python-mode . (lambda ()
-                            (require 'lsp-python-ms)
-                            (lsp))))
-#+end_src
-
 ** C&C++
 补全索引使用 lsp ccls
 #+BEGIN_SRC emacs-lisp
@@ -330,6 +325,13 @@ Org mode 是使用 Emacs 的一个重要原因
 #+BEGIN_SRC emacs-lisp
   (add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
 #+END_SRC
+** Clojure
+#+begin_src emacs-lisp
+  (use-package clojure-mode
+    :ensure t
+    :hook ((clojure-mode . enable-paredit-mode)
+           (clojure-mode . rainbow-delimiters-mode)))
+#+end_src
 
 * Marked Language 
 ** markdown
