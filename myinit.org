@@ -272,8 +272,7 @@ Org mode 是使用 Emacs 的一个重要原因
     (setq lsp-keymap-prefix "C-c l")
     (setq lsp-python-server 'pyls)
     :hook ((python-mode . lsp)
-           (c++-mode . lsp)
-           (c-mode . lsp)
+           (sh-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
     :commands lsp
   )
@@ -302,10 +301,14 @@ Org mode 是使用 Emacs 的一个重要原因
   ;; (add-hook 'c-mode-common-hook
   ;;           '(lambda () (setq indent-tabs-mode t)))
 
-  ;; (use-package ccls
-  ;;   :hook ((c-mode c++-mode objc-mode cuda-mode) .
-  ;;          (lambda () (require 'ccls) (lsp)))
-  ;;   :config (setq ccls-executable "/usr/bin/ccls"))
+  (use-package ccls
+    :hook ((c-mode c++-mode objc-mode cuda-mode) .
+           (lambda ()
+             (require 'ccls)
+             (unless (or (member major-mode '(bison-mode))
+                         (member major-mode '(flex-mode)))
+               (lsp))))
+    :config (setq ccls-executable "/usr/bin/ccls"))
 #+END_SRC
 
 ** Scheme
