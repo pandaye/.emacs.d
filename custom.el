@@ -6,7 +6,7 @@
  '(TeX-auto-local ".ltxauto")
  '(delete-selection-mode nil)
  '(package-selected-packages
-   '(bison-mode queue cider clojure-mode company-box projectile helm-lsp org-faces org-fragtog org-appear org-superstar valign diff-hl yasnippet htmlize yaml-mode wanderlist racket-mode jedi wanderlust helm-xref ccls lsp cnfonts lsp-imenu lsp-python company-jedi emacs-cquery lsp-ui doom-themes cquery lsp-mode nlinum magit auctex yasnippet-snippets ox-gfm markdown-mode flycheck-plantuml plantuml-mode graphviz-dot-mode cmake-mode flycheck-rtags flycheck-irony company-irony-c-headers company-irony irony company-rtags rtags paredit helm-swoop helm elpy flycheck spacemacs-theme company ace-window which-key use-package try smooth-scrolling rainbow-delimiters powerline org-bullets ob-ipython neotree hlinum all-the-icons)))
+   '(adoc-mode bison-mode queue cider clojure-mode company-box projectile helm-lsp org-faces org-fragtog org-appear org-superstar valign diff-hl yasnippet htmlize yaml-mode wanderlist racket-mode jedi wanderlust helm-xref ccls lsp cnfonts lsp-imenu lsp-python company-jedi emacs-cquery lsp-ui doom-themes cquery lsp-mode nlinum magit auctex yasnippet-snippets ox-gfm markdown-mode flycheck-plantuml plantuml-mode graphviz-dot-mode cmake-mode flycheck-rtags flycheck-irony company-irony-c-headers company-irony irony company-rtags rtags paredit helm-swoop helm elpy flycheck spacemacs-theme company ace-window which-key use-package try smooth-scrolling rainbow-delimiters powerline org-bullets ob-ipython neotree hlinum all-the-icons)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

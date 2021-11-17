@@ -167,9 +167,13 @@ Org mode 是使用 Emacs 的一个重要原因
   (defun turn-on-org-show-all-inline-images ()
     (org-display-inline-images t t))
 
+  (setq org-startup-truncated nil)
+
+  ;; 设置自动折行，但好像吊用没有
   (add-hook 'org-mode-hook
-        (lambda()
-          (setq truncate-lines nil))) 
+            (lambda()
+              (setq truncate-lines nil)))
+
   (add-hook 'org-mode-hook 'turn-on-org-show-all-inline-images)
 
   (use-package ob-ipython
