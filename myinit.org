@@ -184,6 +184,38 @@ Org mode 是使用 Emacs 的一个重要原因
   (setq org-src-fontify-natively t)
 #+end_src
 
+** Org-mode todo
+#+begin_src emacs-lisp
+  (setq org-todo-keywords
+        '((sequence "未开始(p!)" "进行中(t!)" "阻塞中(s!)" "|" "已完成(d!)" "已取消(a@/!)")))
+
+  ;; 设置任务样式
+  (setq org-todo-keyword-faces
+        '(("未开始" . (:foreground "red"    :weight bold))
+          ("阻塞中" . (:foreground "red"    :weight bold))
+          ("进行中" . (:foreground "orange" :weight bold))
+          ("已完成" . (:foreground "green"  :weight bold))
+          ("已取消" . (:background "gray"   :foreground "black"))
+          ))
+
+  (setq gtd-path (expand-file-name "~/ProjectW/Record"))
+  (defvar org-gtd-file
+    (concat gtd-path "/project.org"))
+
+  (defun gtd ()
+    "Open the GTD file."
+    (interactive)
+    (find-file org-gtd-file))
+
+  ;; 设置 Org Agenda 快捷键
+  (global-set-key (kbd "C-c a") 'org-agenda)
+  (global-set-key (kbd "C-c g") 'gtd)
+
+  ;; 加入到日程列表里
+  (setq org-agenda-files (list org-gtd-file))
+
+#+end_src
+
 * File Tree
 安装 NeoTree
 #+BEGIN_SRC emacs-lisp
