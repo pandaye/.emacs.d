@@ -182,6 +182,10 @@ Org mode 是使用 Emacs 的一个重要原因
   (add-hook 'org-mode-hook 'org-indent-mode)
   (setq org-export-with-sub-superscripts (quote {}))
   (setq org-src-fontify-natively t)
+
+  ;; (use-package org-superstar
+  ;;   :after org
+  ;;   :hook (org-mode . org-superstar-mode))
 #+end_src
 
 ** Org-mode todo
