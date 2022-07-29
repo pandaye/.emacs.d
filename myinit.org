@@ -1,3 +1,10 @@
+* Exec Path
+#+begin_src emacs-lisp
+  (add-to-list 'exec-path "/home/bogon/lib/go/bin")
+  (add-to-list 'exec-path "/home/bogon/.local/share/gem/ruby/3.0.0/bin/")
+  (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
+#+end_src
+
 * Package Management
 对于一个可扩展的工具，包管理是首要的，有关包管理初始化的内容放在了 init.el 中，这里仅仅设置了自动下载
 ** Use Package
@@ -176,9 +183,6 @@ Org mode 是使用 Emacs 的一个重要原因
 
   (add-hook 'org-mode-hook 'turn-on-org-show-all-inline-images)
 
-  (use-package ob-ipython
-    :ensure t)
-
   (add-hook 'org-mode-hook 'org-indent-mode)
   (setq org-export-with-sub-superscripts (quote {}))
   (setq org-src-fontify-natively t)
@@ -195,11 +199,11 @@ Org mode 是使用 Emacs 的一个重要原因
 
   ;; 设置任务样式
   (setq org-todo-keyword-faces
-        '(("未开始" . (:foreground "red"    :weight bold))
+        '(("未开始" . (:foreground "#66cccc"    :weight bold))
           ("阻塞中" . (:foreground "red"    :weight bold))
           ("进行中" . (:foreground "orange" :weight bold))
           ("已完成" . (:foreground "green"  :weight bold))
-          ("已取消" . (:background "gray"   :foreground "black"))
+          ("已取消" . (:foreground "black"  :weight bold))
           ))
 
   (setq gtd-path (expand-file-name "~/ProjectW/Record"))
@@ -350,6 +354,17 @@ Org mode 是使用 Emacs 的一个重要原因
                (lsp))))
     :config (setq ccls-executable "/usr/bin/ccls"))
 #+END_SRC
+** Go
+#+begin_src emacs-lisp
+  (add-hook 'go-mode-hook #'lsp-deferred)
+
+  ;; Set up before-save hooks to format buffer and add/delete imports.
+  ;; Make sure you don't have other gofmt/goimports hooks enabled.
+  (defun lsp-go-install-save-hooks ()
+    (add-hook 'before-save-hook #'lsp-format-buffer t t)
+    (add-hook 'before-save-hook #'lsp-organize-imports t t))
+  (add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
+#+end_src
 
 ** Scheme
   #+BEGIN_SRC emacs-lisp

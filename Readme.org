@@ -1,34 +1,6 @@
 #+STARTUP: showall
 
-* 潘大爷的 Emacs 配置
+* Pandaye 的 .emacs.d
 
-面向编程新手的 emacs 配置，使用 DOOM 主题，基本支持 C/C++、Python、Scheme、LaTeX
-
-** 安装
-
-先备份自己的 .emacs.d/ 或者 .emacs 配置，然后使用 Git 克隆仓库到本地
-
-#+BEGIN_SRC shell
-git clone https://github.com/pandaye/.emacs.d.git
-#+END_SRC
-
-启动 Emacs，第一次启动会自动安装所有包，若是出现错误，多半是字体没装，默认字体是 Hack。其他情况关掉重开应该就好了。
-
-** 其他的一些说明
-
-C/C++ 以及 Python 的补全均使用 lsp。
-
-安装 python language server (pyls)：
-#+BEGIN_SRC shell
-pip install 'python-language-server[all]'
-#+END_SRC
-
-C/C++ 使用 clangd，在 openSUSE 下可以安转 clang 与 llvm 以获得 clangd
-#+BEGIN_SRC shell
-sudo zypper install clang llvm
-#+END_SRC
-
-配置主要在 ~myinit.org~ ，很容易看懂。
-
-Have a lot fun..
+虽然没有人看，但还是更新一下说明，太久没更新了，别用
 
