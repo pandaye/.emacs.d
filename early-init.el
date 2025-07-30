@@ -1,122 +1,76 @@
 ;;; early-init.el -*- lexical-binding: t; -*-
 
-;; Emacs HEAD (27+) introduces early-init.el, which is run before init.el,
+;; Emacs 27+ introduces early-init.el, which is run before init.el,
 ;; before package and UI initialization happens.
 
-;; Defer garbage collection further back in the startup process
-;; https://github.com/casouri/lunarymacs/blob/6ce1a6da38d5e5c261d71a495ee2fdbd051303f9/early-init.el#L3-L26
+;;-------------------------Performance Optimization--------------------------
+;; Defer garbage collection during startup for better performance
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 0.6)
+
+;; Restore garbage collection settings after startup
 (add-hook 'emacs-startup-hook
-          (let ((old-list file-name-handler-alist)
-                ;; If x10, half of cpu time is spent on gc when
-                ;; scrolling.
-                (threshold (* 100 gc-cons-threshold))
-                (percentage gc-cons-percentage))
-            (lambda ()
-              (message "Emacs ready in %s with %d garbage collections."
-                       (format "%.2f seconds"
-                               (float-time
-                                (time-subtract after-init-time before-init-time)))
-                       gcs-done)
-              (setq file-name-handler-alist old-list
-                    gc-cons-threshold threshold
-                    gc-cons-percentage percentage)
-              (garbage-collect)))
-          t)
+          (lambda ()
+            (setq gc-cons-threshold (* 16 1024 1024)  ; 16MB
+                  gc-cons-percentage 0.1)
+            (message "Emacs ready in %s with %d garbage collections."
+                     (format "%.2f seconds"
+                             (float-time
+                              (time-subtract after-init-time before-init-time)))
+                     gcs-done)))
 
-(setq file-name-handler-alist nil
-      message-log-max 16384
-      gc-cons-threshold most-positive-fixnum
-      gc-cons-percentage 0.6
-      auto-window-vscroll nil)
+;; Temporarily disable file-name-handler-alist for faster startup
+(defvar pandaye--file-name-handler-alist file-name-handler-alist)
+(setq file-name-handler-alist nil)
 
-;; In Emacs 27+, package initialization occurs before `user-init-file' is
-;; loaded, but after `early-init-file'. Doom handles package initialization, so
-;; we must prevent Emacs from doing it early!
+;; Restore file-name-handler-alist after startup
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq file-name-handler-alist pandaye--file-name-handler-alist)))
+
+;;-------------------------Package Management---------------------------------
+;; Prevent package.el from loading packages before init.el
 (setq package-enable-at-startup nil)
-(setq package-quickstart t)
+;; 不需要 package-quickstart，会与 use-package 冲突
 
-;; Make libgccjit able to use gcc which installed from homebrew
-;;(setenv "LIBGCCJITIBRARY_PATH" "/usr/local/opt/gcc/lib/gcc/10:/usr/local/opt/gcc/lib/gcc/10/gcc/x86_64-apple-darwin20/10.2.0")
+;;-------------------------UI Optimization------------------------------------
+;; Disable startup screen and messages
+(setq inhibit-startup-screen t
+      inhibit-startup-message t
+      initial-scratch-message nil)
 
-;;(setq warning-minimum-level :error)
+;; Disable unnecessary UI elements early
+(push '(menu-bar-lines . 0) default-frame-alist)
+(push '(tool-bar-lines . 0) default-frame-alist)
+(push '(vertical-scroll-bars) default-frame-alist)
 
-(setq inhibit-startup-screen t)
-(setq initial-scratch-message nil)
-(setq inhibit-startup-message t)
-;;-------------------------Frame-----------------------------------------------
-;; Resizing the Emacs frame can be a terribly expensive part of changing the
-;; font. By inhibiting this, we easily halve startup times with fonts that are
-;; larger than the system default.
+;; Prevent the glimpse of un-styled Emacs by setting these early
 (setq frame-inhibit-implied-resize t)
 
-;; Set the frame parameters before it's drawing. Save times for redrawing.
-(setq default-frame-alist '((tool-bar-lines . 0)
-                            (menu-bar-lines . 0)
-                            (left-fringe    . 3)
-                            (right-fringe   . 0)
-                            (font . "Fira Mono 13")
-                            (vertical-scroll-bars . nil)
-                            (internal-border-width . 5)))
+;;-------------------------CLI vs GUI Settings-------------------------------
+(if (display-graphic-p)
+    ;; GUI settings
+    (progn
+      (push '(font . "Fira Mono-13") default-frame-alist)
+      (push '(left-fringe . 3) default-frame-alist)
+      (push '(right-fringe . 0) default-frame-alist)
+      (push '(internal-border-width . 5) default-frame-alist)
+      (push '(width . 140) default-frame-alist)
+      (push '(height . 40) default-frame-alist))  ; 修正：height 而不是 length
+  ;; CLI settings - 在终端中不设置字体和窗口大小
+  (progn
+    (setq menu-bar-mode nil)
+    (setq tool-bar-mode nil)))
 
-;;启动时窗口大小
-(add-to-list 'default-frame-alist '(width . 140))
-(add-to-list 'default-frame-alist '(length . 100))
+;;-------------------------Additional Optimizations-------------------------
+;; Improve redisplay performance
+(setq auto-window-vscroll nil
+      fast-but-imprecise-scrolling t
+      redisplay-skip-fontification-on-input t)
 
-;;-------------------------Key Bindings----------------------------------------
-;; Frame shortcuts
-;; (global-set-key (kbd "s-q") 'save-buffers-kill-emacs)
-;; (global-set-key (kbd "s-W") 'delete-frame)
-;; (global-set-key (kbd "s-`") 'other-frame)
-;; (global-set-key (kbd "M-`") 'other-window)
-;; (global-set-key (kbd "C-s-f") 'toggle-frame-fullscreen)
+;; Reduce rendering workload by not rendering cursors or regions in non-focused windows
+(setq-default cursor-in-non-selected-windows nil)
+(setq highlight-nonselected-windows nil)
 
-;; ;; Buffer shortcuts
-;; (global-set-key (kbd "s-w") 'kill-buffer-and-window)
-;; (global-set-key (kbd "s-[") 'previous-buffer)
-;; (global-set-key (kbd "s-]") 'next-buffer)
-;; (global-set-key (kbd "s-s") 'save-buffer)
-;; (global-set-key (kbd "C-,") 'open-config-file)
-;; (global-set-key (kbd "s-.") 'reload-init-file)
-
-;; (defun open-config-file ()
-;;   (interactive)
-;;   (find-file (expand-file-name "config.org" user-emacs-directory)))
-
-;; (defun reload-init-file ()
-;;   (interactive)
-;;   (load-file user-init-file))
-
-;; ;; Moving Cursor
-;; (global-set-key (kbd "s-<up>") 'beginning-of-buffer)
-;; (global-set-key (kbd "s-<down>") 'end-of-buffer)
-;; (global-set-key (kbd "s-<left>") 'move-beginning-of-line)
-;; (global-set-key (kbd "s-<right>") 'move-end-of-line)
-
-;; ;; Selecting Text
-;; (global-set-key (kbd "s-a") 'mark-whole-buffer)
-
-;; ;; Editing Text
-;; (global-set-key (kbd "s-c") 'kill-ring-save)
-;; (global-set-key (kbd "s-x") 'kill-region)
-;; (global-set-key (kbd "s-v") 'yank)
-;; (global-set-key (kbd "s-z") 'undo)
-;; (global-set-key (kbd "<s-return>") 'newline)
-;; (global-set-key (kbd "s-<backspace>") 'backward-kill-line)
-;; (global-set-key (kbd "s-S-<backspace>") 'kill-whole-line)
-;; (global-set-key (kbd "s-/") 'comment-or-uncomment-region-or-line)
-
-;; (defun backward-kill-line (arg)
-;;   "Kill ARG lines backward."
-;;   (interactive "p")
-;;   (kill-line (- 1 arg)))
-
-;; (defun comment-or-uncomment-region-or-line ()
-;;   "Comments or uncomments the region or the current line if
-;; there's no active region."
-;;   (interactive)
-;;   (let (beg end)
-;;     (if (region-active-p)
-;;         (setq beg (region-beginning) end (region-end))
-;;       (setq beg (line-beginning-position) end (line-end-position)))
-;;     (comment-or-uncomment-region beg end)))
-
+;; More performant rapid scrolling over unfontified regions
+(setq jit-lock-defer-time 0)
