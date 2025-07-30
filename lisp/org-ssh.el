@@ -77,10 +77,16 @@
            (format "SSH: %s" (or desc host))))
 
 ;; 快速创建新的服务器组文件
+
+;; 配置 SSH 服务器组文件目录变量
+(defvar my/ssh-configs-dir (expand-file-name "~/Workspace/ssh-configs/")
+  "存放 SSH 服务器组 org 文件的目录。")
+
+;; 优化后的模板创建函数
 (defun my/create-ssh-template (filename group-name default-user default-port)
   "创建新的 SSH 服务器组文件模板。"
   (interactive 
-   (list (read-file-name "文件名: " "~/ssh-configs/" nil nil ".org")
+   (list (read-file-name "文件名: " my/ssh-configs-dir nil nil ".org")
          (read-string "服务器组名称: ")
          (read-string "默认用户名: " user-login-name)
          (read-string "默认端口: " "22")))
@@ -98,6 +104,15 @@
     (insert "- [[ssh:][Server-01]]\n")
     (write-file filename))
   (find-file filename))
+
+;; 新增：在 my/ssh-configs-dir 目录下选择并打开服务器组文件
+(defun my/open-ssh-group-file ()
+  "在 my/ssh-configs-dir 目录下选择并打开一个 SSH 服务器组 org 文件。"
+  (interactive)
+  (let* ((file (read-file-name "选择服务器组文件: " my/ssh-configs-dir nil t nil
+                               (lambda (f) (string-match-p "\\.org$" f)))))
+    (when (and file (file-exists-p file))
+      (find-file file))))
 
 ;; 批量连接当前文件的所有服务器
 (defun my/connect-all-servers-in-file ()
@@ -146,11 +161,14 @@
 
 
 ;; 在 org-mode 中添加便捷键绑定
+
 (eval-after-load 'org
   '(progn
      (define-key org-mode-map (kbd "C-c s c") 'my/connect-all-servers-in-file)
      (define-key org-mode-map (kbd "C-c s a") 'my/add-server-to-current-group)
      (define-key org-mode-map (kbd "C-c s s") 'my/show-ssh-config-summary)
-     (define-key org-mode-map (kbd "C-c s n") 'my/create-ssh-template)))
+     (define-key org-mode-map (kbd "C-c s n") 'my/create-ssh-template)
+     (define-key org-mode-map (kbd "C-c s o") 'my/open-ssh-group-file)))
 
 (provide 'org-ssh)
+
