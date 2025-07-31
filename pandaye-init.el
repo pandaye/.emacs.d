@@ -145,22 +145,26 @@
   :ensure t
   :after evil
   :init
-  (setq evil-escape-key-sequence "jj"      ;; 你也可以用 "fd" 或 "jj"
-        evil-escape-delay 0.2)             ;; 连续按下的最大间隔秒数
+  (setq evil-escape-key-sequence "jj"
+	evil-escape-delay 0.2)
   :config
+  ;; 只在 insert 状态下启用 evil-escape
+  (defun my/evil-escape-insert-only ()
+    (not (eq evil-state 'insert)))
+  (setq evil-escape-inhibit-functions '(my/evil-escape-insert-only))
   (evil-escape-mode 1))
 
 
 (setq org-todo-keywords
-      '((sequence "未开始(p!)" "进行中(t!)" "阻塞中(s!)" "|" "已完成(d!)" "已取消(a@/!)")))
+      '((sequence "TODO(p!)" "PROCESSING(t!)" "BLOCK(s!)" "|" "DONE(d!)" "CANCEL(a@/!)")))
 
 ;; 设置任务样式
 (setq org-todo-keyword-faces
-      '(("未开始" . (:foreground "#66cccc"    :weight bold))
-        ("阻塞中" . (:foreground "red"    :weight bold))
-        ("进行中" . (:foreground "orange" :weight bold))
-        ("已完成" . (:foreground "green"  :weight bold))
-        ("已取消" . (:foreground "black"  :weight bold))
+      '(("TODO"  . (:foreground "#66cccc"    :weight bold))
+        ("BLOCK" . (:foreground "red"    :weight bold))
+        ("PROCESSING" . (:foreground "orange" :weight bold))
+        ("DONE" . (:foreground "green"  :weight bold))
+        ("CANCEL" . (:foreground "black"  :weight bold))
         ))
 
 (setq gtd-path (expand-file-name "~/.pandaye-journal"))

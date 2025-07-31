@@ -16,20 +16,18 @@
 (defun my/get-ssh-config (host)
   "获取当前文件的 SSH 配置，合并文件级和条目级属性。"
   (let* ((file-props (my/get-file-properties))
-         (entry-props (org-entry-properties))
          ;; 优先级：条目属性 > 文件属性 > 默认值
-         (user (or (cdr (assoc "SSH_USER" entry-props))
+         (user (or (org-entry-get nil "SSH_USER")
                    (cdr (assoc "SSH_USER" file-props))
                    "root"))
-         (port (or (cdr (assoc "SSH_PORT" entry-props))
+         (port (or (org-entry-get nil "SSH_PORT")
                    (cdr (assoc "SSH_PORT" file-props))
                    "22"))
-         (password (or (cdr (assoc "SSH_PASSWORD" entry-props))
-                       (cdr (assoc "SSH_PASSWORD" file-props))))
-         (key-file (or (cdr (assoc "SSH_KEY_FILE" entry-props))
-                       (cdr (assoc "SSH_KEY_FILE" file-props))))
-         (clean-known-hosts (or (cdr (assoc "SSH_CLEAN_KNOWN_HOSTS" entry-props))
+         (password (cdr (assoc "SSH_PASSWORD" file-props)))
+         (key-file (cdr (assoc "SSH_KEY_FILE" file-props)))
+         (clean-known-hosts (or (org-entry-get nil "SSH_CLEAN_KNOWN_HOSTS")
                                 (cdr (assoc "SSH_CLEAN_KNOWN_HOSTS" file-props)))))
+    (message "[org-ssh] %s:%s" host port)
     (list :host host
           :user user  
           :port port
