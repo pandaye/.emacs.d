@@ -29,6 +29,8 @@
 (add-to-list 'load-path
 	     (expand-file-name "lisp" user-emacs-directory))
 
+(require 'use-meow)
+
 (load (expand-file-name "pandaye-init.el" user-emacs-directory))
 
 (provide 'init)
