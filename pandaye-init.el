@@ -179,3 +179,16 @@
   (setq doom-modeline-time t)                       ; 显示时间
   (setq doom-modeline-time-icon nil))               ; 时间不显示图标
 
+
+(use-package ace-window
+  :ensure t
+  :init
+  (global-set-key [remap other-window] 'ace-window))
+
+(use-package rainbow-delimiters
+  :ensure t
+  :init
+  (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'racket-mode-hook 'rainbow-delimiters-mode)
+)

@@ -52,53 +52,6 @@
 (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
 (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
 
-(defun turn-on-org-show-all-inline-images ()
-  (org-display-inline-images t t))
-
-(setq org-startup-truncated nil)
-
-;; 设置自动折行，但好像吊用没有
-(add-hook 'org-mode-hook
-          (lambda()
-            (setq truncate-lines nil)))
-
-(add-hook 'org-mode-hook 'turn-on-org-show-all-inline-images)
-
-(add-hook 'org-mode-hook 'org-indent-mode)
-(setq org-export-with-sub-superscripts (quote {}))
-(setq org-src-fontify-natively t)
-
-;; (use-package org-superstar
-;;   :after org
-;;   :hook (org-mode . org-superstar-mode))
-
-(setq org-todo-keywords
-      '((sequence "未开始(p!)" "进行中(t!)" "阻塞中(s!)" "|" "已完成(d!)" "已取消(a@/!)")))
-
-;; 设置任务样式
-(setq org-todo-keyword-faces
-      '(("未开始" . (:foreground "#66cccc"    :weight bold))
-        ("阻塞中" . (:foreground "red"    :weight bold))
-        ("进行中" . (:foreground "orange" :weight bold))
-        ("已完成" . (:foreground "green"  :weight bold))
-        ("已取消" . (:foreground "black"  :weight bold))
-        ))
-
-(setq gtd-path (expand-file-name "~/.pandaye-journal"))
-(defvar org-gtd-file
-  (concat gtd-path "/project.org"))
-
-(defun gtd ()
-  "Open the GTD file."
-  (interactive)
-  (find-file org-gtd-file))
-
-;; 设置 Org Agenda 快捷键
-(global-set-key (kbd "C-c a") 'org-agenda)
-(global-set-key (kbd "C-c g") 'gtd)
-
-;; 加入到日程列表里
-(setq org-agenda-files (list org-gtd-file))
 
 (use-package neotree
   :ensure t
