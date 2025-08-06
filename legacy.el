@@ -26,23 +26,6 @@
 (defalias 'list-buffers 'ibuffer)
 
 (winner-mode 1)
-(use-package ace-window
-  :ensure t
-  :init
-  (progn
-    (global-set-key [remap other-window] 'ace-window)
-    (custom-set-faces
-     '(aw-leading-char-face
-       ((t (:inherit ace-jump-face-foreground :height 3.0)))))
-    ))
-
-(use-package rainbow-delimiters
-  :ensure t
-  :init
-  (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'racket-mode-hook 'rainbow-delimiters-mode)
-)
 
 (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
 (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
@@ -51,7 +34,6 @@
 (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
 (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
 (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
-
 
 (use-package neotree
   :ensure t
@@ -67,6 +49,7 @@
               ("C-c p" . projectile-command-map)))
 
 (require 'myscheme)
+
 (use-package racket-mode
   :ensure t
   :config

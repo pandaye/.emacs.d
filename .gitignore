@@ -24,3 +24,5 @@ amx-items
 places
 *.eld
 *.cache
+*rime/
+*.db

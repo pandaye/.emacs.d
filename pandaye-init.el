@@ -34,8 +34,8 @@
         ivy-wrap t
         ivy-height 15
         ;; 智能模糊匹配 - 更精确的匹配策略
-        ivy-re-builders-alist '((counsel-M-x . ivy--regex-fuzzy)           ; M-x 使用模糊匹配
-                                (counsel-find-file . ivy--regex-plus)       ; 文件查找使用增强匹配
+        ivy-re-builders-alist '((counsel-M-x . ivy--regex-fuzzy)            ; M-x 使用模糊匹配
+                                (counsel-find-file . ivy--regex-fuzzy)       ; 文件查找使用增强匹配
                                 (counsel-file-jump . ivy--regex-fuzzy)      ; 文件跳转使用模糊匹配
                                 (swiper . ivy--regex-plus)                  ; 搜索使用增强匹配
                                 (ivy-switch-buffer . ivy--regex-plus)       ; 缓冲区切换使用增强匹配
@@ -95,9 +95,9 @@
         ("CANCEL" . (:foreground "black"  :weight bold))
         ))
 
-(setq gtd-path (expand-file-name "~/.pandaye-journal"))
+(setq org-base-path (expand-file-name "~/.pandaye-journal"))
 (defvar org-gtd-file
-  (concat gtd-path "/project.org"))
+  (concat org-base-path "/project.org"))
 
 (defun gtd ()
   "Open the GTD file."
@@ -192,3 +192,21 @@
   (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
   (add-hook 'racket-mode-hook 'rainbow-delimiters-mode)
 )
+
+(use-package org-roam
+  :ensure t
+  :custom
+  (org-roam-directory (file-truename org-base-path))
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n g" . org-roam-graph)
+         ("C-c n i" . org-roam-node-insert)
+         ("C-c n c" . org-roam-capture)
+         ;; Dailies
+         ("C-c n j" . org-roam-dailies-capture-today))
+  :config
+  ;; If you're using a vertical completion framework, you might want a more informative completion interface
+  (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+  (org-roam-db-autosync-mode)
+  ;; If using org-roam-protocol
+  (require 'org-roam-protocol))

@@ -1,6 +1,9 @@
 (add-to-list 'load-path
        (expand-file-name "meow" user-emacs-directory))
 
+(defvar *IS-MAC* (eq system-type 'darwin)
+    "Check if the current system is macOS.")
+
 (require 'meow)
 
 (defun meow-setup ()
@@ -21,9 +24,11 @@
    '("8" . meow-digit-argument)
    '("9" . meow-digit-argument)
    '("0" . meow-digit-argument)
+   '("s" . "C-s") ; leader+s 映射到搜索功能
    '("/" . meow-keypad-describe-key)
    '("?" . meow-cheatsheet))
   (meow-normal-define-key
+   '(";" . meow-reverse)
    '("0" . meow-expand-0)
    '("9" . meow-expand-9)
    '("8" . meow-expand-8)
@@ -35,7 +40,6 @@
    '("2" . meow-expand-2)
    '("1" . meow-expand-1)
    '("-" . negative-argument)
-   '(";" . meow-reverse)
    '("," . meow-inner-of-thing)
    '("." . meow-bounds-of-thing)
    '("[" . meow-beginning-of-thing)
@@ -88,5 +92,22 @@
 
 (meow-setup)
 (meow-global-mode 1)
+
+(defun meow-not-insert-p ()
+  "Return t if Meow is not in insert state, nil if in insert state."
+  (not (and (bound-and-true-p meow-mode)
+            (eq (meow--current-state) 'insert))))
+
+(use-package rime
+  :ensure t
+  :init
+  (setq rime-librime-root (expand-file-name "~/.emacs.d/librime")
+	rime-disable-predicates
+	'(meow-not-insert-p
+	  rime-predicate-after-alphabet-char-p
+          rime-predicate-prog-in-code-p))
+  :custom
+  (default-input-method "rime"))
+
 
 (provide 'use-meow)
