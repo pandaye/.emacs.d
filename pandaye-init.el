@@ -125,60 +125,6 @@
   :ensure t
   :if (display-graphic-p))
 
-;; Doom Modeline - 专为 CLI 优化的配置
-(use-package doom-modeline
-  :ensure t
-  :init 
-  (doom-modeline-mode 1)
-  :config
-  ;; CLI 优化的基本配置
-  (setq doom-modeline-height 28)                    ; 增加高度以突出显示
-  (setq doom-modeline-bar-width 4)                  ; 加宽左侧状态条
-  (setq doom-modeline-window-width-limit 85)        ; 适合终端宽度
-  
-  ;; CLI 环境优化
-  (setq doom-modeline-icon nil)                     ; 关闭图标（CLI 中可能显示异常）
-  (setq doom-modeline-major-mode-icon nil)          ; 关闭主模式图标
-  (setq doom-modeline-major-mode-color-icon nil)    ; 关闭彩色图标
-  (setq doom-modeline-buffer-state-icon nil)        ; 关闭缓冲区状态图标
-  (setq doom-modeline-buffer-modification-icon nil) ; 关闭修改状态图标
-  (setq doom-modeline-unicode-fallback t)           ; 使用 Unicode 替代图标
-  
-  ;; Evil 状态突出显示
-  (setq doom-modeline-modal t)                      ; 启用模态编辑指示
-  (setq doom-modeline-modal-icon nil)               ; 关闭模态图标，使用文字
-  (setq doom-modeline-modal-modern-icon nil)        ; 关闭现代图标样式
-  
-  ;; CLI 专用设置 - 显示完整状态名称
-  (setq doom-modeline-always-show-macro-register t) ; 总是显示宏寄存器
-  (setq doom-modeline-persp-name t)                 ; 显示透视图名称
-  (setq doom-modeline-display-default-persp-name nil) ; 不显示默认透视图
-  (setq doom-modeline-workspace-name t)             ; 显示工作区名称
-  
-  ;; 显示配置优化
-  (setq doom-modeline-project-detection 'auto)      ; 自动检测项目
-  (setq doom-modeline-buffer-file-name-style 'truncate-with-project) ; 显示项目相对路径
-  (setq doom-modeline-minor-modes nil)              ; 隐藏次要模式
-  
-  ;; Git 配置
-  (setq doom-modeline-vcs-max-length 15)            ; 增加 Git 分支名显示长度
-  (setq doom-modeline-check-simple-format t)        ; 简化的检查信息格式
-  
-  ;; 其他功能
-  (setq doom-modeline-env-version nil)              ; 隐藏环境版本（减少杂乱）
-  (setq doom-modeline-enable-word-count nil)        ; 不显示字数统计
-  (setq doom-modeline-buffer-encoding t)            ; 隐藏编码信息
-  (setq doom-modeline-indent-info nil)              ; 不显示缩进信息
-  (setq doom-modeline-checker-simple-format t)      ; 简化的语法检查格式
-  (setq doom-modeline-lsp nil)                      ; 关闭 LSP 显示
-  (setq doom-modeline-github nil)                   ; 关闭 GitHub 通知
-  (setq doom-modeline-mu4e nil)                     ; 关闭邮件显示
-  (setq doom-modeline-irc nil)                      ; 关闭 IRC 显示
-  
-  ;; 时间显示（CLI 中有用）
-  (setq doom-modeline-time t)                       ; 显示时间
-  (setq doom-modeline-time-icon nil))               ; 时间不显示图标
-
 
 (use-package ace-window
   :ensure t
@@ -210,3 +156,11 @@
   (org-roam-db-autosync-mode)
   ;; If using org-roam-protocol
   (require 'org-roam-protocol))
+
+(use-package org-super-agenda
+  :ensure t
+  :init
+  (org-super-agenda-mode)
+  :config
+  (setq org-super-agenda-groups
+        '((:auto-parent t))))  ;; 自动按父 headline 分组
