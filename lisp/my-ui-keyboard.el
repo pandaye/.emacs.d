@@ -48,7 +48,7 @@
    '("A" . meow-open-below)
    '("b" . meow-back-word)
    '("B" . meow-back-symbol)
-   '("c" . meow-change)
+   '("C" . meow-change)
    '("x" . meow-delete)
    '("X" . meow-backward-delete)
    '("e" . meow-next-word)
@@ -97,17 +97,6 @@
   "Return t if Meow is not in insert state, nil if in insert state."
   (not (and (bound-and-true-p meow-mode)
             (eq (meow--current-state) 'insert))))
-
-(use-package rime
-  :ensure t
-  :init
-  (setq rime-librime-root (expand-file-name "~/.emacs.d/librime")
-	rime-disable-predicates
-	'(meow-not-insert-p
-	  rime-predicate-after-alphabet-char-p
-          rime-predicate-prog-in-code-p))
-  :custom
-  (default-input-method "rime"))
 
 ;; 自定义 Modeline - 简洁实用的状态栏
 (defface custom-modeline-meow-normal
@@ -271,4 +260,4 @@
 (add-hook 'post-command-hook #'custom-modeline-update)
 (add-hook 'buffer-list-update-hook #'custom-modeline-update)
 
-(provide 'use-meow)
+(provide 'my-ui-keyboard)

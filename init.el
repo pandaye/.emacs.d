@@ -29,7 +29,7 @@
 (add-to-list 'load-path
 	     (expand-file-name "lisp" user-emacs-directory))
 
-(require 'use-meow)
+(require 'my-ui-keyboard)
 
 (load (expand-file-name "pandaye-init.el" user-emacs-directory))
 
