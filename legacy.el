@@ -101,28 +101,5 @@
 (use-package yasnippet-snippets
   :ensure t)
 
-(use-package magit
-  :ensure t
-  :init
-  (global-set-key (kbd "C-x g") 'magit-status)
-  (global-set-key (kbd "C-x M-g") 'magit-dispatch-popup))
-
-(use-package diff-hl
-  :ensure t
-  :init
-  (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
-  (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
-  :config
-  (global-diff-hl-mode)
-  ;; Highlight changes on editing.
-  (diff-hl-flydiff-mode)
-  ;; Makes fringe and margin react to mouse clicks to show the curresponding hunk.
-  (diff-hl-show-hunk-mouse-mode)
-  :custom
-  (diff-hl-draw-borders nil)
-  :custom-face
-  (diff-hl-change ((t (:background "#e9cd43"))))
-  (diff-hl-insert ((t (:background "#03e94f"))))
-  (diff-hl-delete ((t (:background "#f5597e")))))
 
 (global-set-key (kbd "<f9>") 'eshell)

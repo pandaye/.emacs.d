@@ -5,7 +5,6 @@ elpa/
 eshell/
 *.dat
 recentf
-mytestinit.org
 example/
 auto-save-list/
 snippets/
@@ -26,3 +25,5 @@ places
 *.cache
 *rime/
 *.db
+.org-id*
+tramp

@@ -46,7 +46,7 @@
   (ivy-mode 1)
   :bind
   (("C-c C-r" . ivy-resume)
-   ("C-x b" . ivy-switch-buffer)
+   ("C-c b" . ivy-switch-buffer)
    ("C-x B" . ivy-switch-buffer-other-window)))
 
 (use-package counsel
@@ -58,12 +58,12 @@
   :bind
   (("M-x"     . counsel-M-x)
    ("C-x C-f" . counsel-find-file)
-   ("C-c g"   . counsel-git)
-   ("C-c j"   . counsel-git-grep)
-   ("C-c k"   . counsel-ag)
-   ("C-x l"   . counsel-locate)
-   ("C-c f"   . counsel-file-jump)   ;; 递归查找文件（支持深度搜索）
-   ("C-c G"   . counsel-git-grep)))  ;; 在 Git 仓库中查找文件
+   ("C-c f f" . counsel-file-jump)))    ;; 递归查找文件（支持深度搜索）
+   ;; ("C-c j"   . counsel-git-grep)
+   ;; ("C-c k"   . counsel-ag)
+   ;; ("C-x l"   . counsel-locate)
+   ;; ("C-c g"   . counsel-git)
+   ;; ("C-c G"   . counsel-git-grep)))  ;; 在 Git 仓库中查找文件
 
 (use-package swiper
   :ensure t
@@ -100,11 +100,63 @@
   :init
   (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
   (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'racket-mode-hook 'rainbow-delimiters-mode)
-)
+  (add-hook 'racket-mode-hook 'rainbow-delimiters-mode))
 
-;; 其他配置
+(use-package magit
+  :ensure t
+  :init
+  (global-set-key (kbd "C-x g") 'magit-status))
 
-;; org SSH 配置
+(use-package diff-hl
+  :ensure t
+  :init
+  (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
+  (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
+  :config
+  (global-diff-hl-mode)
+  ;; Highlight changes on editing.
+  (diff-hl-flydiff-mode)
+  ;; Makes fringe and margin react to mouse clicks to show the curresponding hunk.
+  (diff-hl-show-hunk-mouse-mode)
+  :custom
+  (diff-hl-draw-borders nil)
+  :custom-face
+  (diff-hl-change ((t (:background "#e9cd43"))))
+  (diff-hl-insert ((t (:background "#03e94f"))))
+  (diff-hl-delete ((t (:background "#f5597e")))))
+
+;; macOS 终端下的剪贴板配置
+(defun macos-terminal-clipboard-setup ()
+  "Setup clipboard integration for terminal Emacs on macOS."
+  (when (and (eq system-type 'darwin)
+	     (not (display-graphic-p)))
+
+    ;; 设置剪贴板复制函数
+    (setq interprogram-cut-function
+	  (lambda (text &optional push)
+	    "Copy TEXT to macOS clipboard using pbcopy."
+	    (let ((process-connection-type nil))
+	      (let ((proc (start-process "pbcopy" nil "pbcopy")))
+		(process-send-string proc text)
+		(process-send-eof proc)))))
+
+    ;; 设置剪贴板粘贴函数
+    (setq interprogram-paste-function
+	  (lambda ()
+	    "Paste from macOS clipboard using pbpaste."
+	    (shell-command-to-string "pbpaste")))
+
+    ;; 启用剪贴板交互
+    (setq select-enable-clipboard t
+	  save-interprogram-paste-before-kill t)))
+
+(macos-terminal-clipboard-setup)
+
 (require 'org-ssh)
 (require 'my-org-writing)
+
+(unless (featurep 'org-tempo)
+  (require 'org-tempo))
+
+;; 快捷键设置，和 vscode 一致
+(global-set-key (kbd "C-c f s") 'save-buffer)
