@@ -10,6 +10,8 @@
   :custom
   (default-input-method "rime"))
 
+(global-set-key (kbd "C-c i") 'toggle-input-method)
+
 ;; --------
 ;; GTD 配置
 ;; --------
@@ -50,6 +52,9 @@
  'org-mode
  '(("^ *- State \\(\"[A-Z]+\"\\).*\\[.*\\]"
     0 'font-lock-comment-face t)))
+;; 低可视度 block 标题
+(set-face-attribute 'org-block-begin-line nil :foreground "gray50")
+(set-face-attribute 'org-block-end-line nil :foreground "gray50")
 
 (defvar daily-diary-base-path (concat org-base-path "/daily")
   "Base path for daily diary files.")
@@ -66,10 +71,8 @@
     ;; Create directory if it doesn't exist
     (unless (file-exists-p diary-dir)
       (make-directory diary-dir t))
-
     ;; Open the diary file
     (find-file diary-file)
-
     ;; If it's a new file, add a basic header
     (when (= (buffer-size) 0)
       (insert (format "#+TITLE: Daily Diary - %s\n"
@@ -93,14 +96,11 @@ DATE-STRING should be in format YYYY-MM-DD or MM-DD (current year assumed)."
 	 (month-day (format-time-string "%m-%d" date-time))
 	 (diary-dir (expand-file-name year daily-diary-base-path))
 	 (diary-file (expand-file-name (concat month-day ".org") diary-dir)))
-
     ;; Create directory if it doesn't exist
     (unless (file-exists-p diary-dir)
       (make-directory diary-dir t))
-
     ;; Open the diary file
     (find-file diary-file)
-
     ;; If it's a new file, add a basic header
     (when (= (buffer-size) 0)
       (insert (format "#+TITLE: Daily Diary - %s\n"

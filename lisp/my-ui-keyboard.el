@@ -8,10 +8,6 @@
 
 (defun meow-setup ()
   (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
-  (meow-motion-define-key
-   '("j" . meow-next)
-   '("k" . meow-prev)
-   '("<escape>" . ignore))
   (meow-leader-define-key
    ;; Use SPC (0-9) for digit arguments.
    '("1" . meow-digit-argument)
@@ -27,6 +23,17 @@
    '("s" . "C-s") ; leader+s 映射到搜索功能
    '("/" . meow-keypad-describe-key)
    '("?" . meow-cheatsheet))
+  (meow-motion-define-key
+   '("b" . meow-back-word)
+   '("B" . meow-back-symbol)
+   '("e" . meow-next-word)
+   '("E" . meow-next-symbol)
+   '("y" . meow-save)
+   '("H" . meow-left-expand)
+   '("J" . meow-next-expand)
+   '("K" . meow-prev-expand)
+   '("L" . meow-right-expand)
+   '("<escape>" . ignore))
   (meow-normal-define-key
    '(";" . meow-reverse)
    '("0" . meow-expand-0)
@@ -49,6 +56,7 @@
    '("b" . meow-back-word)
    '("B" . meow-back-symbol)
    '("C" . meow-change)
+   '("D" . meow-kill)
    '("x" . meow-delete)
    '("X" . meow-backward-delete)
    '("e" . meow-next-word)
@@ -71,7 +79,6 @@
    '("o" . meow-block)
    '("O" . meow-to-block)
    '("p" . meow-yank)
-   ;; '("q" . meow-quit)
    '("Q" . meow-goto-line)
    '("r" . meow-replace)
    '("R" . meow-swap-grab)
@@ -83,10 +90,10 @@
    '("v" . meow-visit)
    '("w" . meow-mark-word)
    '("W" . meow-mark-symbol)
-   '("D" . meow-kill)
    '("y" . meow-save)
    '("Y" . meow-sync-grab)
    '("z" . meow-pop-selection)
+   ;; '("q" . meow-quit)
    '("'" . repeat)
    '("<escape>" . ignore)))
 
