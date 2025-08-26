@@ -199,7 +199,6 @@ DATE-STRING should be in format YYYY-MM-DD or MM-DD (current year assumed)."
 (use-package org-roam-ui
   :after org-roam
   ;; 推荐在 org-roam-mode 启动后，顺便启动 UI 的本地服务器
-  :hook (org-roam-mode . org-roam-ui-mode)
   :config
   (setq org-roam-ui-sync-theme t
 	org-roam-ui-follow t
