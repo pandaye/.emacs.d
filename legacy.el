@@ -87,19 +87,4 @@
   :hook
   ((cmake-mode . lsp)))
 
-(use-package yasnippet
-  :ensure t
-  :init
-  (yas-global-mode 1)
-  :config
-  (yas-reload-all)
-  (add-hook 'prog-mode-hook #'yas-minor-mode)
-  (define-key yas-minor-mode-map [(tab)] nil)
-  (define-key yas-minor-mode-map (kbd "TAB") nil)
-  (define-key yas-minor-mode-map (kbd "<tab>") nil)
-  (define-key yas-minor-mode-map [C-tab] 'yas-expand))
-(use-package yasnippet-snippets
-  :ensure t)
-
-
 (global-set-key (kbd "<f9>") 'eshell)

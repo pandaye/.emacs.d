@@ -16,7 +16,7 @@
 ;; GTD 配置
 ;; --------
 (setq org-todo-keywords
-      '((sequence "TODO(p!)" "PROCESSING(t!)" "BLOCK(s!)" "|" "DONE(d!)" "CANCEL(a@/!)")))
+      '((sequence "TODO(t!)" "PROCESSING(p!)" "BLOCK(b!)" "|" "DONE(d!)" "CANCEL(c@/!)")))
 
 ;; 设置任务样式
 (setq org-todo-keyword-faces
@@ -38,6 +38,7 @@
 
 ;; 加入到日程列表里 - 设置整个目录，自动包含所有 .org 文件
 (setq org-agenda-files (list org-base-path))
+(setq org-agenda-skip-timestamp-if-done t)
 
 ;; 快捷键设置
 ;; 设置 Org Agenda 快捷键
@@ -180,14 +181,14 @@ DATE-STRING should be in format YYYY-MM-DD or MM-DD (current year assumed)."
       :unnarrowed t)))
 
   ;; 配置快捷键
-  :bind (("C-c n l" . org-roam-buffer-toggle) ; 切换/显示反向链接缓冲区
+  :bind (;; ("C-c n l" . org-roam-buffer-toggle) ; 切换/显示反向链接缓冲区
 	 ("C-c n f" . org-roam-node-find)     ; 查找笔记
 	 ("C-c n i" . org-roam-node-insert)   ; 插入一个指向笔记的链接
 	 ("C-c n c" . org-roam-capture)       ; 创建一个新的笔记 (非常重要!)
 	 ;; 每日笔记相关的快捷键
 	 ("C-c n g" . org-roam-dailies-goto-today)         ; 
-	 ("C-c n d" . org-roam-dailies-capture-today)      ; 创建到今天的笔记
 	 ("C-c n y" . org-roam-dailies-goto-yesterday)     ; 昨天的笔记
+	 ("C-c n d" . org-roam-dailies-capture-today)      ; 创建到今天的笔记
 	 ("C-c n t" . org-roam-dailies-capture-tomorrow))  ; 明天的笔记
 
   ;; 初始化 org-roam

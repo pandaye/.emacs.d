@@ -2,7 +2,15 @@
        (expand-file-name "meow" user-emacs-directory))
 
 (defvar *IS-MAC* (eq system-type 'darwin)
-    "Check if the current system is macOS.")
+  "Check if the current system is macOS.")
+
+(use-package gruvbox-theme
+  :ensure t
+  :config
+  (load-theme 'gruvbox-dark-medium t))
+
+;; 启用行号
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
 
 (require 'meow)
 

@@ -90,11 +90,6 @@
   ;; 为 counsel-find-file 提供更丰富的信息显示
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
 
-(use-package gruvbox-theme
-  :ensure t
-  :config
-  (load-theme 'gruvbox-dark-medium t))
-
 ;; 安装字体支持（可选，主要用于 GUI）
 (use-package all-the-icons
   :ensure t
@@ -112,16 +107,11 @@
   (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
   (add-hook 'racket-mode-hook 'rainbow-delimiters-mode))
 
-(use-package magit
-  :ensure t
-  :init
-  (global-set-key (kbd "C-x g") 'magit-status))
-
 (use-package diff-hl
   :ensure t
   :init
-  (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
-  (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
+  ;; (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
+  ;; (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
   :config
   (global-diff-hl-mode)
   ;; Highlight changes on editing.
@@ -181,7 +171,14 @@
   :ensure t
   :mode
   ("\\.beancount\\'" . beancount-mode)
-  ("\\.bean\\'". beancount-mode))
+  ("\\.bean\\'". beancount-mode)
+  :config
+  (define-key beancount-mode-map (kbd "TAB") nil))
+
+(use-package go-mode
+  :ensure t
+  :mode
+  ("\\.go\\'" . go-mode))
 
 (use-package lsp-mode
   :ensure t
@@ -203,6 +200,21 @@
 
 (unless (featurep 'org-tempo)
   (require 'org-tempo))
+
+(use-package yasnippet
+  :ensure t
+  :init
+  (yas-global-mode 1)
+  :config
+  (yas-reload-all)
+  ;; (define-key yas-minor-mode-map [(tab)] nil)
+  ;; (define-key yas-minor-mode-map (kbd "TAB") nil)
+  ;; (define-key yas-minor-mode-map (kbd "<tab>") nil)
+  (define-key yas-minor-mode-map (kbd "<tab>") 'yas-expand)
+  (add-hook 'prog-mode-hook #'yas-minor-mode))
+
+(use-package yasnippet-snippets
+  :ensure t)
 
 ;; 快捷键设置，和 vscode 一致
 (global-set-key (kbd "C-c f s") 'save-buffer)
