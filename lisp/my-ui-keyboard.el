@@ -1,5 +1,5 @@
 (add-to-list 'load-path
-       (expand-file-name "meow" user-emacs-directory))
+			 (expand-file-name "meow" user-emacs-directory))
 
 (defvar *IS-MAC* (eq system-type 'darwin)
   "Check if the current system is macOS.")
@@ -11,8 +11,31 @@
 
 ;; 启用行号
 (add-hook 'prog-mode-hook #'display-line-numbers-mode)
+(setq-default tab-width 4)
 
 (require 'meow)
+
+(defun pandaye/meow-execute-key (key-str)
+  "Execute the command currently bound to KEY-STR.
+This acts as a universal bridge for Meow leader keys to emulate
+standard Emacs keybindings, respecting the current mode's keymap."
+  (let ((command (key-binding (kbd key-str))))
+    (if command
+        (progn
+          (setq-local this-command command) ; Make the command known to Emacs
+          (call-interactively command))
+      (message "No command is bound to %s in the current context" key-str))))
+
+;; Define a set of reusable bridge functions
+(defun pandaye/meow-C-left ()
+  "Execute the command for <C-left>."
+  (interactive)
+  (pandaye/meow-execute-key "<C-left>"))
+
+(defun pandaye/meow-C-right ()
+  "Execute the command for <C-right>."
+  (interactive)
+  (pandaye/meow-execute-key "<C-right>"))
 
 (defun meow-setup ()
   (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
@@ -30,17 +53,15 @@
    '("0" . meow-digit-argument)
    '("s" . "C-s") ; leader+s 映射到搜索功能
    '("/" . meow-keypad-describe-key)
-   '("?" . meow-cheatsheet))
+   '("?" . meow-cheatsheet)
+   '("p h" . ("C-left" . pandaye/meow-C-left))
+   '("p l" . ("C-right" . pandaye/meow-C-right)))
   (meow-motion-define-key
    '("b" . meow-back-word)
    '("B" . meow-back-symbol)
    '("e" . meow-next-word)
    '("E" . meow-next-symbol)
    '("y" . meow-save)
-   '("H" . meow-left-expand)
-   '("J" . meow-next-expand)
-   '("K" . meow-prev-expand)
-   '("L" . meow-right-expand)
    '("<escape>" . ignore))
   (meow-normal-define-key
    '(";" . meow-reverse)
@@ -87,7 +108,7 @@
    '("o" . meow-block)
    '("O" . meow-to-block)
    '("p" . meow-yank)
-   '("Q" . meow-goto-line)
+   '("Q" . meow-quit)
    '("r" . meow-replace)
    '("R" . meow-swap-grab)
    '("s" . meow-line)
@@ -216,47 +237,70 @@
      ;; 普通文件 - 默认颜色
      (t (propertize name 'face 'mode-line-buffer-id)))))
 
+(defface custom-modeline-major-mode-face
+  '((t :inherit font-lock-keyword-face :weight bold :foreground "orange"))
+  "Face for the major mode name in the custom modeline."
+  :group 'faces)
+
+(defface custom-projectile-name-face
+  '((t :inherit font-lock-keyword-face :foreground "grey"))
+  "Face for the major mode name in the custom modeline."
+  :group 'faces)
+
+
 (defun custom-modeline-major-mode ()
-  "Return formatted major mode."
-  (propertize mode-name 'face 'font-lock-keyword-face))
+  "Return formatted major mode, handling both string and list `mode-name`."
+  (let ((name (if (listp mode-name)
+                  (car mode-name)
+                mode-name)))
+    ;; 确保我们只 propertize 字符串
+    (when (stringp name)
+      (propertize name 'face 'custom-modeline-major-mode-face))))
 
 (defun custom-modeline-position ()
   "Return cursor position info."
-  (propertize (format "%d:%d" (line-number-at-pos) (current-column))
+  (propertize (concat (format "%d:%d" (line-number-at-pos) (current-column))
+					  " [%p]")
               'face 'font-lock-type-face))
 
 (defun custom-modeline-separator ()
   "Return a separator."
   (propertize " | " 'face 'custom-modeline-separator))
 
-;; 构建自定义 modeline - 简化右侧，只显示位置和输入法
+(defun projectile-mode-line ()
+  '(:eval (format " Proj[%s]" (projectile-project-name))))
+
 (setq-default mode-line-format
-              '(;; 左侧信息
-                (:eval (when (custom-modeline-meow-state)
-                         (concat " " (custom-modeline-meow-state) " ")))
-                " "
-                (:eval (custom-modeline-buffer-name))  ; 文件名已包含状态信息
-                " "
-                (:eval (custom-modeline-major-mode))   ; 主模式
-                (:eval (let ((git-str (custom-modeline-git-branch)))
-                         (if git-str (concat " " git-str) "")))  ; Git 分支
-                " "
-                mode-line-misc-info
-                
-                ;; 中间填充 - 计算右侧信息长度并右对齐
-                (:eval (let* ((mule-info (format-mode-line mode-line-mule-info))
-                              (pos-info (custom-modeline-position))
-                              (right-info-length (+ (length mule-info) 
-                                                   (length (format-mode-line pos-info)) 
-                                                   3))) ; 3个空格
-                         (propertize " " 'display `(space :align-to (- right ,right-info-length)))))
-                
-                ;; 右侧信息 - 真正的右对齐
-                mode-line-mule-info  ; 输入法信息
-                " "
-                (:eval (custom-modeline-position))  ; 行列位置
-                " "
-                ))
+			  '(;; 左侧信息
+				(:eval (when (custom-modeline-meow-state)
+						 (concat " " (custom-modeline-meow-state) " ")))
+				" "
+				(:eval (when (featurep 'projectile)
+						 (propertize (format "Proj[%s]" (projectile-project-name)) 'face 'custom-projectile-name-face)))
+				" "
+				(:eval (custom-modeline-buffer-name))
+				" "
+				(:eval (custom-modeline-major-mode))
+				" "
+				(:eval (let ((git-str (custom-modeline-git-branch)))
+						 (if git-str (concat " " git-str) "")))
+				" "
+				mode-line-misc-info
+				
+				;; 中间填充：根据右侧要显示的项长度计算空格，使右侧真正贴到最右
+				(:eval
+				 (let* ((mule-str (format-mode-line mode-line-mule-info))
+						(pos-str  (format-mode-line (custom-modeline-position)))
+						;; 用 string-width 更准确地计算显示宽度（对中文/宽字符友好）
+						(right-width (+ (string-width mule-str)
+										(string-width pos-str)
+										3))) ;; 预留的空白（可以调整）
+				   (propertize " " 'display `(space :align-to (- right ,right-width)))))
+
+				;; 右侧信息（按顺序显示：位置 -> 间隔 -> 输入法/编码信息）
+				(:eval (custom-modeline-position))
+				" "
+				mode-line-mule-info))
 
 ;; 设置 modeline 高度和外观
 (set-face-attribute 'mode-line nil

@@ -1,3 +1,13 @@
+(setq org-fontify-quote-and-verse-blocks t)
+(with-eval-after-load 'org
+  (set-face-attribute 'org-quote nil
+                      :foreground "gray70" ; 一个比纯黑稍亮的深灰色
+                      :extend t))
+
+;; 低可视度 block 标题
+(set-face-attribute 'org-block-begin-line nil :foreground "gray35")
+(set-face-attribute 'org-block-end-line nil :foreground "gray35")
+
 (use-package rime
   :ensure t
   :init
@@ -53,9 +63,6 @@
  'org-mode
  '(("^ *- State \\(\"[A-Z]+\"\\).*\\[.*\\]"
     0 'font-lock-comment-face t)))
-;; 低可视度 block 标题
-(set-face-attribute 'org-block-begin-line nil :foreground "gray50")
-(set-face-attribute 'org-block-end-line nil :foreground "gray50")
 
 (defvar daily-diary-base-path (concat org-base-path "/daily")
   "Base path for daily diary files.")
@@ -185,12 +192,12 @@ DATE-STRING should be in format YYYY-MM-DD or MM-DD (current year assumed)."
 	 ("C-c n f" . org-roam-node-find)     ; 查找笔记
 	 ("C-c n i" . org-roam-node-insert)   ; 插入一个指向笔记的链接
 	 ("C-c n c" . org-roam-capture)       ; 创建一个新的笔记 (非常重要!)
+	 ("C-c n o" . org-roam-buffer-toggle) ; 打开 roam-bufer
 	 ;; 每日笔记相关的快捷键
 	 ("C-c n g" . org-roam-dailies-goto-today)         ; 
 	 ("C-c n y" . org-roam-dailies-goto-yesterday)     ; 昨天的笔记
-	 ("C-c n d" . org-roam-dailies-capture-today)      ; 创建到今天的笔记
-	 ("C-c n t" . org-roam-dailies-capture-tomorrow))  ; 明天的笔记
-
+	 ("C-c n d" . org-roam-dailies-capture-today))     ; 创建到今天的笔记
+  
   ;; 初始化 org-roam
   :config
   ;; 这是 Org-roam v2 的标准启动方式
@@ -212,10 +219,10 @@ DATE-STRING should be in format YYYY-MM-DD or MM-DD (current year assumed)."
 (use-package org-super-agenda
   :ensure t
   :init
-  (org-super-agenda-mode)
-  :config
-  (setq org-super-agenda-groups
-        '((:auto-parent t))))  ;; 自动按父 headline 分组
+  (org-super-agenda-mode))
+  ;; :config
+  ;; (setq org-super-agenda-groups
+  ;;       '((:auto-parent t))))  ;; 自动按父 headline 分组
 
 
 (provide 'my-org-writing)

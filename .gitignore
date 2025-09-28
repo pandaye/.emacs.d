@@ -27,3 +27,4 @@ places
 *.db
 .org-id*
 tramp
+racket-mode/

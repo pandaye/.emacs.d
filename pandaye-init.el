@@ -28,9 +28,7 @@
   (projectile-mode 1)
   :config
   (setq projectile-project-search-path '("~/Project/"))
-  (setq projectile-completion-system 'auto)
-  (setq projectile-mode-line
-        '(:eval (format " Proj[%s]" (projectile-project-name)))))
+  (setq projectile-completion-system 'auto))
 
 ;; Ivy 配置 - 优化导航体验
 (use-package ivy
@@ -43,7 +41,7 @@
         ivy-wrap t
         ivy-height 15
         ;; 智能模糊匹配 - 更精确的匹配策略
-        ivy-re-builders-alist '((counsel-M-x . ivy--regex-fuzzy)            ; M-x 使用模糊匹配
+        ivy-re-builders-alist '((counsel-M-x . ivy--regex-plus)            ; M-x 使用模糊匹配
                                 (counsel-find-file . ivy--regex-fuzzy)      ; 文件查找使用增强匹配
                                 (counsel-file-jump . ivy--regex-fuzzy)      ; 文件跳转使用模糊匹配
                                 (swiper . ivy--regex-plus)                  ; 搜索使用增强匹配
@@ -105,6 +103,7 @@
   :init
   (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
   (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'lisp-mode-hook 'rainbow-delimiters-mode)
   (add-hook 'racket-mode-hook 'rainbow-delimiters-mode))
 
 (use-package diff-hl
@@ -165,7 +164,25 @@
         company-minimum-prefix-length 2
         company-selection-wrap-around t
         company-tooltip-align-annotations t
-	company-backends '((company-capf company-files))))
+		company-backends '((company-capf company-files))))
+
+;;; Racket-mode configuration
+;;; ==========================
+(use-package paredit
+  :ensure t
+  :hook (racket-mode . paredit-mode))
+
+
+(use-package racket-mode
+  :ensure t
+  :mode (("\\.rkt\\'" . racket-mode)
+         ("\\.scrbl\\'" . racket-mode)) ; 支持 Scribble 文档
+  :config
+  ;; 确保 REPL 进程在后台运行，不会冻结 Emacs
+  ;; (setq racket-program "path/to/your/racket") ; 如果 racket 不在系统 PATH 中，取消此行注释并设置路径
+  (setq racket-run-in-background t)
+  :hook
+  (racket-mode . racket-xp-mode))
 
 (use-package beancount
   :ensure t
@@ -192,10 +209,11 @@
     :priority 10
     :initialization-options
     (lambda () (list :journal_file (concat (projectile-project-root) "main.bean")
-                     :formatting (list :prefix_width 30
-				       :currency_column 60
-				       :number_currency_spacing 1
-				       :account_amount_spacing 2)))))
+                     :formatting (list
+								  :prefix_width 30
+								  :currency_column 60
+								  :number_currency_spacing 1
+								  :account_amount_spacing 2)))))
   :commands (lsp lsp-deferred))
 
 (unless (featurep 'org-tempo)
@@ -207,14 +225,35 @@
   (yas-global-mode 1)
   :config
   (yas-reload-all)
-  ;; (define-key yas-minor-mode-map [(tab)] nil)
-  ;; (define-key yas-minor-mode-map (kbd "TAB") nil)
-  ;; (define-key yas-minor-mode-map (kbd "<tab>") nil)
   (define-key yas-minor-mode-map (kbd "<tab>") 'yas-expand)
   (add-hook 'prog-mode-hook #'yas-minor-mode))
 
 (use-package yasnippet-snippets
   :ensure t)
+
+(use-package logview
+  :ensure t)
+
+;; Common Lisp Development Environment using SLIME
+(use-package slime
+  :ensure t
+  :init
+  ;; 让 SLIME 知道 Roswell 安装的 Lisp 在哪里
+  (setq inferior-lisp-program "ros run")
+  :mode
+  ("\\.ros\\'" . lisp-mode)
+  :config
+  ;; slime-contrib 包含了很多非常有用的扩展，比如：
+  ;; - slime-fancy-inspector: 更强大的对象检查器
+  ;; - slime-tramp: 通过 TRAMP 连接到远程 Lisp 进程
+  ;; - slime-xref-browser: 交叉引用浏览器 (谁调用了我？)
+  (slime-setup '(slime-fancy slime-tramp slime-asdf slime-xref-browser))
+  ;; 个人偏好：在 REPL 中让 Tab 键只做补全，不做缩进
+  ;; (define-key slime-repl-mode-map (kbd "TAB") #'slime-complete-symbol)
+  ;; 启用亚词级别的移动 (比如 a-long-variable-name 可以被看作 4 个词)
+  (add-hook 'lisp-mode-hook (lambda () (subword-mode 1)))
+  (add-hook 'slime-repl-mode-hook (lambda () (subword-mode 1))))
+
 
 ;; 快捷键设置，和 vscode 一致
 (global-set-key (kbd "C-c f s") 'save-buffer)
@@ -223,3 +262,4 @@
 (global-set-key (kbd "C-c w 2") 'split-window-below)
 (global-set-key (kbd "C-c w 3") 'split-window-right)
 (global-set-key (kbd "C-c w q") 'delete-window)
+
