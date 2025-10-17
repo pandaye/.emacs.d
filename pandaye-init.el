@@ -30,6 +30,8 @@
   (setq projectile-project-search-path '("~/Project/"))
   (setq projectile-completion-system 'auto))
 
+(defalias 'list-buffers 'ibuffer)
+
 ;; Ivy 配置 - 优化导航体验
 (use-package ivy
   :ensure t
@@ -41,7 +43,7 @@
         ivy-wrap t
         ivy-height 15
         ;; 智能模糊匹配 - 更精确的匹配策略
-        ivy-re-builders-alist '((counsel-M-x . ivy--regex-plus)            ; M-x 使用模糊匹配
+        ivy-re-builders-alist '((counsel-M-x . ivy--regex-plus)             ; M-x 使用模糊匹配
                                 (counsel-find-file . ivy--regex-fuzzy)      ; 文件查找使用增强匹配
                                 (counsel-file-jump . ivy--regex-fuzzy)      ; 文件跳转使用模糊匹配
                                 (swiper . ivy--regex-plus)                  ; 搜索使用增强匹配
@@ -54,7 +56,7 @@
   (ivy-mode 1)
   :bind
   (("C-c C-r" . ivy-resume)
-   ("C-c b" . ivy-switch-buffer)
+   ("C-c b b" . ivy-switch-buffer)
    ("C-x B" . ivy-switch-buffer-other-window)))
 
 (use-package counsel
@@ -105,6 +107,12 @@
   (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
   (add-hook 'lisp-mode-hook 'rainbow-delimiters-mode)
   (add-hook 'racket-mode-hook 'rainbow-delimiters-mode))
+
+(use-package magit
+  :ensure t
+  :init
+  (global-set-key (kbd "C-c j s") 'magit-status)
+  (global-set-key (kbd "C-c j p") 'magit-dispatch-popup))
 
 (use-package diff-hl
   :ensure t
@@ -254,7 +262,6 @@
   (add-hook 'lisp-mode-hook (lambda () (subword-mode 1)))
   (add-hook 'slime-repl-mode-hook (lambda () (subword-mode 1))))
 
-
 ;; 快捷键设置，和 vscode 一致
 (global-set-key (kbd "C-c f s") 'save-buffer)
 (global-set-key (kbd "C-c w o") 'ace-window)
@@ -262,4 +269,4 @@
 (global-set-key (kbd "C-c w 2") 'split-window-below)
 (global-set-key (kbd "C-c w 3") 'split-window-right)
 (global-set-key (kbd "C-c w q") 'delete-window)
-
+(global-set-key (kbd "C-c b r") 'revert-buffer)

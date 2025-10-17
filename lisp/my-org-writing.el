@@ -26,12 +26,13 @@
 ;; GTD 配置
 ;; --------
 (setq org-todo-keywords
-      '((sequence "TODO(t!)" "PROCESSING(p!)" "BLOCK(b!)" "|" "DONE(d!)" "CANCEL(c@/!)")))
+      '((sequence "TODO(t!)" "PROCESSING(p!)" "BLOCK(b!)" "LATER(l!)" "|" "DONE(d!)" "CANCEL(c@/!)")))
 
 ;; 设置任务样式
 (setq org-todo-keyword-faces
       '(("TODO"  . (:foreground "#66cccc"    :weight bold))
         ("BLOCK" . (:foreground "red"    :weight bold))
+        ("LATER" . (:foreground "yellow"    :weight bold))
         ("PROCESSING" . (:foreground "orange" :weight bold))
         ("DONE" . (:foreground "green"  :weight bold))
         ("CANCEL" . (:foreground "black"  :weight bold))
@@ -197,7 +198,6 @@ DATE-STRING should be in format YYYY-MM-DD or MM-DD (current year assumed)."
 	 ("C-c n g" . org-roam-dailies-goto-today)         ; 
 	 ("C-c n y" . org-roam-dailies-goto-yesterday)     ; 昨天的笔记
 	 ("C-c n d" . org-roam-dailies-capture-today))     ; 创建到今天的笔记
-  
   ;; 初始化 org-roam
   :config
   ;; 这是 Org-roam v2 的标准启动方式
