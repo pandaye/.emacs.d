@@ -8,6 +8,8 @@
 (set-face-attribute 'org-block-begin-line nil :foreground "gray35")
 (set-face-attribute 'org-block-end-line nil :foreground "gray35")
 
+(require 'my-cursor)
+
 (use-package rime
   :ensure t
   :init
@@ -16,9 +18,12 @@
   (setq rime-disable-predicates
 	  '(meow-not-insert-p
 	    rime-predicate-after-alphabet-char-p
-            rime-predicate-prog-in-code-p))
+        rime-predicate-prog-in-code-p))
+  (add-hook 'rime-mode-hook #'my/update-cursor-by-rime-state)
   :custom
   (default-input-method "rime"))
+
+(add-hook 'buffer-list-update-hook 'my/update-cursor-by-rime-state)
 
 (global-set-key (kbd "C-c i") 'toggle-input-method)
 

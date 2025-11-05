@@ -57,10 +57,6 @@ standard Emacs keybindings, respecting the current mode's keymap."
    '("p h" . ("C-left" . pandaye/meow-C-left))
    '("p l" . ("C-right" . pandaye/meow-C-right)))
   (meow-motion-define-key
-   '("b" . meow-back-word)
-   '("B" . meow-back-symbol)
-   '("e" . meow-next-word)
-   '("E" . meow-next-symbol)
    '("y" . meow-save)
    '("<escape>" . ignore))
   (meow-normal-define-key
