@@ -709,11 +709,8 @@ DOC-LINES       text lines of doc"
 (defvar-local acm-terminal-hover-doc-scroll-start 0
   "Start of hover doc scrolling.")
 
-(defun acm-terminal-popup-documentation--callback (value)
-  "Display hover documentation in a popon frame for terminal."
-  (setq acm-terminal-hover-doc-content value)
-  (setq acm-terminal-hover-doc-scroll-start 0)
-  
+(defun acm-terminal-popup-documentation-render (value)
+  "Render and display hover documentation with markdown support."
   (when (and (stringp value) (not (string-empty-p value)))
     ;; Initialize colors if needed
     (acm-terminal-init-colors)
@@ -757,11 +754,28 @@ DOC-LINES       text lines of doc"
       (plist-put (cdr acm-terminal-hover-doc) :visible t)
       (popon-redisplay))))
 
+(defun acm-terminal-popup-documentation--callback (value)
+  "Display hover documentation in a popon frame for terminal."
+  (setq acm-terminal-hover-doc-content value)
+  (setq acm-terminal-hover-doc-scroll-start 0)
+  
+  (when (and (stringp value) (not (string-empty-p value)))
+    ;; Use delayed markdown rendering similar to LSP backend doc
+    ;; This enables markdown rendering in acm-terminal-nsplit-string
+    (acm-cancel-timer acm-markdown-render-timer)
+    (setq acm-markdown-render-timer
+          (run-with-idle-timer
+           0.2 nil #'acm-terminal-popup-documentation-render value))))
+
 (defun acm-terminal-hide-hover-doc ()
   "Hide the hover documentation popon."
   (interactive)
   (when (popon-live-p acm-terminal-hover-doc)
-    (setq acm-terminal-hover-doc (popon-kill acm-terminal-hover-doc))))
+    (setq acm-terminal-hover-doc (popon-kill acm-terminal-hover-doc)))
+  
+  ;; Cancel markdown render timer if active
+  (acm-cancel-timer acm-markdown-render-timer)
+  (setq acm-markdown-render-doc nil))
 
 (defun acm-terminal-popup-documentation-scroll-up (&optional arg)
   "Scroll hover documentation up."

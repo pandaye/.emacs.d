@@ -18,6 +18,7 @@ transient/
 custom/
 config.el
 myinit.el
+custom.el
 package-quickstart.el
 amx-items
 places
