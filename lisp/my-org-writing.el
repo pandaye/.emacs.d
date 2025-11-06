@@ -13,7 +13,9 @@
 (use-package rime
   :ensure t
   :init
-  (setq rime-librime-root (expand-file-name "~/.emacs.d/librime"))
+  (let ((librime-path (expand-file-name "~/.emacs.d/librime")))
+	(when (file-directory-p librime-path)
+      (setq rime-librime-root librime-path)))
   :config
   (setq rime-disable-predicates
 	  '(meow-not-insert-p
