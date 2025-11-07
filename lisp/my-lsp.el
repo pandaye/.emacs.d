@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 ;; USE LSP-MODE with company
 ;; (use-package company
 ;;   :ensure t
@@ -35,8 +37,22 @@
 (require 'lsp-bridge)
 (global-lsp-bridge-mode)
 
-(unless (display-graphic-p)
-  (with-eval-after-load 'acm
-    (require 'acm-terminal)))
+(setq acm-enable-copilot t)
+(setq tty-child-frames t)
+(setq acm-icon-width -1)
+
+;; Configure user langserver directory
+(setq lsp-bridge-user-langserver-dir (expand-file-name "~/.emacs.d/lsp-bridge-langserver"))
+
+;; (unless (display-graphic-p)
+;;   (with-eval-after-load 'acm
+;;     (require 'acm-terminal)))
+
+(global-set-key (kbd "C-c r d") 'lsp-bridge-find-def)
+(global-set-key (kbd "C-c r t") 'lsp-bridge-find-type-def)
+(global-set-key (kbd "C-c r r") 'lsp-bridge-find-def-return)
+(global-set-key (kbd "C-c r i") 'lsp-bridge-find-impl-other-window)
+(global-set-key (kbd "C-c r R") 'lsp-bridge-find-references)
+(global-set-key (kbd "C-c r s") 'lsp-bridge-show-documentation)
 
 (provide 'my-lsp)

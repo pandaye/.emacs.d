@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (setq org-fontify-quote-and-verse-blocks t)
 (with-eval-after-load 'org
   (set-face-attribute 'org-quote nil

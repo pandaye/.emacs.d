@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; pacakge --- Summery
 ;;; Commentary:
 ;;; author: pandaye

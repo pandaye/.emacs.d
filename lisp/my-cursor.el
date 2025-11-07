@@ -1,4 +1,4 @@
-;;; my-cursor.el --- Change cursor color when emacs-rime is active
+;;; my-cursor.el --- Change cursor color when emacs-rime is active  -*- lexical-binding: t; -*-
 
 ;; 定义光标颜色
 (defvar my/rime-cursor-color "#FF6B6B"

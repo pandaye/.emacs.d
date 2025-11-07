@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (add-to-list 'exec-path "/opt/homebrew/bin/")
 (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
 
@@ -29,6 +30,9 @@
   :config
   (setq projectile-project-search-path '("~/Project/"))
   (setq projectile-completion-system 'auto))
+
+(use-package rg
+  :ensure t)
 
 (defalias 'list-buffers 'ibuffer)
 
@@ -230,6 +234,9 @@
   ;; 启用亚词级别的移动 (比如 a-long-variable-name 可以被看作 4 个词)
   (add-hook 'lisp-mode-hook (lambda () (subword-mode 1)))
   (add-hook 'slime-repl-mode-hook (lambda () (subword-mode 1))))
+
+(use-package markdown-mode
+  :ensure t)
 
 (require 'my-lsp)
 

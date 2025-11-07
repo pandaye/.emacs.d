@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (require 'org)
 
 (defun my/get-file-properties ()
