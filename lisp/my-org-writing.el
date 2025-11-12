@@ -1,13 +1,27 @@
 ;; -*- lexical-binding: t; -*-
+
+;; ================
+;; Org 外观美化
+;; ================
+
+;; 隐藏前导星号，只显示最后一个（例如：*** 显示为   *）
+;; (setq org-hide-leading-stars t)
+;; (setq org-ellipsis " -")
+	  
+;; 美化引用和诗词块
 (setq org-fontify-quote-and-verse-blocks t)
 (with-eval-after-load 'org
   (set-face-attribute 'org-quote nil
-                      :foreground "gray70" ; 一个比纯黑稍亮的深灰色
+                      :foreground "gray70"
                       :extend t))
 
 ;; 低可视度 block 标题
 (set-face-attribute 'org-block-begin-line nil :foreground "gray35")
 (set-face-attribute 'org-block-end-line nil :foreground "gray35")
+
+;; ==================
+;; Rime 中文输入法
+;; ==================
 
 (require 'my-cursor)
 
@@ -15,19 +29,26 @@
   :ensure t
   :init
   (let ((librime-path (expand-file-name "~/.emacs.d/librime")))
-	(when (file-directory-p librime-path)
+    (when (file-directory-p librime-path)
       (setq rime-librime-root librime-path)))
   :config
+  ;; 在非插入模式、字母后、代码中禁用输入法
   (setq rime-disable-predicates
-	  '(meow-not-insert-p
-	    rime-predicate-after-alphabet-char-p
-        rime-predicate-prog-in-code-p))
+        '(meow-not-insert-p
+          rime-predicate-after-alphabet-char-p
+          rime-predicate-prog-in-code-p))
+  ;; Rime 模式变化时更新光标颜色
   (add-hook 'rime-mode-hook #'my/update-cursor-by-rime-state)
   :custom
   (default-input-method "rime"))
 
-(add-hook 'buffer-list-update-hook 'my/update-cursor-by-rime-state)
+;; 监听窗口和 buffer 变化
+;; - window-buffer-change-functions: 窗口显示的 buffer 变化时触发
+;; - window-selection-change-functions: 窗口选择变化时触发（如 C-x o）
+(add-hook 'window-buffer-change-functions #'my/update-cursor-on-frame-change)
+(add-hook 'window-selection-change-functions #'my/update-cursor-on-frame-change)
 
+;; 输入法切换快捷键
 (global-set-key (kbd "C-c i") 'toggle-input-method)
 
 ;; --------

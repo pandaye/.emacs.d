@@ -136,33 +136,6 @@
   (diff-hl-insert ((t (:background "#03e94f"))))
   (diff-hl-delete ((t (:background "#f5597e")))))
 
-;; macOS 终端下的剪贴板配置
-(defun macos-terminal-clipboard-setup ()
-  "Setup clipboard integration for terminal Emacs on macOS."
-  (when (and (eq system-type 'darwin)
-	     (not (display-graphic-p)))
-
-    ;; 设置剪贴板复制函数
-    (setq interprogram-cut-function
-	  (lambda (text &optional push)
-	    "Copy TEXT to macOS clipboard using pbcopy."
-	    (let ((process-connection-type nil))
-	      (let ((proc (start-process "pbcopy" nil "pbcopy")))
-		(process-send-string proc text)
-		(process-send-eof proc)))))
-
-    ;; 设置剪贴板粘贴函数
-    (setq interprogram-paste-function
-	  (lambda ()
-	    "Paste from macOS clipboard using pbpaste."
-	    (shell-command-to-string "pbpaste")))
-
-    ;; 启用剪贴板交互
-    (setq select-enable-clipboard t
-	  save-interprogram-paste-before-kill t)))
-
-(macos-terminal-clipboard-setup)
-
 (require 'org-ssh)
 (require 'my-org-writing)
 
@@ -248,4 +221,34 @@
 (global-set-key (kbd "C-c w 3") 'split-window-right)
 (global-set-key (kbd "C-c w q") 'delete-window)
 (global-set-key (kbd "C-c b r") 'revert-buffer)
+(global-set-key (kbd "C-c b p") 'projectile-ibuffer)
+
+(when (and (not (eq system-type 'darwin))
+		   (not (display-graphic-p)))
+  (require 'my-clipboard)
+  (setq browse-url-browser-function 'nil))
+
+;; macOS 终端下的剪贴板配置
+(defun macos-terminal-clipboard-setup ()
+  "Setup clipboard integration for terminal Emacs on macOS."
+  (when (and (eq system-type 'darwin)
+	     (not (display-graphic-p)))
+    ;; 设置剪贴板复制函数
+    (setq interprogram-cut-function
+	  (lambda (text &optional push)
+	    "Copy TEXT to macOS clipboard using pbcopy."
+	    (let ((process-connection-type nil))
+	      (let ((proc (start-process "pbcopy" nil "pbcopy")))
+		(process-send-string proc text)
+		(process-send-eof proc)))))
+    ;; 设置剪贴板粘贴函数
+    (setq interprogram-paste-function
+	  (lambda ()
+	    "Paste from macOS clipboard using pbpaste."
+	    (shell-command-to-string "pbpaste")))
+    ;; 启用剪贴板交互
+    (setq select-enable-clipboard t
+	  save-interprogram-paste-before-kill t)))
+
+(macos-terminal-clipboard-setup)
 
