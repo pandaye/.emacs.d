@@ -31,43 +31,23 @@
 (defun my/osc-52-copy (text)
   "Copy TEXT to system clipboard using OSC 52 escape sequence.
 Works with modern terminals like WezTerm, iTerm2, and tmux."
-  (let* ((encoded (base64-encode-string text t))
+  (let* ((utf8-text (encode-coding-string text 'utf-8 t))
+         (encoded (base64-encode-string utf8-text t))
          (osc-seq (concat "\e]52;c;" encoded "\a")))
     (send-string-to-terminal osc-seq)))
-
-(defun my/in-tmux-p ()
-  "Check if Emacs is running inside tmux."
-  (getenv "TMUX"))
-
-(defun my/tmux-copy (text)
-  "Copy TEXT to tmux clipboard."
-  (when (my/in-tmux-p)
-    (let ((tmp-file (make-temp-file "emacs-tmux-")))
-      (write-region text nil tmp-file)
-      (call-process "tmux" nil nil nil "load-buffer" tmp-file)
-      (delete-file tmp-file))))
 
 (defun my/copy-to-clipboard (text &optional _push)
   "Copy TEXT to clipboard using OSC 52 if in terminal.
 This function can be used as `interprogram-cut-function'."
   (when (and text (not (display-graphic-p)))
-    (my/osc-52-copy text)
-	(when (my/in-tmux-p)
-	  (my/tmux-copy))))
+    (condition-case err
+        (my/osc-52-copy text)
+      (error 
+       (message "OSC 52 copy failed: %s" (error-message-string err))
+       nil))))
 
 ;; 设置 Emacs 使用 OSC 52 复制到系统剪贴板
 (setq interprogram-cut-function #'my/copy-to-clipboard)
-
-;; 手动复制当前区域到剪贴板
-(defun my/copy-region-to-clipboard ()
-  "Copy current region to system clipboard using OSC 52."
-  (interactive)
-  (when (region-active-p)
-    (let ((text (buffer-substring-no-properties (region-beginning) (region-end))))
-      (my/osc-52-copy text)
-      (when (my/in-tmux-p)
-        (my/tmux-copy text))
-      (message "Copied %d characters to clipboard" (length text)))))
 
 (defun my/clipboard-info ()
   "Display clipboard configuration info."

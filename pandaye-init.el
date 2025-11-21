@@ -29,7 +29,9 @@
   (projectile-mode 1)
   :config
   (setq projectile-project-search-path '("~/Project/"))
-  (setq projectile-completion-system 'auto))
+  (setq projectile-completion-system 'auto)
+  :bind
+  (("C-c f p" . projectile-find-file)))
 
 (use-package rg
   :ensure t)
@@ -48,8 +50,8 @@
         ivy-height 15
         ;; 智能模糊匹配 - 更精确的匹配策略
         ivy-re-builders-alist '((counsel-M-x . ivy--regex-plus)             ; M-x 使用模糊匹配
-                                (counsel-find-file . ivy--regex-fuzzy)      ; 文件查找使用增强匹配
-                                (counsel-file-jump . ivy--regex-fuzzy)      ; 文件跳转使用模糊匹配
+                                (counsel-find-file . ivy--regex-plus)      ; 文件查找使用增强匹配
+                                (counsel-file-jump . ivy--regex-plus)      ; 文件跳转使用模糊匹配
                                 (swiper . ivy--regex-plus)                  ; 搜索使用增强匹配
                                 (ivy-switch-buffer . ivy--regex-plus)       ; 缓冲区切换使用增强匹配
                                 (t . ivy--regex-plus))                      ; 其他情况使用增强匹配
@@ -72,6 +74,8 @@
   :bind
   (("M-x"     . counsel-M-x)
    ("C-x C-f" . counsel-find-file)
+   ("C-c f g" . counsel-git)
+   ("C-c f G" . counsel-git-grep)
    ("C-c f f" . counsel-file-jump)))    ;; 递归查找文件（支持深度搜索）
    ;; ("C-c j"   . counsel-git-grep)
    ;; ("C-c k"   . counsel-ag)

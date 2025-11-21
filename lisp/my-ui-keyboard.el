@@ -58,7 +58,6 @@ standard Emacs keybindings, respecting the current mode's keymap."
    '("p h" . ("C-left" . pandaye/meow-C-left))
    '("p l" . ("C-right" . pandaye/meow-C-right)))
   (meow-motion-define-key
-   '("y" . meow-save)
    '("<escape>" . ignore))
   (meow-normal-define-key
    '(";" . meow-reverse)
@@ -101,7 +100,9 @@ standard Emacs keybindings, respecting the current mode's keymap."
    '("l" . meow-right)
    '("L" . meow-right-expand)
    '("m" . meow-join)
+   '("M" . set-mark-command)
    '("n" . meow-search)
+   '("N" . meow-pop-or-unpop-to-mark)
    '("o" . meow-block)
    '("O" . meow-to-block)
    '("p" . meow-yank)
@@ -119,7 +120,7 @@ standard Emacs keybindings, respecting the current mode's keymap."
    '("y" . meow-save)
    '("Y" . meow-sync-grab)
    '("z" . meow-pop-selection)
-   ;; '("q" . meow-quit)
+   '("Z" . meow-pop-to-global-mark)
    '("'" . repeat)
    '("<escape>" . ignore)))
 
