@@ -2,6 +2,13 @@
 (add-to-list 'exec-path "/opt/homebrew/bin/")
 (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
 
+(setq scroll-step 1
+      scroll-conservatively 10000
+      scroll-margin 0
+      scroll-preserve-screen-position t
+      mouse-wheel-scroll-amount '(1)
+      mouse-wheel-progressive-speed nil)
+
 (when (display-graphic-p)
   ;; GUI 专用配置
   (load "gui.el"))
@@ -32,6 +39,15 @@
   (setq projectile-completion-system 'auto)
   :bind
   (("C-c f p" . projectile-find-file)))
+
+(use-package neotree
+  :ensure t
+  :bind
+  ("C-c t p" . neotree-show)
+  ("C-c t t" . neotree-toggle)
+  :config
+  (setq neo-smart-open t)
+  (setq neo-vc-integration '(face char)))
 
 (use-package rg
   :ensure t)

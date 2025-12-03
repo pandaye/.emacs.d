@@ -105,7 +105,7 @@ standard Emacs keybindings, respecting the current mode's keymap."
    '("N" . meow-pop-or-unpop-to-mark)
    '("o" . meow-block)
    '("O" . meow-to-block)
-   '("p" . meow-yank)
+   '("P" . meow-yank)
    '("Q" . meow-quit)
    '("r" . meow-replace)
    '("R" . meow-swap-grab)
