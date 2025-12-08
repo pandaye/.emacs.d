@@ -3,6 +3,7 @@
 (tool-bar-mode 0)
 (scroll-bar-mode 0)
 (pixel-scroll-precision-mode 1)
+
 (use-package powerline
   :config
   (powerline-default-theme))
@@ -12,3 +13,4 @@
   (set-fontset-font (frame-parameter nil 'font)
                     charset (font-spec :family "Sarasa Mono SC")))
 (setq face-font-rescale-alist '(("Sarasa Mono SC" . 1.2)))
+(provide 'gui)

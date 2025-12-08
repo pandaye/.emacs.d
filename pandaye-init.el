@@ -9,10 +9,6 @@
       mouse-wheel-scroll-amount '(1)
       mouse-wheel-progressive-speed nil)
 
-(when (display-graphic-p)
-  ;; GUI 专用配置
-  (load "gui.el"))
-
 ;; Default Font
 ; (set-face-attribute 'default nil :font "Fira Mono 13")
 
@@ -189,6 +185,10 @@
   :ensure t
   :mode
   ("\\.go\\'" . go-mode))
+
+(use-package yaml-mode
+  :ensure t
+  :mode ("\\.ya?ml\\'" . yaml-mode))
 
 (unless (featurep 'org-tempo)
   (require 'org-tempo))

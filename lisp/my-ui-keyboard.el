@@ -268,7 +268,14 @@ standard Emacs keybindings, respecting the current mode's keymap."
 (defun projectile-mode-line ()
   '(:eval (format " Proj[%s]" (projectile-project-name))))
 
-(setq-default mode-line-format
+;; 优化刷新性能 - 添加 hook 来确保实时更新
+(defun custom-modeline-update ()
+  "Force update modeline."
+  (force-mode-line-update))
+
+(when (not (display-graphic-p))
+  (progn
+   (setq-default mode-line-format
 			  '(;; 左侧信息
 				(:eval (when (custom-modeline-meow-state)
 						 (concat " " (custom-modeline-meow-state) " ")))
@@ -300,21 +307,17 @@ standard Emacs keybindings, respecting the current mode's keymap."
 				" "
 				mode-line-mule-info))
 
-;; 设置 modeline 高度和外观
-(set-face-attribute 'mode-line nil
+   ;; 设置 modeline 高度和外观
+   (set-face-attribute 'mode-line nil
                     :height 100
                     :box '(:line-width 1 :color "#504945"))
-(set-face-attribute 'mode-line-inactive nil
+   (set-face-attribute 'mode-line-inactive nil
                     :height 100
                     :box '(:line-width 1 :color "#3c3836"))
 
-;; 优化刷新性能 - 添加 hook 来确保实时更新
-(defun custom-modeline-update ()
-  "Force update modeline."
-  (force-mode-line-update))
 
-;; 在状态改变时立即更新 modeline
-(add-hook 'post-command-hook #'custom-modeline-update)
-(add-hook 'buffer-list-update-hook #'custom-modeline-update)
+   ;; 在状态改变时立即更新 modeline
+   (add-hook 'post-command-hook #'custom-modeline-update)
+   (add-hook 'buffer-list-update-hook #'custom-modeline-update)))
 
 (provide 'my-ui-keyboard)

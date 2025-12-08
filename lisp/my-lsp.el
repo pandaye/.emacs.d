@@ -7,8 +7,10 @@
 (global-lsp-bridge-mode)
 
 (setq acm-enable-copilot t)
-(setq tty-child-frames t)
-(setq acm-icon-width -1)
+(when (not (display-graphic-p))
+  (progn
+	(setq tty-child-frames t)
+	(setq acm-icon-width -1)))
 
 ;; Configure user langserver directory
 (setq lsp-bridge-user-langserver-dir (expand-file-name "~/.emacs.d/lsp-bridge-langserver"))

@@ -37,6 +37,8 @@
 (require 'my-ui-keyboard)
 
 (load (expand-file-name "pandaye-init.el" user-emacs-directory))
+(when (display-graphic-p)
+  (load (expand-file-name "gui.el" user-emacs-directory)))
 
 (provide 'init)
 ;;; init.el ends here
