@@ -190,6 +190,10 @@
   :mode
   ("\\.go\\'" . go-mode))
 
+(use-package yaml-mode
+  :ensure t
+  :mode ("\\.ya?ml\\'" . yaml-mode))
+
 (unless (featurep 'org-tempo)
   (require 'org-tempo))
 
