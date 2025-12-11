@@ -25,6 +25,14 @@
 
 (require 'my-cursor)
 
+(defun my/set-rime-jp ()
+  (interactive)
+  (rime-lib-select-schema "jaroomaji"))
+
+(defun my/set-rime-zh ()
+  (interactive)
+  (rime-lib-select-schema "tigress"))
+
 (use-package rime
   :ensure t
   :init
@@ -39,6 +47,10 @@
           rime-predicate-prog-in-code-p))
   ;; Rime 模式变化时更新光标颜色
   (add-hook 'rime-mode-hook #'my/update-cursor-by-rime-state)
+  (add-hook 'kill-emacs-hook #'rime-lib-finalize)
+  :bind
+  (("C-c i j" . my/set-rime-jp)
+   ("C-c i f" . my/set-rime-zh))
   :custom
   (default-input-method "rime"))
 
@@ -49,8 +61,7 @@
 (add-hook 'window-selection-change-functions #'my/update-cursor-on-frame-change)
 
 ;; 输入法切换快捷键
-(global-set-key (kbd "C-c i") 'toggle-input-method)
-
+(global-set-key (kbd "C-c i i") 'toggle-input-method)
 ;; --------
 ;; GTD 配置
 ;; --------
@@ -64,7 +75,7 @@
         ("LATER" . (:foreground "yellow"    :weight bold))
         ("PROCESSING" . (:foreground "orange" :weight bold))
         ("DONE" . (:foreground "green"  :weight bold))
-        ("CANCEL" . (:foreground "black"  :weight bold))
+        ("CANCEL" . (:foreground "grey"  :weight bold))
         ))
 
 (setq org-base-path (expand-file-name "~/.pandaye-journal"))
