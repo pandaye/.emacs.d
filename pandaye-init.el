@@ -154,6 +154,7 @@
 
 (require 'org-ssh)
 (require 'my-org-writing)
+(require 'my-word)
 
 ;;; Racket-mode configuration
 ;;; ==========================
@@ -199,7 +200,7 @@
   (yas-global-mode 1)
   :config
   (yas-reload-all)
-  (define-key yas-minor-mode-map (kbd "<tab>") 'yas-expand)
+  ;; (define-key yas-minor-mode-map (kbd "<tab>") 'yas-expand)
   (add-hook 'prog-mode-hook #'yas-minor-mode))
 
 (use-package yasnippet-snippets

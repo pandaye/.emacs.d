@@ -32,7 +32,7 @@
 			 (expand-file-name "lisp" user-emacs-directory))
 ;; add opensource el codes
 (add-to-list 'load-path
-			 (expand-file-name "opensource" user-emacs-directory))
+			 (expand-file-name "site-lisp" user-emacs-directory))
 
 (require 'my-ui-keyboard)
 
