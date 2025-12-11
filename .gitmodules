@@ -6,5 +6,13 @@
 	url = https://github.com/manateelazycat/lsp-bridge.git
 [submodule "rime"]
 	path = rime
-	url = ./rime/
+	url = git@github.com:pandaye/rime-schema.git
+	branch = main
+[submodule "eaf"]
+	path = site-lisp/emacs-application-framework
+	url = https://github.com/emacs-eaf/emacs-application-framework.git
+	branch = master
+[submodule "org-fc"]
+    path = site-lisp/org-fc
+	url = https://git.sr.ht/~l3kn/org-fc
 	branch = main
