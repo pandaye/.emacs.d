@@ -13,9 +13,6 @@
   ;; GUI 专用配置
   (load "gui.el"))
 
-;; Default Font
-; (set-face-attribute 'default nil :font "Fira Mono 13")
-
 (use-package try
   :ensure t)
 
@@ -93,11 +90,6 @@
    ("C-c f g" . counsel-git)
    ("C-c f G" . counsel-git-grep)
    ("C-c f f" . counsel-file-jump)))    ;; 递归查找文件（支持深度搜索）
-   ;; ("C-c j"   . counsel-git-grep)
-   ;; ("C-c k"   . counsel-ag)
-   ;; ("C-x l"   . counsel-locate)
-   ;; ("C-c g"   . counsel-git)
-   ;; ("C-c G"   . counsel-git-grep)))  ;; 在 Git 仓库中查找文件
 
 (use-package swiper
   :ensure t
@@ -240,7 +232,7 @@
 ;; 快捷键设置，和 vscode 一致
 (global-set-key (kbd "C-c f s") 'save-buffer)
 (global-set-key (kbd "C-c w o") 'ace-window)
-(global-set-key (kbd "C-c w 1") 'delete-other-windows)
+(global-set-key (kbd "C-c w w") 'delete-other-windows)
 (global-set-key (kbd "C-c w 2") 'split-window-below)
 (global-set-key (kbd "C-c w 3") 'split-window-right)
 (global-set-key (kbd "C-c w q") 'delete-window)

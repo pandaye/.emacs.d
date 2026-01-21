@@ -44,6 +44,7 @@
   (setq rime-disable-predicates
         '(meow-not-insert-p
           rime-predicate-after-alphabet-char-p
+		  rime-predicate-space-after-cc-p
           rime-predicate-prog-in-code-p))
   ;; Rime 模式变化时更新光标颜色
   (add-hook 'rime-mode-hook #'my/update-cursor-by-rime-state)
@@ -82,6 +83,19 @@
 (defvar org-gtd-file
   (concat org-base-path "/project.org"))
 
+(defvar my/issue-file (expand-file-name "issue.org" org-base-path))
+
+(setq org-log-into-drawer t)
+
+(setq org-capture-templates
+      `(
+        ;; 日常任务：直接写入 issue.org 顶层（inbox 文件）
+        ("i" "Issue (inbox todo)" entry
+         (file ,my/issue-file)
+         "* TODO %?\n  %U\n  %a\n"
+         :empty-lines 1)
+        ))
+
 (defun gtd ()
   "Open the GTD file."
   (interactive)
@@ -90,12 +104,19 @@
 ;; 加入到日程列表里 - 设置整个目录，自动包含所有 .org 文件
 (setq org-agenda-files (list org-base-path))
 (setq org-agenda-skip-timestamp-if-done t)
+;; 允许 refile 到 agenda 文件
+(setq org-refile-targets '((org-agenda-files :maxlevel . 3)))
+;; 显示完整路径（包括文件名）
+(setq org-refile-use-outline-path 'file)
+;; 允许按完整路径补全
+(setq org-outline-path-complete-in-steps nil)
 
 ;; 快捷键设置
 ;; 设置 Org Agenda 快捷键
 (global-set-key (kbd "C-c o g") 'gtd)
 (global-set-key (kbd "C-c a") 'org-agenda)
-(global-set-key (kbd "C-c l c") 'org-store-link)
+(global-set-key (kbd "C-c l c") 'org-capture)
+(global-set-key (kbd "C-c l l") 'org-store-link)
 (global-set-key (kbd "C-c l r") 'org-clock-report)
 
 ;; 其他未归档的配置
@@ -260,9 +281,5 @@ DATE-STRING should be in format YYYY-MM-DD or MM-DD (current year assumed)."
   :ensure t
   :init
   (org-super-agenda-mode))
-  ;; :config
-  ;; (setq org-super-agenda-groups
-  ;;       '((:auto-parent t))))  ;; 自动按父 headline 分组
-
 
 (provide 'my-org-writing)

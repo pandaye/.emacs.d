@@ -124,6 +124,38 @@ standard Emacs keybindings, respecting the current mode's keymap."
    '("'" . repeat)
    '("<escape>" . ignore)))
 
+;; 1. 定义 inner 函数：返回不含首尾空白的行
+(defun my/meow--inner-of-line-trimmed ()
+  "Return bounds of line without leading/trailing whitespace."
+  (cons (save-excursion
+          (beginning-of-line)
+          (skip-chars-forward " \t")
+          (point))
+        (save-excursion
+          (end-of-line)
+          (skip-chars-backward " \t")
+          (point))))
+
+;; 2. 定义 bounds 函数：返回包含换行符的版本（可选）
+(defun my/meow--bounds-of-line-trimmed ()
+  "Return bounds of line without leading/trailing whitespace, but include newline."
+  (cons (save-excursion
+          (beginning-of-line)
+          (skip-chars-forward " \t")
+          (point))
+        (save-excursion
+          (end-of-line)
+          (skip-chars-backward " \t")
+          (min (1+ (point)) (point-max)))))
+
+;; 3. 注册这个新的 thing
+(meow-thing-register 'line-trimmed 
+                     'my/meow--inner-of-line-trimmed
+                     'my/meow--bounds-of-line-trimmed)
+
+;; 4. 添加到 char-thing-table，绑定到按键 't'
+(add-to-list 'meow-char-thing-table '(?t . line-trimmed))
+
 (meow-setup)
 (meow-global-mode 1)
 
