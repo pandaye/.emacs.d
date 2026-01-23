@@ -10,6 +10,8 @@
 (setq tty-child-frames t)
 (setq acm-icon-width -1)
 
+(setq c-basic-offset 4)
+
 ;; Configure user langserver directory
 (setq lsp-bridge-user-langserver-dir (expand-file-name "~/.emacs.d/lsp-bridge-langserver"))
 
@@ -35,8 +37,6 @@
         (let ((custom-config (expand-file-name ".lsp-bridge.json" project-path)))
           (when (file-exists-p custom-config)
 			custom-config))))
-
-(setq c-basic-offset 4)
 
 (global-set-key (kbd "C-c r d") 'lsp-bridge-find-def)
 (global-set-key (kbd "C-c r t") 'lsp-bridge-find-type-def)

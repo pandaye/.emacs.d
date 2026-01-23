@@ -282,4 +282,34 @@ DATE-STRING should be in format YYYY-MM-DD or MM-DD (current year assumed)."
   :init
   (org-super-agenda-mode))
 
+;; 定义文件名到颜色的映射
+(defvar my/org-agenda-file-colors
+  '(("project" . "#ff7b72")    ;; 红色
+    ("issue" . "#79c0ff")      ;; 蓝色  
+    ("daily" . "#a5d6ff"))     ;; 浅蓝色
+  "Alist mapping category patterns to colors for agenda items.")
+
+(defun my/org-agenda-colorize-category ()
+  "Colorize only the category part of agenda items based on source file."
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (let* ((cat (get-text-property (point) 'org-category))
+             (color (when cat
+                      (cl-loop for (pattern . col) in my/org-agenda-file-colors
+                               when (string-match-p pattern cat)
+                               return col))))
+        (when color
+          ;; 找到 category 文本的位置并只着色它
+          (let ((inhibit-read-only t)
+                (line-start (line-beginning-position))
+                (line-end (line-end-position)))
+            ;; category 通常在行首，格式为 "  category:"
+            (when (re-search-forward (concat "^[[:space:]]*\\(" (regexp-quote cat) "\\):?") line-end t)
+              (add-face-text-property (match-beginning 1) (match-end 1)
+                                      `(:foreground ,color))))))
+      (forward-line 1))))
+
+(add-hook 'org-agenda-finalize-hook #'my/org-agenda-colorize-category)
+
 (provide 'my-org-writing)
