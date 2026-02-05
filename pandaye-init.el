@@ -149,6 +149,7 @@
   (diff-hl-delete ((t (:background "#f5597e")))))
 
 (require 'org-ssh)
+(require 'org-tmux)
 (require 'my-org-writing)
 
 ;;; Racket-mode configuration
