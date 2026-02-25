@@ -67,7 +67,7 @@
 ;; GTD 配置
 ;; --------
 (setq org-todo-keywords
-      '((sequence "TODO(t!)" "PROCESSING(p!)" "BLOCK(b!)" "LATER(l!)" "|" "DONE(d!)" "CANCEL(c@/!)")))
+      '((sequence "TODO(t!)" "PROCESSING(p!)" "REVIEWING(r!)" "BLOCK(b!)" "LATER(l!)" "|" "DONE(d!)" "CANCEL(c@/!)")))
 
 ;; 设置任务样式
 (setq org-todo-keyword-faces
@@ -75,6 +75,7 @@
         ("BLOCK" . (:foreground "red"    :weight bold))
         ("LATER" . (:foreground "yellow"    :weight bold))
         ("PROCESSING" . (:foreground "orange" :weight bold))
+        ("REVIEWING" . (:foreground "#a5d6ff" :weight bold))
         ("DONE" . (:foreground "green"  :weight bold))
         ("CANCEL" . (:foreground "grey"  :weight bold))
         ))
@@ -110,6 +111,23 @@
 (setq org-refile-use-outline-path 'file)
 ;; 允许按完整路径补全
 (setq org-outline-path-complete-in-steps nil)
+
+;; 自定义 Agenda 命令 - 追加 Weekly Review
+(with-eval-after-load 'org-agenda
+  (add-to-list 'org-agenda-custom-commands
+               '("w" "Weekly Review"
+                 ((agenda "" ((org-agenda-span 'week)
+                              (org-agenda-start-on-weekday 1))) ; 从周一开始
+                  (todo "REVIEWING"
+                        ((org-agenda-overriding-header "Tasks in Review")))
+                  (todo "PROCESSING"
+                        ((org-agenda-overriding-header "In Progress")))
+                  (todo "TODO"
+                        ((org-agenda-overriding-header "Todo Items")))
+                  (todo "BLOCK"
+                        ((org-agenda-overriding-header "Blocked Tasks")))
+                  (todo "LATER"
+                        ((org-agenda-overriding-header "Scheduled for Later")))))))
 
 ;; 快捷键设置
 ;; 设置 Org Agenda 快捷键
