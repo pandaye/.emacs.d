@@ -269,3 +269,5 @@
 
 (macos-terminal-clipboard-setup)
 
+(require 'my-gptel)
+
