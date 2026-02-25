@@ -6,5 +6,5 @@
 	url = https://github.com/manateelazycat/lsp-bridge.git
 [submodule "rime"]
 	path = rime
-	url = ./rime/
+	url = git@github.com:pandaye/rime-schema.git
 	branch = main
