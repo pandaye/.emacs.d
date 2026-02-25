@@ -10,9 +10,9 @@
   (setq gptel-backend (gptel-make-gh-copilot "Copilot")
         gptel-model   'claude-sonnet-4.5)
   :bind
-  (("C-c g s" . gptel-send)
-   ("C-c g m" . gptel-menu)
-   ("C-c g g" . gptel)))
+  (("C-c v s" . gptel-send)
+   ("C-c v m" . gptel-menu)
+   ("C-c v v" . gptel)))
 
 ;; gptel-agent: 为 gptel 添加工具调用和 agentic 能力
 ;; 工具包括：web 搜索、URL 抓取、文件读写、Shell 命令等
