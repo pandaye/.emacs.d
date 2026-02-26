@@ -22,7 +22,7 @@
   :config
   ;; 默认使用 opencode 作为 agent
   (setq agent-shell-preferred-agent-config
-        (agent-shell-opencode-make-config))
+        (agent-shell-opencode-make-agent-config))
   :bind
   (("C-c v a" . agent-shell)))
 
