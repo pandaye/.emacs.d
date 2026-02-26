@@ -270,4 +270,5 @@
 (macos-terminal-clipboard-setup)
 
 (require 'my-gptel)
+(require 'my-agent-shell)
 
