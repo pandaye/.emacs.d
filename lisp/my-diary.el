@@ -1,0 +1,100 @@
+;; -*- lexical-binding: t; -*-
+;;; my-diary.el --- 日记系统配置
+
+;;; Commentary:
+;; 每日日记文件管理，包括打开当日日记、按日期打开、列出日记文件。
+;; 依赖 my-gtd.el 中的 org-base-path 变量。
+
+;;; Code:
+
+(condition-case err
+    (require 'my-gtd)
+  (error (message "my-gtd 加载失败: %s" (error-message-string err))))
+
+(defvar daily-diary-base-path (concat org-base-path "/daily")
+  "日记文件的基础路径，格式为 daily/YY/MM-DD.org。")
+
+(defun open-today-diary ()
+  "打开今日日记文件，格式为 /path/to/daily/YY/MM-DD.org"
+  (interactive)
+  (let* ((today (current-time))
+	 (year (format-time-string "%y" today))
+	 (month-day (format-time-string "%m-%d" today))
+	 (diary-dir (expand-file-name year daily-diary-base-path))
+	 (diary-file (expand-file-name (concat month-day ".org") diary-dir)))
+
+    ;; Create directory if it doesn't exist
+    (unless (file-exists-p diary-dir)
+      (make-directory diary-dir t))
+    ;; Open the diary file
+    (find-file diary-file)
+    ;; If it's a new file, add a basic header
+    (when (= (buffer-size) 0)
+      (insert (format "#+TITLE: Daily Diary - %s\n"
+		      (format-time-string "%Y-%m-%d %A" today)))
+      (insert (format "#+DATE: %s\n\n"
+		      (format-time-string "%Y-%m-%d" today)))
+      (insert "* Today's Notes\n\n")
+      (save-buffer))))
+
+(defun open-diary-by-date (date-string)
+  "打开指定日期的日记文件。
+DATE-STRING 格式为 YYYY-MM-DD 或 MM-DD（默认当年）。"
+  (interactive "sEnter date (YYYY-MM-DD or MM-DD): ")
+  (let* ((parsed-date (if (string-match "^\\([0-9]\\{2\\}\\)-\\([0-9]\\{2\\}\\)$" date-string)
+			  ;; MM-DD format, use current year
+			  (concat (format-time-string "%Y-") date-string)
+			;; Assume YYYY-MM-DD format
+			date-string))
+	 (date-time (date-to-time (concat parsed-date " 00:00:00")))
+	 (year (format-time-string "%y" date-time))
+	 (month-day (format-time-string "%m-%d" date-time))
+	 (diary-dir (expand-file-name year daily-diary-base-path))
+	 (diary-file (expand-file-name (concat month-day ".org") diary-dir)))
+    ;; Create directory if it doesn't exist
+    (unless (file-exists-p diary-dir)
+      (make-directory diary-dir t))
+    ;; Open the diary file
+    (find-file diary-file)
+    ;; If it's a new file, add a basic header
+    (when (= (buffer-size) 0)
+      (insert (format "#+TITLE: Daily Diary - %s\n"
+		      (format-time-string "%Y-%m-%d %A" date-time)))
+      (insert (format "#+DATE: %s\n\n"
+		      (format-time-string "%Y-%m-%d" date-time)))
+      (insert "* Today's Notes\n\n")
+      (save-buffer))))
+
+;; TODO: 可以像 agenda 那样直接点进到具体的文件中
+(defun list-diary-files ()
+  "列出所有日记文件。"
+  (interactive)
+  (let* ((diary-buffer "*Diary Files*")
+	 (year-dirs (directory-files daily-diary-base-path t "^[0-9]\\{2\\}$")))
+
+    (with-output-to-temp-buffer diary-buffer
+      (princ "Daily Diary Files:\n")
+      (princ "==================\n\n")
+
+      (dolist (year-dir year-dirs)
+	(let* ((year (file-name-nondirectory year-dir))
+	       (diary-files (directory-files year-dir t "\\.org$")))
+	  (when diary-files
+	    (princ (format "20%s:\n" year))
+	    (dolist (file diary-files)
+	      (let ((filename (file-name-sans-extension
+			       (file-name-nondirectory file))))
+		(princ (format "  %s (20%s-%s)\n" filename year filename))))
+	    (princ "\n"))))
+
+      (princ "\nCommands:\n")
+      (princ "  M-x open-today-diary    - Open today's diary\n")
+      (princ "  M-x open-diary-by-date  - Open diary by date\n")
+      (princ "  M-x list-diary-files    - Show this list\n"))))
+
+(global-set-key (kbd "C-c o t") 'open-today-diary)
+(global-set-key (kbd "C-c o d") 'open-diary-by-date)
+(global-set-key (kbd "C-c o l") 'list-diary-files)
+
+(provide 'my-diary)
+;;; my-diary.el ends here

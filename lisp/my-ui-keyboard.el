@@ -14,7 +14,9 @@
 (add-hook 'prog-mode-hook #'display-line-numbers-mode)
 (setq-default tab-width 4)
 
-(require 'meow)
+(condition-case err
+    (require 'meow)
+  (error (message "meow 加载失败: %s" (error-message-string err))))
 
 (defun pandaye/meow-execute-key (key-str)
   "Execute the command currently bound to KEY-STR.

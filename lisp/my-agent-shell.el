@@ -3,9 +3,15 @@
 
 ;; opencode 通过 nvm 安装，Emacs 启动时 exec-path 不含 nvm 路径
 ;; 在此动态补充，确保 agent-shell 能找到 opencode 可执行文件
+
+(defcustom my/nvm-versions-dir (expand-file-name "~/.nvm/versions/node")
+  "NVM node 版本目录路径。"
+  :type 'string
+  :group 'convenience)
+
 (defun my/add-nvm-node-to-exec-path ()
   "将当前激活的 nvm node bin 目录加入 exec-path 和 PATH。"
-  (let* ((nvm-dir (expand-file-name "~/.nvm/versions/node"))
+  (let* ((nvm-dir my/nvm-versions-dir)
          (node-bins
           (when (file-directory-p nvm-dir)
             (seq-filter #'file-directory-p

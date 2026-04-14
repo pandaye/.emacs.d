@@ -34,9 +34,13 @@
 (add-to-list 'load-path
 			 (expand-file-name "opensource" user-emacs-directory))
 
-(require 'my-ui-keyboard)
+(condition-case err
+    (require 'my-ui-keyboard)
+  (error (message "my-ui-keyboard 加载失败: %s" (error-message-string err))))
 
-(load (expand-file-name "pandaye-init.el" user-emacs-directory))
+(condition-case err
+    (load (expand-file-name "pandaye-init.el" user-emacs-directory) :no-error :no-message)
+  (error (message "pandaye-init 加载失败: %s" (error-message-string err))))
 
 (provide 'init)
 ;;; init.el ends here

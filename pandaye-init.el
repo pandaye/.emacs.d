@@ -13,13 +13,19 @@
 
 (when (display-graphic-p)
   ;; GUI 专用配置
-  (load "gui.el"))
+  (load "gui.el" :noerror))
+
+;; ============================================================
+;; 基础工具 - 需要尽早加载
+;; ============================================================
 
 (use-package try
-  :ensure t)
+  :ensure t
+  :commands (try))
 
 (use-package which-key
   :ensure t
+  :defer 2
   :config (which-key-mode))
 
 ;; 安装 diminish 以支持 :diminish 关键字
@@ -27,31 +33,11 @@
   :ensure t)
 
 ;; 备份文件配置 - 禁用 ~ 后缀文件，保留自动保存
-(setq make-backup-files nil)       ; 禁用 file~ 备份文件
+(setq make-backup-files nil)
 
-(use-package projectile
-  :ensure t
-  :init
-  (projectile-mode 1)
-  :config
-  (setq projectile-project-search-path '("~/Project/"))
-  (setq projectile-completion-system 'auto)
-  :bind
-  (("C-c f p" . projectile-find-file)))
-
-(use-package neotree
-  :ensure t
-  :bind
-  ("C-c t p" . neotree-show)
-  ("C-c t t" . neotree-toggle)
-  :config
-  (setq neo-smart-open t)
-  (setq neo-vc-integration '(face char)))
-
-(use-package rg
-  :ensure t)
-
-(defalias 'list-buffers 'ibuffer)
+;; ============================================================
+;; 导航框架 - Ivy/Counsel/Swiper（核心导航，保留急切加载）
+;; ============================================================
 
 ;; Ivy 配置 - 优化导航体验
 (use-package ivy
@@ -63,16 +49,13 @@
         enable-recursive-minibuffers t
         ivy-wrap t
         ivy-height 15
-        ;; 智能模糊匹配 - 更精确的匹配策略
-        ivy-re-builders-alist '((counsel-M-x . ivy--regex-plus)             ; M-x 使用模糊匹配
-                                (counsel-find-file . ivy--regex-plus)      ; 文件查找使用增强匹配
-                                (counsel-file-jump . ivy--regex-plus)      ; 文件跳转使用模糊匹配
-                                (swiper . ivy--regex-plus)                  ; 搜索使用增强匹配
-                                (ivy-switch-buffer . ivy--regex-plus)       ; 缓冲区切换使用增强匹配
-                                (t . ivy--regex-plus))                      ; 其他情况使用增强匹配
-        ;; 忽略大小写
+        ivy-re-builders-alist '((counsel-M-x . ivy--regex-plus)
+                                (counsel-find-file . ivy--regex-plus)
+                                (counsel-file-jump . ivy--regex-plus)
+                                (swiper . ivy--regex-plus)
+                                (ivy-switch-buffer . ivy--regex-plus)
+                                (t . ivy--regex-plus))
         ivy-case-fold-search-default t
-        ;; 初始输入为空
         ivy-initial-inputs-alist nil)
   (ivy-mode 1)
   :bind
@@ -91,7 +74,7 @@
    ("C-x C-f" . counsel-find-file)
    ("C-c f g" . counsel-git)
    ("C-c f G" . counsel-git-grep)
-   ("C-c f f" . counsel-file-jump)))    ;; 递归查找文件（支持深度搜索）
+   ("C-c f f" . counsel-file-jump)))
 
 (use-package swiper
   :ensure t
@@ -105,43 +88,81 @@
   :after (ivy counsel)
   :config
   (ivy-rich-mode 1)
-  ;; 为 counsel-find-file 提供更丰富的信息显示
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
+
+;; ============================================================
+;; 项目与文件管理 - 延迟加载
+;; ============================================================
+
+(use-package projectile
+  :ensure t
+  :defer 3
+  :init
+  (setq projectile-project-search-path '("~/Project/")
+        projectile-completion-system 'auto)
+  :config
+  (projectile-mode 1)
+  :bind
+  (("C-c f p" . projectile-find-file)))
+
+(use-package neotree
+  :ensure t
+  :commands (neotree-show neotree-toggle neotree-find)
+  :bind
+  ("C-c t p" . neotree-show)
+  ("C-c t t" . neotree-toggle)
+  :config
+  (setq neo-smart-open t
+        neo-vc-integration '(face char)))
+
+(use-package rg
+  :ensure t
+  :defer t)
+
+(defalias 'list-buffers 'ibuffer)
+
+;; ============================================================
+;; 窗口与编辑增强
+;; ============================================================
+
+;; 窗口布局记忆
+(winner-mode 1)
 
 ;; 安装字体支持（可选，主要用于 GUI）
 (use-package all-the-icons
   :ensure t
-  :if (display-graphic-p))
+  :if (display-graphic-p)
+  :commands (all-the-icons-install-fonts))
 
 (use-package ace-window
   :ensure t
+  :commands (ace-window)
   :init
   (global-set-key [remap other-window] 'ace-window))
 
 (use-package rainbow-delimiters
   :ensure t
-  :init
-  (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'lisp-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'racket-mode-hook 'rainbow-delimiters-mode))
+  :hook (scheme-mode . rainbow-delimiters-mode)
+  (emacs-lisp-mode . rainbow-delimiters-mode)
+  (lisp-mode . rainbow-delimiters-mode)
+  (racket-mode . rainbow-delimiters-mode))
+
+;; ============================================================
+;; Git 与版本控制
+;; ============================================================
 
 (use-package magit
   :ensure t
-  :init
-  (global-set-key (kbd "C-c j s") 'magit-status)
-  (global-set-key (kbd "C-c j p") 'magit-dispatch-popup))
+  :commands (magit-status magit-dispatch-popup)
+  :bind
+  (("C-c j s" . magit-status)
+   ("C-c j p" . magit-dispatch-popup)))
 
 (use-package diff-hl
   :ensure t
-  :init
-  ;; (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
-  ;; (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
+  :hook (after-init . global-diff-hl-mode)
   :config
-  (global-diff-hl-mode)
-  ;; Highlight changes on editing.
   (diff-hl-flydiff-mode)
-  ;; Makes fringe and margin react to mouse clicks to show the curresponding hunk.
   (diff-hl-show-hunk-mouse-mode)
   :custom
   (diff-hl-draw-borders nil)
@@ -150,24 +171,42 @@
   (diff-hl-insert ((t (:background "#03e94f"))))
   (diff-hl-delete ((t (:background "#f5597e")))))
 
-(require 'org-ssh)
-(require 'tmux-manager)
-(require 'my-org-writing)
+;; ============================================================
+;; Org 与写作系统 - 延迟加载
+;; ============================================================
 
-;;; Racket-mode configuration
-;;; ==========================
+(condition-case err
+    (progn
+      (require 'org-ssh)
+      (require 'tmux-manager))
+  (error (message "可选模块加载失败: %s" (error-message-string err))))
+
+;; Org 系统 - 拆分为独立模块
+(require 'my-org-writing)    ;; Org 外观美化
+(require 'my-gtd)            ;; GTD 任务管理
+(require 'my-rime)           ;; Rime 中文输入法
+(require 'my-diary)          ;; 日记系统
+(require 'my-org-roam)       ;; Org-roam 双向链接
+
+;; ============================================================
+;; 编程语言支持 - 按需加载
+;; ============================================================
+
+;; 括号编辑增强
 (use-package paredit
   :ensure t
-  :hook (racket-mode . paredit-mode))
-
+  :hook (racket-mode . paredit-mode)
+  (emacs-lisp-mode . paredit-mode)
+  (lisp-mode . paredit-mode)
+  (clojure-mode . paredit-mode)
+  (eval-expression-minibuffer-setup . paredit-mode)
+  (ielm-mode . paredit-mode))
 
 (use-package racket-mode
   :ensure t
   :mode (("\\.rkt\\'" . racket-mode)
-         ("\\.scrbl\\'" . racket-mode)) ; 支持 Scribble 文档
+         ("\\.scrbl\\'" . racket-mode))
   :config
-  ;; 确保 REPL 进程在后台运行，不会冻结 Emacs
-  ;; (setq racket-program "path/to/your/racket") ; 如果 racket 不在系统 PATH 中，取消此行注释并设置路径
   (setq racket-run-in-background t)
   :hook
   (racket-mode . racket-xp-mode))
@@ -176,7 +215,7 @@
   :ensure t
   :mode
   ("\\.beancount\\'" . beancount-mode)
-  ("\\.bean\\'". beancount-mode)
+  ("\\.bean\\'" . beancount-mode)
   :config
   (define-key beancount-mode-map (kbd "TAB") nil))
 
@@ -189,50 +228,132 @@
   :ensure t
   :mode ("\\.ya?ml\\'" . yaml-mode))
 
+(use-package clojure-mode
+  :ensure t
+  :hook ((clojure-mode . enable-paredit-mode)
+         (clojure-mode . rainbow-delimiters-mode)))
+
+(use-package cmake-mode
+  :ensure t
+  :mode ("\\(?:CMakeLists\\.txt\\|\\.cmake\\)\\'" . cmake-mode))
+
 (unless (featurep 'org-tempo)
   (require 'org-tempo))
 
+;; ============================================================
+;; Snippets - 延迟到编程模式
+;; ============================================================
+
 (use-package yasnippet
   :ensure t
-  :init
-  (yas-global-mode 1)
+  :defer 2
   :config
+  (yas-global-mode 1)
   (yas-reload-all)
   (define-key yas-minor-mode-map (kbd "<tab>") 'yas-expand)
   (add-hook 'prog-mode-hook #'yas-minor-mode))
 
 (use-package yasnippet-snippets
-  :ensure t)
+  :ensure t
+  :after yasnippet)
+
+;; ============================================================
+;; 日志与监控 - 按需加载
+;; ============================================================
 
 (use-package logview
-  :ensure t)
+  :ensure t
+  :commands (logview-mode))
 
-;; Common Lisp Development Environment using SLIME
+;; ============================================================
+;; Common Lisp 开发环境 - 按需加载
+;; ============================================================
+
 (use-package slime
   :ensure t
+  :commands (slime)
   :init
-  ;; 让 SLIME 知道 Roswell 安装的 Lisp 在哪里
   (setq inferior-lisp-program "ros run")
   :mode
   ("\\.ros\\'" . lisp-mode)
   :config
-  ;; slime-contrib 包含了很多非常有用的扩展，比如：
-  ;; - slime-fancy-inspector: 更强大的对象检查器
-  ;; - slime-tramp: 通过 TRAMP 连接到远程 Lisp 进程
-  ;; - slime-xref-browser: 交叉引用浏览器 (谁调用了我？)
   (slime-setup '(slime-fancy slime-tramp slime-asdf slime-xref-browser))
-  ;; 个人偏好：在 REPL 中让 Tab 键只做补全，不做缩进
-  ;; (define-key slime-repl-mode-map (kbd "TAB") #'slime-complete-symbol)
-  ;; 启用亚词级别的移动 (比如 a-long-variable-name 可以被看作 4 个词)
   (add-hook 'lisp-mode-hook (lambda () (subword-mode 1)))
   (add-hook 'slime-repl-mode-hook (lambda () (subword-mode 1))))
 
+;; ============================================================
+;; Markdown - 按需加载
+;; ============================================================
+
 (use-package markdown-mode
-  :ensure t)
+  :ensure t
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode)))
 
-(require 'my-lsp)
+(use-package ox-gfm
+  :ensure ox-gfm
+  :after markdown-mode)
 
-;; 快捷键设置，和 vscode 一致
+;; ============================================================
+;; LSP - 延迟到编程模式（最大性能提升）
+;; ============================================================
+
+;; LSP - 编程模式首次激活时加载（避免启动时加载重型 lsp-bridge）
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (unless (featurep 'my-lsp)
+              (require 'my-lsp nil t))))
+
+;; ============================================================
+;; AI 工具 - 延迟加载
+;; ============================================================
+
+(condition-case err
+    (progn
+      (require 'my-gptel)
+      (require 'my-agent-shell))
+  (error (message "AI 工具模块加载失败: %s" (error-message-string err))))
+
+;; org-opencode: modular Org frontend for opencode AI agent
+(add-to-list 'load-path (expand-file-name "lisp/org-opencode" user-emacs-directory))
+(autoload 'org-opencode-mode "org-opencode" "Minor mode for opencode in Org buffers." t)
+
+;; ============================================================
+;; UI 增强
+;; ============================================================
+
+;; 括号匹配高亮
+(add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
+
+;; 回退显示字符美化
+(defface fallback '((t :family "Fira Code Light"
+                       :foreground "gray")) "Fallback")
+(set-display-table-slot standard-display-table 'truncation
+                        (make-glyph-code ?… 'fallback))
+(set-display-table-slot standard-display-table 'wrap
+                        (make-glyph-code ?↩ 'fallback))
+
+;; Fringe 背景透明化
+(set-face-attribute 'fringe nil :background nil)
+(define-fringe-bitmap 'left-arrow [])
+(define-fringe-bitmap 'left-curly-arrow [])
+(define-fringe-bitmap 'left-triangle [])
+
+;; 列号显示
+(setq column-number-mode t)
+
+;; 当前行高亮
+(global-hl-line-mode t)
+
+;; 快速终端访问
+(global-set-key (kbd "<f9>") 'eshell)
+
+;; ============================================================
+;; 快捷键设置
+;; ============================================================
+
 (global-set-key (kbd "C-c f s") 'save-buffer)
 (global-set-key (kbd "C-c w o") 'ace-window)
 (global-set-key (kbd "C-c w w") 'delete-other-windows)
@@ -242,9 +363,15 @@
 (global-set-key (kbd "C-c b r") 'revert-buffer)
 (global-set-key (kbd "C-c b p") 'projectile-ibuffer)
 
+;; ============================================================
+;; 剪贴板配置
+;; ============================================================
+
 (when (and (not (eq system-type 'darwin))
-		   (not (display-graphic-p)))
-  (require 'my-clipboard)
+           (not (display-graphic-p)))
+  (condition-case err
+      (require 'my-clipboard)
+    (error (message "剪贴板模块加载失败: %s" (error-message-string err))))
   (setq browse-url-browser-function 'nil))
 
 ;; macOS 终端下的剪贴板配置
@@ -252,7 +379,6 @@
   "Setup clipboard integration for terminal Emacs on macOS."
   (when (and (eq system-type 'darwin)
 	     (not (display-graphic-p)))
-    ;; 设置剪贴板复制函数
     (setq interprogram-cut-function
 	  (lambda (text &optional push)
 	    "Copy TEXT to macOS clipboard using pbcopy."
@@ -260,20 +386,14 @@
 	      (let ((proc (start-process "pbcopy" nil "pbcopy")))
 		(process-send-string proc text)
 		(process-send-eof proc)))))
-    ;; 设置剪贴板粘贴函数
     (setq interprogram-paste-function
 	  (lambda ()
 	    "Paste from macOS clipboard using pbpaste."
 	    (shell-command-to-string "pbpaste")))
-    ;; 启用剪贴板交互
     (setq select-enable-clipboard t
 	  save-interprogram-paste-before-kill t)))
 
 (macos-terminal-clipboard-setup)
 
-(require 'my-gptel)
-(require 'my-agent-shell)
-
-;; org-opencode: modular Org frontend for opencode AI agent
-(add-to-list 'load-path (expand-file-name "lisp/org-opencode" user-emacs-directory))
-(autoload 'org-opencode-mode "org-opencode" "Minor mode for opencode in Org buffers." t)
+(provide 'pandaye-init)
+;;; pandaye-init.el ends here

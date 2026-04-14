@@ -121,8 +121,10 @@
 ;; 快速创建新的服务器组文件
 
 ;; 配置 SSH 服务器组文件目录变量
-(defvar my/ssh-configs-dir (expand-file-name "~/work/hosts/")
-  "存放 SSH 服务器组 org 文件的目录。")
+(defcustom my/ssh-configs-dir (expand-file-name "~/work/hosts/")
+  "存放 SSH 服务器组 org 文件的目录。"
+  :type 'string
+  :group 'convenience)
 
 ;; 优化后的模板创建函数
 (defun my/create-ssh-template (filename group-name default-user default-port)
