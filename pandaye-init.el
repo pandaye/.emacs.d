@@ -9,6 +9,8 @@
       mouse-wheel-scroll-amount '(1)
       mouse-wheel-progressive-speed nil)
 
+(setopt cjk-ambiguous-chars-are-wide nil)
+
 (when (display-graphic-p)
   ;; GUI 专用配置
   (load "gui.el"))
@@ -149,7 +151,7 @@
   (diff-hl-delete ((t (:background "#f5597e")))))
 
 (require 'org-ssh)
-(require 'org-tmux)
+(require 'tmux-manager)
 (require 'my-org-writing)
 
 ;;; Racket-mode configuration
@@ -272,3 +274,6 @@
 (require 'my-gptel)
 (require 'my-agent-shell)
 
+;; org-opencode: modular Org frontend for opencode AI agent
+(add-to-list 'load-path (expand-file-name "lisp/org-opencode" user-emacs-directory))
+(autoload 'org-opencode-mode "org-opencode" "Minor mode for opencode in Org buffers." t)

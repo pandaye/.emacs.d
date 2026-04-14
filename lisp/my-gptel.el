@@ -8,7 +8,7 @@
   :config
   ;; 注册 GitHub Copilot 后端并设为默认
   (setq gptel-backend (gptel-make-gh-copilot "Copilot")
-        gptel-model   'claude-sonnet-4.5
+        gptel-model   'claude-sonnet-4.6
         gptel-default-mode 'org-mode)
   :bind
   (("C-c v s" . gptel-send)

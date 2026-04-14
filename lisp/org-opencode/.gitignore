@@ -1,0 +1,7 @@
+*.elc
+*~
+\#*\#
+.\#*
+.DS_Store
+*.tar
+/dist/
