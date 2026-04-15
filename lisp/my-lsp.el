@@ -22,7 +22,7 @@
   :custom
   (acm-enable-copilot t)
   (tty-child-frames t)
-  (acm-icon-width -1)
+  (acm-enable-icon nil)
   (c-basic-offset 4)
   (lsp-bridge-user-langserver-dir (expand-file-name "lsp-bridge-langserver" user-emacs-directory))
   :config
@@ -44,6 +44,36 @@
           (let ((custom-config (expand-file-name ".lsp-bridge.json" project-path)))
             (when (file-exists-p custom-config)
               custom-config))))
+
+  ;; 修复补全弹窗错位：上游 acm-frame-get-popup-position 混用
+  ;; window-pixel-edges（含行号列）与 posn-at-point（文本区域相对），
+  ;; 导致开启 display-line-numbers-mode 时弹窗向右偏移行号列宽度。
+  ;; 改用 window-body-pixel-edges 统一坐标系。
+  (define-advice acm-frame-get-popup-position
+      (:override (frame-popup-point &optional line-bias)
+                 fix-line-number-offset)
+    "Use body-pixel-edges to align popup with text area coordinates."
+    (let* ((edges (window-body-pixel-edges))
+           (window-left
+            (+ (nth 0 edges)
+               ;; Icon fine-tuning: shift left when icons disabled.
+               (if (bound-and-true-p acm-enable-icon)
+                   0
+                 (* (frame-char-width)
+                    (1- (or (bound-and-true-p acm-icon-width) 0))))
+               ;; Quick-access index fine-tuning.
+               (if (bound-and-true-p acm-enable-quick-access)
+                   (- (* (frame-char-width) 3))
+                 0)))
+           (window-top (nth 1 edges))
+           (pos (posn-x-y (posn-at-point frame-popup-point)))
+           (x (car pos))
+           (y (+ (cdr pos) (* (or line-bias 0) (line-pixel-height))))
+           (offset-y
+            (+ (window-tab-line-height)
+               (window-header-line-height))))
+      (cons (+ x window-left)
+            (+ y window-top offset-y))))
 
   (global-lsp-bridge-mode)
 
