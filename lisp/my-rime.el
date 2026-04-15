@@ -18,7 +18,6 @@
   (rime-lib-select-schema "tigress"))
 
 (use-package rime
-  :ensure t
   :init
   (let ((librime-path (expand-file-name "~/.emacs.d/librime")))
     (when (file-directory-p librime-path)

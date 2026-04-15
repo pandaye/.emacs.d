@@ -4,7 +4,6 @@
   "Check if the current system is macOS.")
 
 (use-package gruvbox-theme
-  :ensure t
   :config
   (load-theme 'gruvbox-dark-medium t))
 

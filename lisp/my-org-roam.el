@@ -15,7 +15,6 @@
 ;; ============================================================
 
 (use-package org-roam
-  :ensure t
   :custom
   (org-roam-directory (file-truename (concat org-base-path "/roam")))
   (org-roam-node-display-template
@@ -64,7 +63,6 @@
 ;; ============================================================
 
 (use-package org-super-agenda
-  :ensure t
   :after org-agenda
   :config
   (org-super-agenda-mode))

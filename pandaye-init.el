@@ -73,24 +73,23 @@
   (error (message "utils 加载失败: %s" (error-message-string err))))
 
 (use-package try
-  :ensure t
   :commands (try))
 
 (use-package which-key
-  :ensure t
+
   :defer 2
   :config (which-key-mode))
 
 ;; 安装 diminish 以支持 :diminish 关键字
 (use-package diminish
-  :ensure t)
+)
 
 ;; ============================================================
 ;; 导航框架 - Ivy/Counsel/Swiper
 ;; ============================================================
 
 (use-package ivy
-  :ensure t
+
   :diminish
   :init
   (setq ivy-use-virtual-buffers t
@@ -113,7 +112,7 @@
    ("C-x B" . ivy-switch-buffer-other-window)))
 
 (use-package counsel
-  :ensure t
+
   :diminish
   :after ivy
   :init
@@ -126,14 +125,14 @@
    ("C-c f f" . counsel-file-jump)))
 
 (use-package swiper
-  :ensure t
+
   :after ivy
   :bind
   (("C-s" . swiper)
    ("C-r" . swiper-backward)))
 
 (use-package ivy-rich
-  :ensure t
+
   :after (ivy counsel)
   :config
   (ivy-rich-mode 1)
@@ -144,7 +143,7 @@
 ;; ============================================================
 
 (use-package projectile
-  :ensure t
+
   :defer 3
   :init
   (setq projectile-project-search-path '("~/Project/")
@@ -155,7 +154,7 @@
   (("C-c f p" . projectile-find-file)))
 
 (use-package neotree
-  :ensure t
+
   :commands (neotree-show neotree-toggle neotree-find)
   :bind
   ("C-c t p" . neotree-show)
@@ -165,7 +164,7 @@
         neo-vc-integration '(face char)))
 
 (use-package rg
-  :ensure t
+
   :defer t)
 
 (defalias 'list-buffers 'ibuffer)
@@ -177,18 +176,18 @@
 (winner-mode 1)
 
 (use-package all-the-icons
-  :ensure t
+
   :if (display-graphic-p)
   :commands (all-the-icons-install-fonts))
 
 (use-package ace-window
-  :ensure t
+
   :commands (ace-window)
   :init
   (global-set-key [remap other-window] 'ace-window))
 
 (use-package rainbow-delimiters
-  :ensure t
+
   :hook (scheme-mode . rainbow-delimiters-mode)
   (emacs-lisp-mode . rainbow-delimiters-mode)
   (lisp-mode . rainbow-delimiters-mode)
@@ -199,14 +198,14 @@
 ;; ============================================================
 
 (use-package magit
-  :ensure t
+
   :commands (magit-status magit-dispatch)
   :bind
   (("C-c j s" . magit-status)
    ("C-c j p" . magit-dispatch)))
 
 (use-package diff-hl
-  :ensure t
+
   :hook (after-init . global-diff-hl-mode)
   :config
   (diff-hl-flydiff-mode)
@@ -238,7 +237,6 @@
   (require 'org-tempo))
 
 (use-package ox-gfm
-  :ensure ox-gfm
   :after org)
 
 ;; ============================================================
@@ -246,7 +244,7 @@
 ;; ============================================================
 
 (use-package paredit
-  :ensure t
+
   :hook (racket-mode . paredit-mode)
   (emacs-lisp-mode . paredit-mode)
   (lisp-mode . paredit-mode)
@@ -255,7 +253,7 @@
   (ielm-mode . paredit-mode))
 
 (use-package racket-mode
-  :ensure t
+
   :mode (("\\.rkt\\'" . racket-mode)
          ("\\.scrbl\\'" . racket-mode))
   :config
@@ -264,7 +262,7 @@
   (racket-mode . racket-xp-mode))
 
 (use-package beancount
-  :ensure t
+
   :mode
   ("\\.beancount\\'" . beancount-mode)
   ("\\.bean\\'" . beancount-mode)
@@ -272,24 +270,24 @@
   (define-key beancount-mode-map (kbd "TAB") nil))
 
 (use-package go-mode
-  :ensure t
+
   :mode
   ("\\.go\\'" . go-mode))
 
 (use-package yaml-mode
-  :ensure t
+
   :mode ("\\.ya?ml\\'" . yaml-mode))
 
 (use-package clojure-mode
-  :ensure t
+
   :hook ((clojure-mode . rainbow-delimiters-mode)))
 
 (use-package cmake-mode
-  :ensure t
+
   :mode ("\\(?:CMakeLists\\.txt\\|\\.cmake\\)\\'" . cmake-mode))
 
 (use-package slime
-  :ensure t
+
   :commands (slime)
   :init
   (setq inferior-lisp-program "ros run")
@@ -301,7 +299,7 @@
   (add-hook 'slime-repl-mode-hook (lambda () (subword-mode 1))))
 
 (use-package markdown-mode
-  :ensure t
+
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.md\\'" . markdown-mode)
@@ -312,14 +310,14 @@
 ;; ============================================================
 
 (use-package yasnippet
-  :ensure t
+
   :defer 2
   :config
   (yas-global-mode 1)
   (define-key yas-minor-mode-map (kbd "<tab>") 'yas-expand))
 
 (use-package yasnippet-snippets
-  :ensure t
+
   :after yasnippet)
 
 ;; ============================================================
@@ -343,7 +341,7 @@
 ;; ============================================================
 
 (use-package logview
-  :ensure t
+
   :commands (logview-mode))
 
 ;; ============================================================
