@@ -162,43 +162,60 @@ standard Emacs keybindings, respecting the current mode's keymap."
   (meow-global-mode 1))
 
 ;; 自定义 Modeline - 简洁实用的状态栏
+
+;; ── Faces ────────────────────────────────────────────────
+
 (defface custom-modeline-meow-normal
   '((t :foreground "#83a598" :weight bold))
-  "Face for Meow normal state.")
+  "Face for Meow normal state."
+  :group 'faces)
 
 (defface custom-modeline-meow-motion
   '((t :foreground "#8ec07c" :weight bold))
-  "Face for Meow motion state.")
+  "Face for Meow motion state."
+  :group 'faces)
 
 (defface custom-modeline-meow-insert
   '((t :foreground "#fb4934" :weight bold))
-  "Face for Meow insert state.")
+  "Face for Meow insert state."
+  :group 'faces)
 
 (defface custom-modeline-meow-keypad
   '((t :foreground "#d3869b" :weight bold))
-  "Face for Meow keypad state.")
+  "Face for Meow keypad state."
+  :group 'faces)
 
-(defface custom-modeline-meow-visual
+(defface custom-modeline-meow-beacon
   '((t :foreground "#fabd2f" :weight bold))
-  "Face for Meow visual state.")
+  "Face for Meow beacon state."
+  :group 'faces)
 
 (defface custom-modeline-buffer-modified
   '((t :foreground "#fe8019" :weight bold))
-  "Face for modified buffer indicator.")
+  "Face for modified buffer indicator."
+  :group 'faces)
 
 (defface custom-modeline-git-branch
   '((t :foreground "#b8bb26" :weight normal))
-  "Face for git branch name.")
+  "Face for git branch name."
+  :group 'faces)
 
 (defface custom-modeline-separator
   '((t :foreground "#665c54" :weight normal))
-  "Face for modeline separators.")
+  "Face for modeline separators."
+  :group 'faces)
 
-;; 缓存变量，提高性能
-(defvar custom-modeline-git-branch-cache nil)
-(defvar custom-modeline-git-branch-cache-file nil)
-(defvar custom-modeline-buffer-git-status-cache nil)
-(defvar custom-modeline-buffer-git-status-cache-file nil)
+(defface custom-modeline-major-mode-face
+  '((t :inherit font-lock-keyword-face :weight bold :foreground "orange"))
+  "Face for the major mode name in the custom modeline."
+  :group 'faces)
+
+(defface custom-projectile-name-face
+  '((t :inherit font-lock-keyword-face :foreground "grey"))
+  "Face for the projectile project name in the custom modeline."
+  :group 'faces)
+
+;; ── 段落函数 ─────────────────────────────────────────────
 
 (defun custom-modeline-meow-state ()
   "Return formatted Meow state for modeline."
@@ -209,125 +226,96 @@ standard Emacs keybindings, respecting the current mode's keymap."
         ('insert (propertize "I" 'face 'custom-modeline-meow-insert))
         ('motion (propertize "M" 'face 'custom-modeline-meow-motion))
         ('keypad (propertize "K" 'face 'custom-modeline-meow-keypad))
-        (_ (propertize "?" 'face 'custom-modeline-meow-visual))))))
+        ('beacon (propertize "B" 'face 'custom-modeline-meow-beacon))
+        (_       (propertize "?" 'face 'font-lock-warning-face))))))
 
 (defun custom-modeline-buffer-status ()
   "Return buffer modification status."
   (cond
    (buffer-read-only (propertize "RO" 'face 'font-lock-warning-face))
-   ((buffer-modified-p) 
+   ((buffer-modified-p)
     (propertize "●" 'face 'custom-modeline-buffer-modified))
    (t (propertize "-" 'face 'custom-modeline-separator))))
 
 (defun custom-modeline-git-branch ()
-  "Return current git branch if available with caching."
-  (when (and buffer-file-name (file-exists-p buffer-file-name))
-    (let ((current-file buffer-file-name))
-      ;; 只有当文件改变时才重新获取 git 信息
-      (when (or (not custom-modeline-git-branch-cache-file)
-                (not (string= current-file custom-modeline-git-branch-cache-file)))
-        (setq custom-modeline-git-branch-cache-file current-file)
-        (setq custom-modeline-git-branch-cache
-              (condition-case nil
-                (when (vc-git-registered current-file)
-                  (let ((branch (vc-git--symbolic-ref current-file)))
-                    (when branch
-                      (propertize (format "⎇ %s" branch) 
-                                 'face 'custom-modeline-git-branch))))
-                (error nil))))
-      custom-modeline-git-branch-cache)))
+  "Return current git branch via `vc-mode' (Emacs 内置，无额外进程开销)."
+  (when (and vc-mode (stringp vc-mode))
+    ;; vc-mode 格式如 " Git:main" 或 " Git-main"，去掉前缀
+    (let ((branch (replace-regexp-in-string "^ Git[:-]" "" vc-mode)))
+      (propertize (format "⎇ %s" branch) 'face 'custom-modeline-git-branch))))
 
 (defun custom-modeline-buffer-name ()
   "Return formatted buffer name with status-based coloring."
-  (let ((name (buffer-name))
-        (current-file buffer-file-name))
+  (let ((name (buffer-name)))
     (cond
-     ;; 只读文件 - 橙色
-     (buffer-read-only 
+     ;; 只读
+     (buffer-read-only
       (propertize name 'face '(:foreground "#fe8019" :weight bold)))
-     ;; 修改过的文件 - 红色
-     ((buffer-modified-p) 
+     ;; 已修改
+     ((buffer-modified-p)
       (propertize name 'face '(:foreground "#fb4934" :weight bold)))
-     ;; Git 跟踪的文件 - 绿色（带缓存）
-     ((and current-file 
-           (or (and custom-modeline-buffer-git-status-cache-file
-                    (string= current-file custom-modeline-buffer-git-status-cache-file)
-                    custom-modeline-buffer-git-status-cache)
-               (progn
-                 (setq custom-modeline-buffer-git-status-cache-file current-file)
-                 (setq custom-modeline-buffer-git-status-cache
-                       (condition-case nil
-                           (vc-git-registered current-file)
-                         (error nil)))
-                 custom-modeline-buffer-git-status-cache)))
+     ;; Git 跟踪（借助 vc-mode，Emacs 自行维护，无额外进程）
+     ((and vc-mode (stringp vc-mode))
       (propertize name 'face '(:foreground "#b8bb26" :weight normal)))
-     ;; 普通文件 - 默认颜色
+     ;; 普通
      (t (propertize name 'face 'mode-line-buffer-id)))))
-
-(defface custom-modeline-major-mode-face
-  '((t :inherit font-lock-keyword-face :weight bold :foreground "orange"))
-  "Face for the major mode name in the custom modeline."
-  :group 'faces)
-
-(defface custom-projectile-name-face
-  '((t :inherit font-lock-keyword-face :foreground "grey"))
-  "Face for the major mode name in the custom modeline."
-  :group 'faces)
-
 
 (defun custom-modeline-major-mode ()
   "Return formatted major mode, handling both string and list `mode-name`."
   (let ((name (if (listp mode-name)
                   (car mode-name)
                 mode-name)))
-    ;; 确保我们只 propertize 字符串
     (when (stringp name)
       (propertize name 'face 'custom-modeline-major-mode-face))))
 
 (defun custom-modeline-position ()
-  "Return cursor position info."
-  (propertize (concat (format "%d:%d" (line-number-at-pos) (current-column))
-					  " [%p]")
+  "Return cursor position info (line:col)."
+  (propertize (format "%d:%d" (line-number-at-pos) (current-column))
               'face 'font-lock-type-face))
 
 (defun custom-modeline-separator ()
   "Return a separator."
   (propertize " | " 'face 'custom-modeline-separator))
 
-(defun projectile-mode-line ()
-  '(:eval (format " Proj[%s]" (projectile-project-name))))
+;; ── mode-line-format ─────────────────────────────────────
 
 (setq-default mode-line-format
-			  '(;; 左侧信息
-				(:eval (when (custom-modeline-meow-state)
-						 (concat " " (custom-modeline-meow-state) " ")))
-				" "
-				(:eval (when (featurep 'projectile)
-						 (propertize (format "[%s]" (projectile-project-name)) 'face 'custom-projectile-name-face)))
-				" "
-				(:eval (custom-modeline-buffer-name))
-				" "
-				(:eval (custom-modeline-major-mode))
-				" "
-				(:eval (let ((git-str (custom-modeline-git-branch)))
-						 (if git-str (concat " " git-str) "")))
-				" "
-				mode-line-misc-info
-				
-				;; 中间填充：根据右侧要显示的项长度计算空格，使右侧真正贴到最右
-				(:eval
-				 (let* ((mule-str (format-mode-line mode-line-mule-info))
-						(pos-str  (format-mode-line (custom-modeline-position)))
-						;; 用 string-width 更准确地计算显示宽度（对中文/宽字符友好）
-						(right-width (+ (string-width mule-str)
-										(string-width pos-str)
-										3))) ;; 预留的空白（可以调整）
-				   (propertize " " 'display `(space :align-to (- right ,right-width)))))
-
-				;; 右侧信息（按顺序显示：位置 -> 间隔 -> 输入法/编码信息）
-				(:eval (custom-modeline-position))
-				" "
-				mode-line-mule-info))
+  '(;; 左侧：Meow 状态
+    (:eval (let ((state (custom-modeline-meow-state)))
+             (when state (concat " " state " "))))
+    " "
+    ;; Projectile 项目名
+    (:eval (when (featurep 'projectile)
+             (propertize (format "[%s]" (projectile-project-name))
+                         'face 'custom-projectile-name-face)))
+    " "
+    ;; Buffer 名称（带状态着色）
+    (:eval (custom-modeline-buffer-name))
+    " "
+    ;; Major mode
+    (:eval (custom-modeline-major-mode))
+    " "
+    ;; Git branch
+    (:eval (let ((git-str (custom-modeline-git-branch)))
+             (if git-str (concat " " git-str) "")))
+    " "
+    mode-line-misc-info
+    ;; 中间弹性空白，将右侧推到最右
+    (:eval
+     (let* ((pos-str (format-mode-line '(:eval (custom-modeline-position))))
+            (pct-str (format-mode-line "%p"))
+            (mule-str (format-mode-line mode-line-mule-info))
+            (right-width (+ (string-width pos-str)
+                            (string-width pct-str)
+                            (string-width mule-str)
+                            5)))
+       (propertize " " 'display `(space :align-to (- right ,right-width)))))
+    ;; 右侧：位置 → 百分比 → 编码
+    (:eval (custom-modeline-position))
+    " "
+    "[" (:eval (format-mode-line "%p")) "]"
+    " "
+    mode-line-mule-info))
 
 ;; 设置 modeline 高度和外观
 (set-face-attribute 'mode-line nil
