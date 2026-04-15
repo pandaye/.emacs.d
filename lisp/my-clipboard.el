@@ -11,13 +11,6 @@
 
 ;;; Code:
 
-;; ── 基础设置 ──────────────────────────────────────────────
-
-(setq select-enable-clipboard t
-      select-enable-primary t
-      save-interprogram-paste-before-kill t
-      kill-ring-max 200)
-
 ;; ── 工具函数 ──────────────────────────────────────────────
 
 (defun my/in-tmux-p ()

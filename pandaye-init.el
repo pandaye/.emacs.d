@@ -1,4 +1,9 @@
 ;; -*- lexical-binding: t; -*-
+
+;; ============================================================
+;; 环境与基础设置
+;; ============================================================
+
 (when (eq system-type 'darwin)
   (add-to-list 'exec-path "/opt/homebrew/bin/"))
 (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
@@ -12,9 +17,48 @@
 
 (setopt cjk-ambiguous-chars-are-wide nil)
 
+;; 剪贴板基础设置（GUI / 终端通用）
+(setq select-enable-clipboard t
+      select-enable-primary t
+      save-interprogram-paste-before-kill t
+      kill-ring-max 200)
+
+;; 备份文件配置 - 禁用 ~ 后缀文件，保留自动保存
+(setq make-backup-files nil)
+
+;; ============================================================
+;; GUI 专用配置
+;; ============================================================
+
 (when (display-graphic-p)
-  ;; GUI 专用配置
   (load "gui.el" :noerror))
+
+;; ============================================================
+;; UI 外观
+;; ============================================================
+
+;; 回退显示字符美化
+(defface fallback '((t :family "Fira Code Light"
+                       :foreground "gray")) "Fallback")
+(set-display-table-slot standard-display-table 'truncation
+                        (make-glyph-code ?… 'fallback))
+(set-display-table-slot standard-display-table 'wrap
+                        (make-glyph-code ?↩ 'fallback))
+
+;; Fringe 背景透明化
+(set-face-attribute 'fringe nil :background nil)
+(define-fringe-bitmap 'left-arrow [])
+(define-fringe-bitmap 'left-curly-arrow [])
+(define-fringe-bitmap 'left-triangle [])
+
+;; 列号显示
+(setq column-number-mode t)
+
+;; 当前行高亮
+(global-hl-line-mode t)
+
+;; 括号匹配高亮（所有编程模式）
+(add-hook 'prog-mode-hook #'show-paren-mode)
 
 ;; ============================================================
 ;; 基础工具 - 需要尽早加载
@@ -37,14 +81,10 @@
 (use-package diminish
   :ensure t)
 
-;; 备份文件配置 - 禁用 ~ 后缀文件，保留自动保存
-(setq make-backup-files nil)
-
 ;; ============================================================
-;; 导航框架 - Ivy/Counsel/Swiper（核心导航，保留急切加载）
+;; 导航框架 - Ivy/Counsel/Swiper
 ;; ============================================================
 
-;; Ivy 配置 - 优化导航体验
 (use-package ivy
   :ensure t
   :diminish
@@ -96,7 +136,7 @@
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
 
 ;; ============================================================
-;; 项目与文件管理 - 延迟加载
+;; 项目与文件管理
 ;; ============================================================
 
 (use-package projectile
@@ -130,10 +170,8 @@
 ;; 窗口与编辑增强
 ;; ============================================================
 
-;; 窗口布局记忆
 (winner-mode 1)
 
-;; 安装字体支持（可选，主要用于 GUI）
 (use-package all-the-icons
   :ensure t
   :if (display-graphic-p)
@@ -177,7 +215,7 @@
   (diff-hl-delete ((t (:background "#f5597e")))))
 
 ;; ============================================================
-;; Org 与写作系统 - 延迟加载
+;; Org 与写作系统
 ;; ============================================================
 
 (condition-case err
@@ -186,18 +224,23 @@
       (require 'tmux-manager))
   (error (message "可选模块加载失败: %s" (error-message-string err))))
 
-;; Org 系统 - 拆分为独立模块
 (require 'my-org-writing)    ;; Org 外观美化
 (require 'my-gtd)            ;; GTD 任务管理
 (require 'my-rime)           ;; Rime 中文输入法
 (require 'my-diary)          ;; 日记系统
 (require 'my-org-roam)       ;; Org-roam 双向链接
 
+(unless (featurep 'org-tempo)
+  (require 'org-tempo))
+
+(use-package ox-gfm
+  :ensure ox-gfm
+  :after org)
+
 ;; ============================================================
-;; 编程语言支持 - 按需加载
+;; 编程语言支持
 ;; ============================================================
 
-;; 括号编辑增强
 (use-package paredit
   :ensure t
   :hook (racket-mode . paredit-mode)
@@ -241,11 +284,27 @@
   :ensure t
   :mode ("\\(?:CMakeLists\\.txt\\|\\.cmake\\)\\'" . cmake-mode))
 
-(unless (featurep 'org-tempo)
-  (require 'org-tempo))
+(use-package slime
+  :ensure t
+  :commands (slime)
+  :init
+  (setq inferior-lisp-program "ros run")
+  :mode
+  ("\\.ros\\'" . lisp-mode)
+  :config
+  (slime-setup '(slime-fancy slime-tramp slime-asdf slime-xref-browser))
+  (add-hook 'lisp-mode-hook (lambda () (subword-mode 1)))
+  (add-hook 'slime-repl-mode-hook (lambda () (subword-mode 1))))
+
+(use-package markdown-mode
+  :ensure t
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode)))
 
 ;; ============================================================
-;; Snippets - 延迟到编程模式
+;; Snippets
 ;; ============================================================
 
 (use-package yasnippet
@@ -260,7 +319,23 @@
   :after yasnippet)
 
 ;; ============================================================
-;; 日志与监控 - 按需加载
+;; LSP
+;; ============================================================
+
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (unless (featurep 'my-lsp)
+              (require 'my-lsp nil t))))
+
+;; ============================================================
+;; AI 工具
+;; ============================================================
+
+(add-to-list 'load-path (expand-file-name "lisp/org-opencode" user-emacs-directory))
+(autoload 'org-opencode-mode "org-opencode" "Minor mode for opencode in Org buffers." t)
+
+;; ============================================================
+;; 日志与监控
 ;; ============================================================
 
 (use-package logview
@@ -268,87 +343,10 @@
   :commands (logview-mode))
 
 ;; ============================================================
-;; Common Lisp 开发环境 - 按需加载
+;; 快捷键
 ;; ============================================================
 
-(use-package slime
-  :ensure t
-  :commands (slime)
-  :init
-  (setq inferior-lisp-program "ros run")
-  :mode
-  ("\\.ros\\'" . lisp-mode)
-  :config
-  (slime-setup '(slime-fancy slime-tramp slime-asdf slime-xref-browser))
-  (add-hook 'lisp-mode-hook (lambda () (subword-mode 1)))
-  (add-hook 'slime-repl-mode-hook (lambda () (subword-mode 1))))
-
-;; ============================================================
-;; Markdown - 按需加载
-;; ============================================================
-
-(use-package markdown-mode
-  :ensure t
-  :commands (markdown-mode gfm-mode)
-  :mode (("README\\.md\\'" . gfm-mode)
-         ("\\.md\\'" . markdown-mode)
-         ("\\.markdown\\'" . markdown-mode)))
-
-(use-package ox-gfm
-  :ensure ox-gfm
-  :after org)
-
-;; ============================================================
-;; LSP - 延迟到编程模式（最大性能提升）
-;; ============================================================
-
-;; LSP - 编程模式首次激活时加载（避免启动时加载重型 lsp-bridge）
-(add-hook 'prog-mode-hook
-          (lambda ()
-            (unless (featurep 'my-lsp)
-              (require 'my-lsp nil t))))
-
-;; ============================================================
-;; AI 工具 - 延迟加载
-;; ============================================================
-;; org-opencode: modular Org frontend for opencode AI agent
-(add-to-list 'load-path (expand-file-name "lisp/org-opencode" user-emacs-directory))
-(autoload 'org-opencode-mode "org-opencode" "Minor mode for opencode in Org buffers." t)
-
-;; ============================================================
-;; UI 增强
-;; ============================================================
-
-;; 括号匹配高亮（所有编程模式）
-(add-hook 'prog-mode-hook #'show-paren-mode)
-
-;; 回退显示字符美化
-(defface fallback '((t :family "Fira Code Light"
-                       :foreground "gray")) "Fallback")
-(set-display-table-slot standard-display-table 'truncation
-                        (make-glyph-code ?… 'fallback))
-(set-display-table-slot standard-display-table 'wrap
-                        (make-glyph-code ?↩ 'fallback))
-
-;; Fringe 背景透明化
-(set-face-attribute 'fringe nil :background nil)
-(define-fringe-bitmap 'left-arrow [])
-(define-fringe-bitmap 'left-curly-arrow [])
-(define-fringe-bitmap 'left-triangle [])
-
-;; 列号显示
-(setq column-number-mode t)
-
-;; 当前行高亮
-(global-hl-line-mode t)
-
-;; 快速终端访问
 (global-set-key (kbd "<f9>") 'eshell)
-
-;; ============================================================
-;; 快捷键设置
-;; ============================================================
-
 (global-set-key (kbd "C-c f s") 'save-buffer)
 (global-set-key (kbd "C-c w o") 'ace-window)
 (global-set-key (kbd "C-c w w") 'delete-other-windows)
@@ -359,7 +357,7 @@
 (global-set-key (kbd "C-c b p") 'projectile-ibuffer)
 
 ;; ============================================================
-;; 剪贴板配置（终端统一由 my-clipboard 处理）
+;; 终端剪贴板（终端统一由 my-clipboard 处理）
 ;; ============================================================
 
 (unless (display-graphic-p)
