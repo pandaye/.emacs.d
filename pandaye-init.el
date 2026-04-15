@@ -1,5 +1,6 @@
 ;; -*- lexical-binding: t; -*-
-(add-to-list 'exec-path "/opt/homebrew/bin/")
+(when (eq system-type 'darwin)
+  (add-to-list 'exec-path "/opt/homebrew/bin/"))
 (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
 
 (setq scroll-step 1
@@ -18,6 +19,10 @@
 ;; ============================================================
 ;; 基础工具 - 需要尽早加载
 ;; ============================================================
+
+(condition-case err
+    (require 'utils)
+  (error (message "utils 加载失败: %s" (error-message-string err))))
 
 (use-package try
   :ensure t
@@ -153,10 +158,10 @@
 
 (use-package magit
   :ensure t
-  :commands (magit-status magit-dispatch-popup)
+  :commands (magit-status magit-dispatch)
   :bind
   (("C-c j s" . magit-status)
-   ("C-c j p" . magit-dispatch-popup)))
+   ("C-c j p" . magit-dispatch)))
 
 (use-package diff-hl
   :ensure t
@@ -230,8 +235,7 @@
 
 (use-package clojure-mode
   :ensure t
-  :hook ((clojure-mode . enable-paredit-mode)
-         (clojure-mode . rainbow-delimiters-mode)))
+  :hook ((clojure-mode . rainbow-delimiters-mode)))
 
 (use-package cmake-mode
   :ensure t
@@ -249,9 +253,7 @@
   :defer 2
   :config
   (yas-global-mode 1)
-  (yas-reload-all)
-  (define-key yas-minor-mode-map (kbd "<tab>") 'yas-expand)
-  (add-hook 'prog-mode-hook #'yas-minor-mode))
+  (define-key yas-minor-mode-map (kbd "<tab>") 'yas-expand))
 
 (use-package yasnippet-snippets
   :ensure t
@@ -294,7 +296,7 @@
 
 (use-package ox-gfm
   :ensure ox-gfm
-  :after markdown-mode)
+  :after org)
 
 ;; ============================================================
 ;; LSP - 延迟到编程模式（最大性能提升）
@@ -309,13 +311,6 @@
 ;; ============================================================
 ;; AI 工具 - 延迟加载
 ;; ============================================================
-
-(condition-case err
-    (progn
-      (require 'my-gptel)
-      (require 'my-agent-shell))
-  (error (message "AI 工具模块加载失败: %s" (error-message-string err))))
-
 ;; org-opencode: modular Org frontend for opencode AI agent
 (add-to-list 'load-path (expand-file-name "lisp/org-opencode" user-emacs-directory))
 (autoload 'org-opencode-mode "org-opencode" "Minor mode for opencode in Org buffers." t)
@@ -324,8 +319,8 @@
 ;; UI 增强
 ;; ============================================================
 
-;; 括号匹配高亮
-(add-hook 'emacs-lisp-mode-hook 'show-paren-mode)
+;; 括号匹配高亮（所有编程模式）
+(add-hook 'prog-mode-hook #'show-paren-mode)
 
 ;; 回退显示字符美化
 (defface fallback '((t :family "Fira Code Light"
@@ -372,7 +367,7 @@
   (condition-case err
       (require 'my-clipboard)
     (error (message "剪贴板模块加载失败: %s" (error-message-string err))))
-  (setq browse-url-browser-function 'nil))
+  (setq browse-url-browser-function nil))
 
 ;; macOS 终端下的剪贴板配置
 (defun macos-terminal-clipboard-setup ()

@@ -1,4 +1,5 @@
 *~
+*.elc
 .notes
 .python-environments/
 elpa/

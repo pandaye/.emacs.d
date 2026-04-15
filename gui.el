@@ -1,11 +1,9 @@
+;; -*- lexical-binding: t; -*-
 ;; 基础增强
 (menu-bar-mode 0)
 (tool-bar-mode 0)
 (scroll-bar-mode 0)
 (pixel-scroll-precision-mode 1)
-(use-package powerline
-  :config
-  (powerline-default-theme))
 
 ;; Chinese Font
 (dolist (charset '(kana han symbol cjk-misc bopomofo))

@@ -53,12 +53,6 @@
 			(define-key scheme-mode-map (kbd "<f5>") 'scheme-send-last-sexp-split-window)
 			(define-key scheme-mode-map (kbd "<f6>") 'scheme-send-definition-split-window)))
 
-(use-package paredit
-  :ensure t
-  :hook
-  (racket-mode . paredit-mode))
-
 (add-hook 'scheme-mode-hook 'show-paren-mode)
-(add-hook 'scheme-mode-hook 'company-mode)
 
 (provide 'myscheme)
