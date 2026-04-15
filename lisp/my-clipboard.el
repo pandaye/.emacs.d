@@ -1,32 +1,43 @@
-;;; my-clipboard.el --- Clipboard configuration for remote Emacs  -*- lexical-binding: t; -*-
+;;; my-clipboard.el --- Unified clipboard for terminal Emacs  -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; 配置远程 Shell 中的 Emacs 剪贴板功能
-;; 支持两种场景：
-;; 1. 通过 OSC 52 复制到本地剪贴板（需要终端支持）
-;; 2. 在远程服务器内部使用 Emacs kill-ring（Ctrl-y 粘贴）
+;; 终端 Emacs 剪贴板集成（GUI 无需此模块）。
+;;
+;; 策略：
+;;   macOS 终端  → pbcopy / pbpaste（双向）
+;;   其他终端    → OSC 52 复制到本地剪贴板（粘贴走 kill-ring）
+;;
+;; 加载方式：在 pandaye-init.el 中 (when (not (display-graphic-p)) (require 'my-clipboard))
 
 ;;; Code:
 
-;; ==================
-;; 基础配置
-;; ==================
+;; ── 基础设置 ──────────────────────────────────────────────
 
-;; 启用 X 剪贴板支持（如果可用）
-(setq select-enable-clipboard t)
-(setq select-enable-primary t)
+(setq select-enable-clipboard t
+      select-enable-primary t
+      save-interprogram-paste-before-kill t
+      kill-ring-max 200)
 
-;; 保存剪贴板历史
-(setq save-interprogram-paste-before-kill t)
+;; ── 工具函数 ──────────────────────────────────────────────
 
-;; 增大 kill-ring 容量
-(setq kill-ring-max 200)
+(defun my/in-tmux-p ()
+  "Return non-nil when running inside tmux."
+  (getenv "TMUX"))
 
-;; ==================
-;; OSC 52 支持
-;; ==================
-;; OSC 52 允许通过终端转义序列复制到本地剪贴板
-;; 支持的终端：iTerm2, WezTerm, Alacritty, tmux (需配置)
+;; ── macOS: pbcopy / pbpaste ──────────────────────────────
+
+(defun my/pbcopy (text &optional _push)
+  "Copy TEXT to macOS clipboard via pbcopy."
+  (let ((process-connection-type nil))
+    (let ((proc (start-process "pbcopy" nil "pbcopy")))
+      (process-send-string proc text)
+      (process-send-eof proc))))
+
+(defun my/pbpaste ()
+  "Return macOS clipboard content via pbpaste."
+  (shell-command-to-string "pbpaste"))
+
+;; ── 非 macOS: OSC 52 ────────────────────────────────────
 
 (defun my/osc-52-copy (text)
   "Copy TEXT to system clipboard using OSC 52 escape sequence.
@@ -36,26 +47,40 @@ Works with modern terminals like WezTerm, iTerm2, and tmux."
          (osc-seq (concat "\e]52;c;" encoded "\a")))
     (send-string-to-terminal osc-seq)))
 
-(defun my/copy-to-clipboard (text &optional _push)
-  "Copy TEXT to clipboard using OSC 52 if in terminal.
-This function can be used as `interprogram-cut-function'."
+(defun my/osc-52-cut-function (text &optional _push)
+  "Copy TEXT to clipboard via OSC 52 in terminal.
+Suitable as `interprogram-cut-function'."
   (when (and text (not (display-graphic-p)))
     (condition-case err
         (my/osc-52-copy text)
-      (error 
+      (error
        (message "OSC 52 copy failed: %s" (error-message-string err))
        nil))))
 
-;; 设置 Emacs 使用 OSC 52 复制到系统剪贴板
-(setq interprogram-cut-function #'my/copy-to-clipboard)
+;; ── 分派 ─────────────────────────────────────────────────
+
+(cond
+ ;; macOS 终端
+ ((eq system-type 'darwin)
+  (setq interprogram-cut-function   #'my/pbcopy
+        interprogram-paste-function #'my/pbpaste))
+ ;; 其他终端（Linux / remote SSH 等）
+ (t
+  (setq interprogram-cut-function #'my/osc-52-cut-function)))
+
+;; 终端下通常没有合适的浏览器
+(setq browse-url-browser-function nil)
+
+;; ── 诊断 ─────────────────────────────────────────────────
 
 (defun my/clipboard-info ()
   "Display clipboard configuration info."
   (interactive)
-  (message "Clipboard: OSC52=%s, Tmux=%s, Display=%s"
-           (if (fboundp 'my/osc-52-copy) "enabled" "disabled")
+  (message "Clipboard: cut=%s, paste=%s, tmux=%s, system=%s"
+           interprogram-cut-function
+           interprogram-paste-function
            (if (my/in-tmux-p) "yes" "no")
-           (if (display-graphic-p) "GUI" "Terminal")))
+           system-type))
 
 (provide 'my-clipboard)
 ;;; my-clipboard.el ends here

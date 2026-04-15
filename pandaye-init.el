@@ -359,36 +359,13 @@
 (global-set-key (kbd "C-c b p") 'projectile-ibuffer)
 
 ;; ============================================================
-;; 剪贴板配置
+;; 剪贴板配置（终端统一由 my-clipboard 处理）
 ;; ============================================================
 
-(when (and (not (eq system-type 'darwin))
-           (not (display-graphic-p)))
+(unless (display-graphic-p)
   (condition-case err
       (require 'my-clipboard)
-    (error (message "剪贴板模块加载失败: %s" (error-message-string err))))
-  (setq browse-url-browser-function nil))
-
-;; macOS 终端下的剪贴板配置
-(defun macos-terminal-clipboard-setup ()
-  "Setup clipboard integration for terminal Emacs on macOS."
-  (when (and (eq system-type 'darwin)
-	     (not (display-graphic-p)))
-    (setq interprogram-cut-function
-	  (lambda (text &optional push)
-	    "Copy TEXT to macOS clipboard using pbcopy."
-	    (let ((process-connection-type nil))
-	      (let ((proc (start-process "pbcopy" nil "pbcopy")))
-		(process-send-string proc text)
-		(process-send-eof proc)))))
-    (setq interprogram-paste-function
-	  (lambda ()
-	    "Paste from macOS clipboard using pbpaste."
-	    (shell-command-to-string "pbpaste")))
-    (setq select-enable-clipboard t
-	  save-interprogram-paste-before-kill t)))
-
-(macos-terminal-clipboard-setup)
+    (error (message "剪贴板模块加载失败: %s" (error-message-string err)))))
 
 (provide 'pandaye-init)
 ;;; pandaye-init.el ends here
