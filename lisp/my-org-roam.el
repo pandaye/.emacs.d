@@ -65,7 +65,8 @@
 
 (use-package org-super-agenda
   :ensure t
-  :init
+  :after org-agenda
+  :config
   (org-super-agenda-mode))
 
 (provide 'my-org-roam)
