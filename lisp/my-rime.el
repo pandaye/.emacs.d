@@ -1,15 +1,11 @@
 ;; -*- lexical-binding: t; -*-
-;;; my-rime.el --- Rime 中文输入法与光标颜色配置
+;;; my-rime.el --- Rime 中文输入法配置
 
 ;;; Commentary:
-;; Rime 输入法配置，包括输入方案切换、Meow 状态联动光标颜色。
-;; 依赖 my-cursor.el 提供光标颜色管理函数。
+;; Rime 输入法配置，包括输入方案切换。
+;; 光标颜色联动由 my-cursor.el 统一管理。
 
 ;;; Code:
-
-(condition-case err
-    (require 'my-cursor)
-  (error (message "my-cursor 加载失败: %s" (error-message-string err))))
 
 (defun my/set-rime-jp ()
   "切换到日语输入方案。"
@@ -34,18 +30,12 @@
           rime-predicate-after-alphabet-char-p
 	  rime-predicate-space-after-cc-p
           rime-predicate-prog-in-code-p))
-  ;; Rime 模式变化时更新光标颜色
-  (add-hook 'rime-mode-hook #'my/update-cursor-by-rime-state)
   (add-hook 'kill-emacs-hook #'rime-lib-finalize)
   :bind
   (("C-c i j" . my/set-rime-jp)
    ("C-c i f" . my/set-rime-zh))
   :custom
   (default-input-method "rime"))
-
-;; 监听窗口和 buffer 变化
-(add-hook 'window-buffer-change-functions #'my/update-cursor-on-frame-change)
-(add-hook 'window-selection-change-functions #'my/update-cursor-on-frame-change)
 
 ;; 输入法切换快捷键
 (global-set-key (kbd "C-c i i") 'toggle-input-method)
