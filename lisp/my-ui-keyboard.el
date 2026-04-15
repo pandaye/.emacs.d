@@ -1,6 +1,4 @@
 ;; -*- lexical-binding: t; -*-
-(add-to-list 'load-path
-			 (expand-file-name "meow" user-emacs-directory))
 
 (defvar *IS-MAC* (eq system-type 'darwin)
   "Check if the current system is macOS.")
@@ -13,10 +11,6 @@
 ;; 启用行号
 (add-hook 'prog-mode-hook #'display-line-numbers-mode)
 (setq-default tab-width 4)
-
-(condition-case err
-    (require 'meow)
-  (error (message "meow 加载失败: %s" (error-message-string err))))
 
 (defun pandaye/meow-execute-key (key-str)
   "Execute the command currently bound to KEY-STR.
@@ -59,7 +53,7 @@ standard Emacs keybindings, respecting the current mode's keymap."
    '("?" . meow-cheatsheet)
    '("p h" . ("C-left" . pandaye/meow-C-left))
    '("p l" . ("C-right" . pandaye/meow-C-right)))
-  (meow-motion-define-key
+  (meow-motion-overwrite-define-key
    '("<escape>" . ignore))
   (meow-normal-define-key
    '(";" . meow-reverse)
@@ -150,21 +144,22 @@ standard Emacs keybindings, respecting the current mode's keymap."
           (skip-chars-backward " \t")
           (min (1+ (point)) (point-max)))))
 
-;; 3. 注册这个新的 thing
-(meow-thing-register 'line-trimmed 
-                     'my/meow--inner-of-line-trimmed
-                     'my/meow--bounds-of-line-trimmed)
-
-;; 4. 添加到 char-thing-table，绑定到按键 't'
-(add-to-list 'meow-char-thing-table '(?t . line-trimmed))
-
-(meow-setup)
-(meow-global-mode 1)
-
 (defun meow-not-insert-p ()
   "Return t if Meow is not in insert state, nil if in insert state."
   (not (and (bound-and-true-p meow-mode)
             (eq (meow--current-state) 'insert))))
+
+(use-package meow
+  :vc (:url "https://github.com/meow-edit/meow")
+  :demand t
+  :config
+  ;; 注册自定义 thing
+  (meow-thing-register 'line-trimmed
+                       'my/meow--inner-of-line-trimmed
+                       'my/meow--bounds-of-line-trimmed)
+  (add-to-list 'meow-char-thing-table '(?t . line-trimmed))
+  (meow-setup)
+  (meow-global-mode 1))
 
 ;; 自定义 Modeline - 简洁实用的状态栏
 (defface custom-modeline-meow-normal
@@ -308,7 +303,7 @@ standard Emacs keybindings, respecting the current mode's keymap."
 						 (concat " " (custom-modeline-meow-state) " ")))
 				" "
 				(:eval (when (featurep 'projectile)
-						 (propertize (format "Proj[%s]" (projectile-project-name)) 'face 'custom-projectile-name-face)))
+						 (propertize (format "[%s]" (projectile-project-name)) 'face 'custom-projectile-name-face)))
 				" "
 				(:eval (custom-modeline-buffer-name))
 				" "
@@ -342,13 +337,8 @@ standard Emacs keybindings, respecting the current mode's keymap."
                     :height 100
                     :box '(:line-width 1 :color "#3c3836"))
 
-;; 优化刷新性能 - 添加 hook 来确保实时更新
-(defun custom-modeline-update ()
-  "Force update modeline."
-  (force-mode-line-update))
-
-;; 在状态改变时立即更新 modeline
-(add-hook 'post-command-hook #'custom-modeline-update)
-(add-hook 'buffer-list-update-hook #'custom-modeline-update)
+;; Meow 状态变化时刷新 modeline（Emacs 自身已处理大多数 modeline 更新场景）
+(when (boundp 'meow-state-change-hook)
+  (add-hook 'meow-state-change-hook (lambda () (force-mode-line-update))))
 
 (provide 'my-ui-keyboard)
