@@ -340,5 +340,34 @@ Returns t on success."
 Returns a new session alist with the forked session's details."
   (org-opencode--http-json "POST" (format "/session/%s/fork" session-id)))
 
+(defun org-opencode-api-revert (session-id)
+  "Revert the last assistant message in SESSION-ID.
+Returns the updated session state."
+  (org-opencode--http-json "POST" (format "/session/%s/revert" session-id)))
+
+(defun org-opencode-api-unrevert (session-id)
+  "Undo the last revert in SESSION-ID, restoring the reverted message.
+Returns the updated session state."
+  (org-opencode--http-json "POST" (format "/session/%s/unrevert" session-id)))
+
+(defun org-opencode-api-command (session-id command)
+  "Execute slash COMMAND in SESSION-ID.
+COMMAND is a string like \"compact\" or \"plan\".
+Returns the command execution result."
+  (org-opencode--http-json
+   "POST"
+   (format "/session/%s/command" session-id)
+   `((command . ,command))))
+
+(defun org-opencode-api-summarize (session-id)
+  "Request a summary of SESSION-ID.
+Returns the summary data."
+  (org-opencode--http-json "POST" (format "/session/%s/summarize" session-id)))
+
+(defun org-opencode-api-todo (session-id)
+  "Get the todo list for SESSION-ID.
+Returns a list of todo item alists."
+  (org-opencode--http-json "GET" (format "/session/%s/todo" session-id)))
+
 (provide 'org-opencode-core)
 ;;; org-opencode-core.el ends here
