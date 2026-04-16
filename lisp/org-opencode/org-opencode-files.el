@@ -30,18 +30,25 @@
 ;;
 ;; 1. Detects file.edited, file.watcher.updated, and session.diff events
 ;; 2. Offers to auto-revert buffers that changed
-;; 3. Shows file diffs from the session in an Org buffer
-;; 4. Provides accept/reject workflow for file changes
+;; 3. Reviews file diffs via ediff (checkpoint vs current)
+;; 4. Provides accept/reject workflow backed by git checkpoint restore
 ;;
-;; To use:
-;;   (require 'org-opencode-files)
-;;   ;; Optionally enable auto-revert
-;;   (setq org-opencode-auto-revert-files t)
+;; Diff review is triggered after the agent completes (session.idle).
+;; Each changed file can be reviewed individually in ediff, then
+;; accepted (keep agent's version) or rejected (restore checkpoint).
 
 ;;; Code:
 
 (require 'org-opencode-core)
 (require 'org-opencode-events)
+(require 'ediff)
+
+;; Forward declarations for checkpoint module
+(declare-function org-opencode--checkpoint-get-file-content "org-opencode-checkpoint")
+(declare-function org-opencode--checkpoint-restore-file "org-opencode-checkpoint")
+
+;; Forward declaration for session module
+(declare-function org-opencode--session-id "org-opencode-session")
 
 ;; ---------------------------------------------------------------------------
 ;; Customization
@@ -62,8 +69,15 @@ When set to `notify', show a message but don't revert."
                  (const :tag "Disabled" nil))
   :group 'org-opencode-files)
 
+(defcustom org-opencode-auto-review-on-idle t
+  "When non-nil, prompt to review diffs when the agent finishes.
+The prompt only appears if the session has file changes and a
+checkpoint ref is available."
+  :type 'boolean
+  :group 'org-opencode-files)
+
 (defcustom org-opencode-diff-buffer-name "*opencode-diff*"
-  "Name of the buffer used to display session diffs."
+  "Name of the buffer used to display the session diff summary."
   :type 'string
   :group 'org-opencode-files)
 
@@ -109,37 +123,37 @@ If the buffer is not modified, it is reverted silently regardless of
             (_ nil)))))))
 
 ;; ---------------------------------------------------------------------------
-;; Session Diff Viewer
+;; Session Diff Summary (quick overview, non-ediff)
 ;; ---------------------------------------------------------------------------
 
 (defun org-opencode-show-session-diff (session-id)
-  "Show the diff for SESSION-ID in a dedicated buffer.
-The diff is displayed in Org format with collapsible sections per file.
-Interactively, prompts for SESSION-ID if not provided."
+  "Show a summary of changed files for SESSION-ID.
+Displays file names with addition/deletion counts.  For detailed
+per-file review, use `org-opencode-review-session-diff' instead.
+Interactively, uses the current session."
   (interactive
    (list (or (org-opencode--current-session-id)
              (read-string "Session ID: "))))
   (org-opencode--ensure-server)
   (let ((diffs (org-opencode-api-session-diff session-id)))
     (with-current-buffer (get-buffer-create org-opencode-diff-buffer-name)
-      (erase-buffer)
-      (org-mode)
-      (setq-local org-opencode-current-session-id session-id)
-      (insert (format "* OpenCode Session Diff: %s\n\n" session-id))
-      (if (null diffs)
-          (insert "No changes in this session.\n")
-        (dolist (diff diffs)
-          (let ((filename (alist-get 'filename diff))
-                (additions (or (alist-get 'additions diff) 0))
-                (deletions (or (alist-get 'deletions diff) 0))
-                (content (alist-get 'content diff)))
-            (insert (format "** %s (+%d / -%d)\n" filename additions deletions))
-            (when content
-              (insert "#+begin_src diff\n")
-              (insert content)
-              (insert "\n#+end_src\n"))
-            (insert "\n"))))
-      (goto-char (point-min))
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "OpenCode Session Diff: %s\n" session-id))
+        (insert (make-string 60 ?-) "\n\n")
+        (setq-local org-opencode-current-session-id session-id)
+        (if (null diffs)
+            (insert "No changes in this session.\n")
+          (dolist (diff diffs)
+            (let ((filename (alist-get 'filename diff))
+                  (additions (or (alist-get 'additions diff) 0))
+                  (deletions (or (alist-get 'deletions diff) 0)))
+              (insert (format "  %s  (+%d / -%d)\n" filename additions deletions))))
+          (insert (format "\n%d file(s) changed.\n" (length diffs)))
+          (insert "\nPress 'e' to review with ediff, 'a' to accept all, 'q' to quit.\n"))
+        (goto-char (point-min)))
+      (setq buffer-read-only t)
+      (use-local-map org-opencode-diff-mode-map)
       (display-buffer (current-buffer)))))
 
 (defun org-opencode-refresh-session-diff ()
@@ -148,6 +162,171 @@ Interactively, prompts for SESSION-ID if not provided."
   (if (bound-and-true-p org-opencode-current-session-id)
       (org-opencode-show-session-diff org-opencode-current-session-id)
     (user-error "Not in an OpenCode diff buffer")))
+
+;; ---------------------------------------------------------------------------
+;; Ediff-Based Review
+;; ---------------------------------------------------------------------------
+
+(defvar org-opencode--review-queue nil
+  "List of (FILEPATH . SESSION-ID) pairs awaiting ediff review.")
+
+(defvar org-opencode--review-current nil
+  "The (FILEPATH . SESSION-ID) currently being reviewed in ediff, or nil.")
+
+(defun org-opencode-review-session-diff (&optional session-id)
+  "Review all changed files in SESSION-ID one-by-one using ediff.
+For each file, ediff compares the checkpoint version (before send)
+against the current version (after agent edits).
+
+In the ediff control panel:
+- `a' copies the checkpoint (old) version — effectively rejecting the change.
+- `b' copies the agent (new) version — effectively accepting the change.
+- `q' quits ediff; you are then prompted to accept or reject.
+
+SESSION-ID defaults to the current buffer's session."
+  (interactive)
+  (let ((sid (or session-id
+                 (org-opencode--current-session-id)
+                 (bound-and-true-p org-opencode--session)
+                 (read-string "Session ID: "))))
+    (when (and (listp sid) (alist-get 'id sid))
+      (setq sid (alist-get 'id sid)))
+    (when (string-empty-p sid)
+      (user-error "Session ID cannot be empty"))
+    (org-opencode--ensure-server)
+    (let* ((diffs (org-opencode-api-session-diff sid))
+           (files (mapcar (lambda (d) (alist-get 'filename d)) diffs)))
+      (if (null files)
+          (message "OpenCode: No file changes to review")
+        (setq org-opencode--review-queue
+              (mapcar (lambda (f) (cons f sid)) files))
+        (setq org-opencode--review-current nil)
+        (message "OpenCode: %d file(s) to review" (length files))
+        (org-opencode--review-next)))))
+
+(defun org-opencode--review-next ()
+  "Pop the next file from the review queue and open ediff for it."
+  (if (null org-opencode--review-queue)
+      (progn
+        (setq org-opencode--review-current nil)
+        (message "OpenCode: diff review complete"))
+    (let* ((entry (pop org-opencode--review-queue))
+           (filepath (car entry))
+           (session-id (cdr entry)))
+      (setq org-opencode--review-current entry)
+      (org-opencode--ediff-review-file filepath session-id))))
+
+(defun org-opencode--ediff-review-file (filepath _session-id)
+  "Launch ediff comparing checkpoint vs current version of FILEPATH.
+_SESSION-ID is kept for future use but not needed for the diff itself."
+  (let ((old-content (org-opencode--checkpoint-get-file-content filepath)))
+    (unless old-content
+      ;; File didn't exist at checkpoint — it's a new file.
+      (setq old-content ""))
+    (let* ((buf-old (generate-new-buffer
+                     (format "*checkpoint:%s*"
+                             (file-name-nondirectory filepath))))
+           (buf-new (or (find-buffer-visiting filepath)
+                        (find-file-noselect filepath t))))
+      ;; Fill the checkpoint buffer with old content.
+      (with-current-buffer buf-old
+        (insert old-content)
+        ;; Inherit the mode from the file for syntax highlighting.
+        (let ((buffer-file-name filepath))
+          (ignore-errors (set-auto-mode)))
+        (setq buffer-read-only t)
+        (goto-char (point-min)))
+      ;; Make sure the current file buffer is up to date.
+      (with-current-buffer buf-new
+        (when (not (buffer-modified-p))
+          (revert-buffer t t)))
+      ;; Store filepath for the quit hook.
+      (setq org-opencode--ediff-filepath filepath)
+      ;; Launch ediff.
+      (ediff-buffers
+       buf-old buf-new
+       (list (lambda ()
+               (setq-local ediff-quit-hook
+                           (list #'org-opencode--ediff-quit-handler
+                                 #'ediff-cleanup-mess))))))))
+
+(defvar org-opencode--ediff-filepath nil
+  "Filepath of the file being reviewed in the current ediff session.")
+
+(defun org-opencode--ediff-quit-handler ()
+  "Handle ediff quit: prompt accept/reject, clean up, advance to next file."
+  (let ((filepath org-opencode--ediff-filepath)
+        (buf-old ediff-buffer-A))
+    ;; Kill the temporary checkpoint buffer.
+    (when (buffer-live-p buf-old)
+      (kill-buffer buf-old))
+    ;; Prompt for accept/reject.
+    (when filepath
+      (let ((action (read-char-choice
+                     (format "OpenCode %s: [a]ccept / [r]eject? "
+                             (file-name-nondirectory filepath))
+                     '(?a ?r))))
+        (pcase action
+          (?a (org-opencode-accept-file-changes filepath))
+          (?r (org-opencode-reject-file-changes filepath)))))
+    ;; Advance to next file.
+    (run-with-timer 0.1 nil #'org-opencode--review-next)))
+
+;; ---------------------------------------------------------------------------
+;; Accept/Reject Workflow
+;; ---------------------------------------------------------------------------
+
+(defun org-opencode-accept-file-changes (filepath)
+  "Accept the agent's changes to FILEPATH.
+This keeps the current file content (agent's version) and reverts
+any open buffer to ensure it reflects the on-disk state."
+  (interactive
+   (list (read-file-name "Accept changes to file: "
+                         (org-opencode--session-directory))))
+  (let ((buffer (find-buffer-visiting filepath)))
+    (when buffer
+      (with-current-buffer buffer
+        (revert-buffer t t))))
+  (message "OpenCode: accepted changes to %s" (file-name-nondirectory filepath)))
+
+(defun org-opencode-reject-file-changes (filepath)
+  "Reject the agent's changes to FILEPATH.
+Restores the file to its state at the checkpoint (before the last
+send).  Requires a checkpoint ref from `org-opencode-checkpoint'."
+  (interactive
+   (list (read-file-name "Reject changes to file: "
+                         (org-opencode--session-directory))))
+  (require 'org-opencode-checkpoint)
+  (if (not (bound-and-true-p org-opencode--checkpoint-ref))
+      (user-error "No checkpoint available; cannot reject changes")
+    (org-opencode--checkpoint-restore-file filepath)
+    (message "OpenCode: rejected changes to %s (restored from checkpoint)"
+             (file-name-nondirectory filepath))))
+
+(defun org-opencode-accept-all-changes (&optional session-id)
+  "Accept all file changes in SESSION-ID.
+Reverts all open buffers for changed files."
+  (interactive)
+  (let ((sid (or session-id (org-opencode--current-session-id))))
+    (unless sid (user-error "No active session"))
+    (let ((diffs (org-opencode-api-session-diff sid)))
+      (dolist (diff diffs)
+        (org-opencode-accept-file-changes (alist-get 'filename diff)))
+      (message "OpenCode: accepted all %d file changes" (length diffs)))))
+
+(defun org-opencode-reject-all-changes (&optional session-id)
+  "Reject all file changes in SESSION-ID.
+Restores all changed files from the checkpoint."
+  (interactive)
+  (let ((sid (or session-id (org-opencode--current-session-id))))
+    (unless sid (user-error "No active session"))
+    (require 'org-opencode-checkpoint)
+    (unless (bound-and-true-p org-opencode--checkpoint-ref)
+      (user-error "No checkpoint available"))
+    (let ((diffs (org-opencode-api-session-diff sid)))
+      (dolist (diff diffs)
+        (org-opencode-reject-file-changes (alist-get 'filename diff)))
+      (message "OpenCode: rejected all %d file changes" (length diffs)))))
 
 ;; ---------------------------------------------------------------------------
 ;; Session Diff Handler
@@ -160,6 +339,37 @@ PROPERTIES contains `sessionID' and `diff' keys."
     (when diff-data
       (message "OpenCode: Session %s has %d file(s) with changes"
                session-id (length diff-data)))))
+
+;; ---------------------------------------------------------------------------
+;; Auto-Review on Session Idle
+;; ---------------------------------------------------------------------------
+
+(defun org-opencode--handle-session-idle-for-review (session-id _properties)
+  "Offer diff review when the agent finishes, if changes exist.
+Called from the `session.idle' event.  Only prompts when
+`org-opencode-auto-review-on-idle' is non-nil and a checkpoint
+ref is available."
+  (when (and org-opencode-auto-review-on-idle
+             (bound-and-true-p org-opencode--checkpoint-ref))
+    ;; Check if the idle session matches our buffer's session.
+    (dolist (buf (buffer-list))
+      (when (buffer-live-p buf)
+        (with-current-buffer buf
+          (when (and (bound-and-true-p org-opencode-mode)
+                     (equal (org-opencode--session-id) session-id))
+            ;; Schedule prompt outside the event filter context.
+            (run-with-timer
+             0.5 nil
+             (lambda (sid)
+               (condition-case nil
+                   (let ((diffs (org-opencode-api-session-diff sid)))
+                     (when (and diffs (> (length diffs) 0))
+                       (when (y-or-n-p
+                              (format "OpenCode: %d file(s) changed. Review diffs? "
+                                      (length diffs)))
+                         (org-opencode-review-session-diff sid))))
+                 (error nil)))
+             session-id)))))))
 
 ;; ---------------------------------------------------------------------------
 ;; File State Management
@@ -181,27 +391,6 @@ Returns the diff alist or nil if no changes."
                 diffs)))
 
 ;; ---------------------------------------------------------------------------
-;; Accept/Reject Workflow (Placeholder for future implementation)
-;; ---------------------------------------------------------------------------
-
-(defun org-opencode-accept-file-changes (filepath)
-  "Accept changes to FILEPATH from opencode.
-This marks the changes as accepted (currently just a placeholder)."
-  (interactive "FAccept changes to file: ")
-  (message "OpenCode: Accepted changes to %s" filepath))
-
-(defun org-opencode-reject-file-changes (filepath)
-  "Reject changes to FILEPATH from opencode.
-This reverts the file to its original state."
-  (interactive "FReject changes to file: ")
-  (when (y-or-n-p (format "Revert %s to original state? " filepath))
-    (let ((buffer (find-buffer-visiting filepath)))
-      (when buffer
-        (with-current-buffer buffer
-          (revert-buffer t t)))
-      (message "OpenCode: Reverted %s" filepath))))
-
-;; ---------------------------------------------------------------------------
 ;; Utility Functions
 ;; ---------------------------------------------------------------------------
 
@@ -214,31 +403,41 @@ This reverts the file to its original state."
 ;; Event Handler Registration
 ;; ---------------------------------------------------------------------------
 
-;; Register handlers for file-related events
 (org-opencode-register-event-handler "file.edited" #'org-opencode--handle-file-edited)
 (org-opencode-register-event-handler "file.watcher.updated" #'org-opencode--handle-file-watcher-updated)
 (org-opencode-register-event-handler "session.diff" #'org-opencode--handle-session-diff)
+(org-opencode-register-event-handler "session.idle" #'org-opencode--handle-session-idle-for-review)
 
 ;; ---------------------------------------------------------------------------
-;; Keymap for Diff Buffer
+;; Keymap for Diff Summary Buffer
 ;; ---------------------------------------------------------------------------
 
 (defvar org-opencode-diff-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "e") #'org-opencode--diff-buffer-review)
+    (define-key map (kbd "a") #'org-opencode--diff-buffer-accept-all)
     (define-key map (kbd "g") #'org-opencode-refresh-session-diff)
     (define-key map (kbd "q") #'quit-window)
     map)
-  "Keymap for OpenCode diff buffers.")
+  "Keymap for OpenCode diff summary buffers.
 
-;; Add the keymap to diff buffers via a minor mode or by setting it directly
-(defun org-opencode--maybe-install-diff-keymap ()
-  "Install `org-opencode-diff-mode-map' in the OpenCode diff buffer.
-Intended for use on `org-mode-hook'."
-  (when (and (buffer-name)
-             (string= (buffer-name) org-opencode-diff-buffer-name))
-    (use-local-map org-opencode-diff-mode-map)))
+\\<org-opencode-diff-mode-map>
+  e  review with ediff
+  a  accept all changes
+  g  refresh
+  q  quit")
 
-(add-hook 'org-mode-hook #'org-opencode--maybe-install-diff-keymap)
+(defun org-opencode--diff-buffer-review ()
+  "Launch ediff review from the diff summary buffer."
+  (interactive)
+  (when (bound-and-true-p org-opencode-current-session-id)
+    (org-opencode-review-session-diff org-opencode-current-session-id)))
+
+(defun org-opencode--diff-buffer-accept-all ()
+  "Accept all changes from the diff summary buffer."
+  (interactive)
+  (when (bound-and-true-p org-opencode-current-session-id)
+    (org-opencode-accept-all-changes org-opencode-current-session-id)))
 
 ;; ---------------------------------------------------------------------------
 ;; Provide Feature
