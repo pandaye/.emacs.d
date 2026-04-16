@@ -105,6 +105,12 @@ and response sections."
 (defvar-local org-opencode--status-text "Idle"
   "Current OpenCode status text for this Org buffer.")
 
+(defvar-local org-opencode--token-input 0
+  "Cumulative input token count for the current session.")
+
+(defvar-local org-opencode--token-output 0
+  "Cumulative output token count for the current session.")
+
 (defvar-local org-opencode--saved-header-line-format nil
   "Original `header-line-format' saved when org-opencode mode enables.")
 
@@ -528,11 +534,18 @@ may not be the target Org buffer."
 
 (defun org-opencode--header-status-text ()
   "Return one-line status text for fixed top display."
-  (let ((session (or (org-opencode--session-id) "none")))
-    (format " OpenCode | %s | session:%s | pending:%d "
+  (let ((session (or (org-opencode--session-id) "none"))
+        (tokens (if (or (> org-opencode--token-input 0)
+                        (> org-opencode--token-output 0))
+                    (format " | tokens:%d/%d"
+                            org-opencode--token-input
+                            org-opencode--token-output)
+                  "")))
+    (format " OpenCode | %s | session:%s | pending:%d%s "
             org-opencode--status-text
             session
-            (org-opencode--pending-count))))
+            (org-opencode--pending-count)
+            tokens)))
 
 (defun org-opencode--apply-header-status-area ()
   "Install or remove fixed header status area based on user option."
@@ -600,7 +613,14 @@ Marker placement depends on `org-opencode-response-layout'."
          (state (and message-id
                      (org-opencode--state-for-event session-id message-id))))
     (when (and state (equal (alist-get 'role info) "assistant"))
-      (puthash :assistant-message-id message-id state))))
+      (puthash :assistant-message-id message-id state)
+      (let ((usage (alist-get 'usage info)))
+        (when usage
+          (let ((buffer (gethash :buffer state)))
+            (when (buffer-live-p buffer)
+              (with-current-buffer buffer
+                (setq org-opencode--token-input (or (alist-get 'input usage) org-opencode--token-input))
+                (setq org-opencode--token-output (or (alist-get 'output usage) org-opencode--token-output))))))))))
 
 (defun org-opencode--event-part-updated (_session-id properties)
   "Handle `message.part.updated` event with PROPERTIES.

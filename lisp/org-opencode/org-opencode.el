@@ -59,10 +59,15 @@
 (require 'org-opencode-approval)
 (require 'org-opencode-files)
 (require 'org-opencode-ui)
+(require 'org-opencode-checkpoint)
 
 ;; Forward declarations for functions defined in submodules but
 ;; referenced in the keymap and interactive commands.
 (declare-function org-opencode-send-as-entry "org-opencode-ui")
+(declare-function org-opencode--checkpoint-before-send "org-opencode-checkpoint")
+(declare-function org-opencode-revert-last-message "org-opencode-checkpoint")
+(declare-function org-opencode-unrevert-last-message "org-opencode-checkpoint")
+(declare-function org-opencode-review-session-diff "org-opencode-files")
 
 ;;; ============================================================
 ;;; Keymap
@@ -81,6 +86,10 @@
     (define-key map (kbd "C-c C-x C-m") #'org-opencode-select-model)
     (define-key map (kbd "C-c C-x C-g") #'org-opencode-select-agent)
     (define-key map (kbd "C-c C-x C-f") #'org-opencode-fork-session)
+    (define-key map (kbd "C-c C-x /") #'org-opencode-execute-command)
+    (define-key map (kbd "C-c C-x C-u") #'org-opencode-revert-last-message)
+    (define-key map (kbd "C-c C-x C-y") #'org-opencode-unrevert-last-message)
+    (define-key map (kbd "C-c C-x C-i") #'org-opencode-review-session-diff)
     map)
   "Keymap for `org-opencode-mode'.")
 
@@ -102,6 +111,20 @@
   (org-opencode--set-status "Aborted")
   (message "Aborted opencode session %s" (org-opencode--session-id)))
 
+(defun org-opencode-execute-command (command)
+  "Execute a slash COMMAND in the current opencode session.
+Prompts for the command name interactively.  Common commands include
+\"compact\", \"plan\", \"share\", etc."
+  (interactive
+   (list (read-string "Slash command: /")))
+  (unless (org-opencode--session-id)
+    (user-error "Current buffer has no opencode session"))
+  (when (string-empty-p command)
+    (user-error "Command cannot be empty"))
+  (org-opencode--ensure-server)
+  (org-opencode-api-command (org-opencode--session-id) command)
+  (message "OpenCode: executed /%s" command))
+
 (defun org-opencode-send (prompt)
   "Send PROMPT to the current opencode session and insert the reply.
 PROMPT source priority: active region, current headline content,
@@ -113,6 +136,7 @@ then minibuffer input.  Use prefix argument to force minibuffer."
     (user-error "Prompt is empty"))
   (org-opencode--ensure-server)
   (org-opencode--ensure-session)
+  (org-opencode--checkpoint-before-send)
   (let* ((session-id (org-opencode--session-id))
          (path (org-opencode--path-with-query
                 (format "/session/%s/message" session-id)
@@ -182,7 +206,11 @@ Key bindings:
     (kill-local-variable 'org-opencode--status-text)
     (kill-local-variable 'org-opencode--session)
     (kill-local-variable 'org-opencode-selected-model)
-    (kill-local-variable 'org-opencode-selected-agent)))
+    (kill-local-variable 'org-opencode-selected-agent)
+    (kill-local-variable 'org-opencode--token-input)
+    (kill-local-variable 'org-opencode--token-output)
+    (kill-local-variable 'org-opencode--checkpoint-ref)
+    (kill-local-variable 'org-opencode--checkpoint-directory)))
 
 ;;; ============================================================
 ;;; Provide

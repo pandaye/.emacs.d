@@ -50,6 +50,13 @@ minibuffer. Use prefix argument to force minibuffer input."
   :type 'boolean
   :group 'org-opencode)
 
+(defvar org-opencode-prompt-minibuffer-map
+  (let ((map (copy-keymap minibuffer-local-map)))
+    (define-key map (kbd "@") #'org-opencode--minibuffer-insert-at-file)
+    map)
+  "Keymap active when reading an opencode prompt in the minibuffer.
+Binds `@' to insert a file reference via completion.")
+
 ;; -----------------------------------------------------------------------------
 ;; Selected Model/Agent Variables
 ;; -----------------------------------------------------------------------------
@@ -64,6 +71,16 @@ Format: \"provider/model\" string.")
 ;; -----------------------------------------------------------------------------
 ;; Prompt Reading
 ;; -----------------------------------------------------------------------------
+
+(defun org-opencode--minibuffer-insert-at-file ()
+  "Insert an @file reference at point in the minibuffer.
+Triggers `read-file-name' to select a file, then inserts it as
+@relative-path at point."
+  (interactive)
+  (let* ((dir (or (org-opencode--session-directory) default-directory))
+         (file (read-file-name "Attach file: " dir nil t)))
+    (when file
+      (insert "@" (file-relative-name file dir)))))
 
 (defun org-opencode--read-prompt (force-minibuffer)
   "Return a prompt for opencode.
@@ -86,7 +103,7 @@ Otherwise, use the active region when available."
         (and headline-text
              (not (string-empty-p headline-text))
              headline-text)
-        (string-trim (read-string "Prompt for opencode: ")))))
+        (string-trim (read-from-minibuffer "Prompt for opencode: " nil org-opencode-prompt-minibuffer-map)))))
 
 (defun org-opencode--headline-prompt ()
   "Return prompt text built from current headline and section text.
