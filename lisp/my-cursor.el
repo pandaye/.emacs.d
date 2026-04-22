@@ -3,23 +3,20 @@
 ;;; Commentary:
 ;; 终端下根据 Meow 模式状态和 Rime 输入法动态改变光标颜色（OSC 12）。
 ;;
-;; 优先级：Rime 激活 > Meow 状态（motion / normal / insert）
-;; 颜色方案：
-;;   Rime   → 红色   #FF6B6B
-;;   Motion → 橙色   #FFA500
-;;   Normal → 绿色   #00FF00
-;;   Insert → 白色   #FFFFFF
+;; 逻辑：
+;;   Insert + Rime → 红色（提醒输入法已激活）
+;;   Motion        → 橙色
+;;   其他          → 绿色
 ;;
-;; 本模块是光标颜色的唯一管理者，统一注册所有触发 hook。
+;; meow-switch-state-hook 传入新 state 作为参数，hook 在状态切换完成后触发。
 
 ;;; Code:
 
 ;; ── 颜色配置 ─────────────────────────────────────────────
 
-(defvar my/cursor-color-rime   "#FF6B6B" "Rime 输入法激活时的光标颜色。")
+(defvar my/cursor-color-rime   "#FF6B6B" "Insert + Rime 激活时的光标颜色。")
 (defvar my/cursor-color-motion "#FFA500" "Meow motion 模式的光标颜色。")
-(defvar my/cursor-color-normal "#00FF00" "Meow normal 模式的光标颜色。")
-(defvar my/cursor-color-insert "#FFFFFF" "Meow insert 模式的光标颜色。")
+(defvar my/cursor-color-normal "#00FF00" "Meow normal / insert 无 Rime 的光标颜色。")
 
 ;; ── 核心函数 ─────────────────────────────────────────────
 
@@ -28,41 +25,44 @@
   (unless (display-graphic-p)
     (send-string-to-terminal (format "\e]12;%s\a" color))))
 
-(defun my/update-cursor-color ()
-  "根据 Rime 和 Meow 当前状态更新光标颜色。
-优先级：Rime > Meow motion > Meow normal > Meow insert > 默认(normal)。"
-  (interactive)
-  (my/wezterm-set-cursor-color
+(defvar my/cursor--last-color nil
+  "上次设置的光标颜色，避免重复发送 OSC 序列。")
+
+(defun my/cursor--set-color (color)
+  "仅在颜色变化时发送 OSC 12。"
+  (unless (equal color my/cursor--last-color)
+    (setq my/cursor--last-color color)
+    (my/wezterm-set-cursor-color color)))
+
+(defun my/update-cursor-color-for-state (state)
+  "根据 STATE 和 Rime 状态更新光标颜色。
+STATE 由 meow-switch-state-hook 传入。"
+  (my/cursor--set-color
    (cond
-    ;; Rime 激活
-    ((and (boundp 'rime-mode) rime-mode)
+    ((and (eq state 'insert) (bound-and-true-p rime-mode))
      my/cursor-color-rime)
-    ;; Meow 状态
-    ((and (fboundp 'meow--current-state) (bound-and-true-p meow-mode))
-     (pcase (meow--current-state)
-       ('motion my/cursor-color-motion)
-       ('insert my/cursor-color-insert)
-       (_       my/cursor-color-normal)))
-    ;; 无 meow / 非 meow buffer
+    ((eq state 'motion)
+     my/cursor-color-motion)
     (t my/cursor-color-normal))))
 
-(defun my/update-cursor-color-on-frame-change (_frame)
-  "窗口 / buffer 变化时更新光标颜色（hook 回调，忽略 FRAME 参数）。"
-  (my/update-cursor-color))
+(defun my/update-cursor-color-for-buffer (&optional _frame)
+  "窗口 / buffer 切换时，根据当前 buffer 的 meow state 更新光标颜色。"
+  (when (bound-and-true-p meow-mode)
+    (my/update-cursor-color-for-state (meow--current-state))))
 
 ;; ── Hook 注册 ────────────────────────────────────────────
 
-;; Meow 状态切换（normal ↔ insert ↔ motion）
+;; meow-switch-state-hook: run-hook-with-args 传入新 state
 (with-eval-after-load 'meow
-  (add-hook 'meow-state-change-hook #'my/update-cursor-color))
+  (add-hook 'meow-switch-state-hook #'my/update-cursor-color-for-state))
 
-;; Rime 开关
+;; Insert 下切换 Rime 时重新判断颜色
 (with-eval-after-load 'rime
-  (add-hook 'rime-mode-hook #'my/update-cursor-color))
+  (add-hook 'rime-mode-hook #'my/update-cursor-color-for-buffer))
 
-;; 窗口 / buffer 切换（不同 buffer 可能处于不同 meow 状态）
-(add-hook 'window-buffer-change-functions    #'my/update-cursor-color-on-frame-change)
-(add-hook 'window-selection-change-functions #'my/update-cursor-color-on-frame-change)
+;; 窗口 / buffer 切换
+(add-hook 'window-buffer-change-functions    #'my/update-cursor-color-for-buffer)
+(add-hook 'window-selection-change-functions #'my/update-cursor-color-for-buffer)
 
 (provide 'my-cursor)
 ;;; my-cursor.el ends here

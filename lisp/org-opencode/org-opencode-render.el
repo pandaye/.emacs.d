@@ -105,6 +105,15 @@ and response sections."
 (defvar-local org-opencode--status-text "Idle"
   "Current OpenCode status text for this Org buffer.")
 
+(defvar-local org-opencode--session-mode nil
+  "Current session mode (e.g. \"plan\", \"build\", \"code\"), or nil.")
+
+(defvar-local org-opencode--session-model nil
+  "Current model identifier reported by session.status event.")
+
+(defvar-local org-opencode--session-provider nil
+  "Current provider identifier reported by session.status event.")
+
 (defvar-local org-opencode--token-input 0
   "Cumulative input token count for the current session.")
 
@@ -506,7 +515,7 @@ markers and hash-table entries are released."
     (goto-char (point-min))
     (while (re-search-forward
             "^[[:space:]]*#\\+\\(begin\\|end\\)_src\\b" nil t)
-      (replace-match ",\\&" t t))
+      (replace-match ",\\&" t))
     (buffer-string)))
 
 ;; ---------------------------------------------------------------------------
@@ -534,24 +543,84 @@ may not be the target Org buffer."
 
 (defun org-opencode--header-status-text ()
   "Return one-line status text for fixed top display."
-  (let ((session (or (org-opencode--session-id) "none"))
-        (tokens (if (or (> org-opencode--token-input 0)
-                        (> org-opencode--token-output 0))
-                    (format " | tokens:%d/%d"
-                            org-opencode--token-input
-                            org-opencode--token-output)
-                  "")))
-    (format " OpenCode | %s | session:%s | pending:%d%s "
+  (let* ((session (or (org-opencode--session-id) "none"))
+         ;; Prefer live model from session.status; fallback to user selection.
+         (model (or org-opencode--session-model
+                    (bound-and-true-p org-opencode-selected-model)
+                    "default"))
+         (provider (or org-opencode--session-provider ""))
+         (agent (or (bound-and-true-p org-opencode-selected-agent) "default"))
+         (mode (or org-opencode--session-mode ""))
+         (tokens (if (or (> org-opencode--token-input 0)
+                         (> org-opencode--token-output 0))
+                     (format " | tokens:%d/%d"
+                             org-opencode--token-input
+                             org-opencode--token-output)
+                   ""))
+         ;; Build mode segment: "[plan]" or "[build]" etc.
+         (mode-str (if (and mode (not (string-empty-p mode)))
+                       (format "[%s]" mode)
+                     ""))
+         ;; Build provider/model segment
+         (model-str (if (and provider (not (string-empty-p provider)))
+                        (format "%s/%s" provider model)
+                      model)))
+    (format " OpenCode %s | %s | %s | %s | session:%s | pending:%d%s "
+            mode-str
             org-opencode--status-text
-            session
+            model-str
+            agent
+            (org-opencode--truncate-session-id-for-header session)
             (org-opencode--pending-count)
             tokens)))
+
+(defun org-opencode--truncate-session-id-for-header (session-id)
+  "Truncate SESSION-ID for header-line display (max 8 chars)."
+  (if (and session-id (> (length session-id) 8))
+      (substring session-id 0 8)
+    (or session-id "none")))
 
 (defun org-opencode--apply-header-status-area ()
   "Install or remove fixed header status area based on user option."
   (if org-opencode-show-header-status
       (setq-local header-line-format '(:eval (org-opencode--header-status-text)))
     (setq-local header-line-format org-opencode--saved-header-line-format)))
+
+(defun org-opencode--fetch-initial-session-status ()
+  "Fetch mode/model/provider from the last assistant message.
+Called during mode enable to show current model/mode immediately.
+The /session/status API does not include mode/model/provider fields,
+so we retrieve them from the most recent assistant message's info."
+  (condition-case nil
+      (let* ((session-id (org-opencode--session-id))
+             (messages (and session-id (org-opencode-api-messages session-id))))
+        (when messages
+          ;; Walk messages in reverse to find the last assistant message
+          (catch 'done
+            (dolist (msg (reverse messages))
+              (let ((role (alist-get 'role msg)))
+                (when (and role (equal role "assistant"))
+                  (let* ((info (alist-get 'info msg))
+                         (mode (and info (alist-get 'mode info)))
+                         (model-id (and info (alist-get 'modelID info)))
+                         (provider-id (and info (alist-get 'providerID info))))
+                    (when mode (setq org-opencode--session-mode mode))
+                    (when model-id (setq org-opencode--session-model model-id))
+                    (when provider-id (setq org-opencode--session-provider provider-id))
+                    (force-mode-line-update t)
+                    (throw 'done nil))))))
+          ;; Still update idle/busy status from session-status API
+          (condition-case nil
+              (let* ((all-status (and session-id (org-opencode-api-session-status)))
+                     (status (and all-status (alist-get (intern session-id) all-status))))
+                (when status
+                  (let ((state (alist-get 'status status)))
+                    (when state
+                      (setq org-opencode--status-text
+                            (if (equal state "busy") "busy" "idle"))
+                      (force-mode-line-update t)))))
+            (error nil))))
+    (error nil)))
 
 ;; ---------------------------------------------------------------------------
 ;; Legacy/Compatibility Functions
@@ -607,30 +676,58 @@ Marker placement depends on `org-opencode-response-layout'."
 ;; ---------------------------------------------------------------------------
 
 (defun org-opencode--event-message-updated (session-id properties)
-  "Handle `message.updated` event for SESSION-ID with PROPERTIES."
+  "Handle `message.updated` event for SESSION-ID with PROPERTIES.
+Only processes assistant messages.  User messages are ignored to prevent
+accidentally binding a render state to the wrong message ID (since
+`org-opencode--state-for-event' has the side effect of binding unbound
+states to the given message ID)."
   (let* ((info (alist-get 'info properties))
-         (message-id (alist-get 'id info))
-         (state (and message-id
-                     (org-opencode--state-for-event session-id message-id))))
-    (when (and state (equal (alist-get 'role info) "assistant"))
-      (puthash :assistant-message-id message-id state)
-      (let ((usage (alist-get 'usage info)))
-        (when usage
-          (let ((buffer (gethash :buffer state)))
+         (role (alist-get 'role info))
+         (message-id (alist-get 'id info)))
+    ;; Guard: only bind render state for assistant messages.
+    ;; Calling `org-opencode--state-for-event' for user messages would
+    ;; consume the unbound pending state, leaving no state available
+    ;; when the assistant message arrives — causing all streaming
+    ;; deltas to be silently dropped.
+    (when (and message-id (equal role "assistant"))
+      (let ((state (org-opencode--state-for-event session-id message-id)))
+        (when state
+          (puthash :assistant-message-id message-id state)
+          (let ((buffer (gethash :buffer state))
+                (mode (alist-get 'mode info))
+                (model-id (alist-get 'modelID info))
+                (provider-id (alist-get 'providerID info))
+                (usage (alist-get 'usage info)))
             (when (buffer-live-p buffer)
               (with-current-buffer buffer
-                (setq org-opencode--token-input (or (alist-get 'input usage) org-opencode--token-input))
-                (setq org-opencode--token-output (or (alist-get 'output usage) org-opencode--token-output))))))))))
+                (when mode
+                  (setq org-opencode--session-mode mode))
+                (when model-id
+                  (setq org-opencode--session-model model-id))
+                (when provider-id
+                  (setq org-opencode--session-provider provider-id))
+                (when usage
+                  (setq org-opencode--token-input
+                        (or (alist-get 'input usage) org-opencode--token-input))
+                  (setq org-opencode--token-output
+                        (or (alist-get 'output usage) org-opencode--token-output)))
+                (force-mode-line-update t)))))))))
 
 (defun org-opencode--event-part-updated (_session-id properties)
   "Handle `message.part.updated` event with PROPERTIES.
 _SESSION-ID is provided by the event dispatch but not needed here
-since part carries its own sessionID."
+since part carries its own sessionID.
+
+Uses `org-opencode--pending-state' for a direct lookup instead of
+`org-opencode--state-for-event' to avoid the binding side effect.
+User message parts arrive before the assistant message.updated event,
+and calling state-for-event here would bind the render state to the
+user message ID — leaving no state for the real assistant message."
   (let* ((part (alist-get 'part properties))
-         (session-id (alist-get 'sessionID part))
+         (_session-id (alist-get 'sessionID part))
          (message-id (alist-get 'messageID part))
          (state (and message-id
-                     (org-opencode--state-for-event session-id message-id))))
+                     (org-opencode--pending-state message-id))))
     (when (and state
                (gethash :assistant-message-id state)
                (equal (gethash :assistant-message-id state) message-id))
@@ -643,10 +740,14 @@ since part carries its own sessionID."
       (org-opencode--refresh-render-state state))))
 
 (defun org-opencode--event-part-delta (session-id properties)
-  "Handle `message.part.delta` event for SESSION-ID with PROPERTIES."
+  "Handle `message.part.delta` event for SESSION-ID with PROPERTIES.
+
+Uses `org-opencode--pending-state' for a direct lookup instead of
+`org-opencode--state-for-event' to avoid the binding side effect.
+See `org-opencode--event-part-updated' for rationale."
   (let* ((message-id (alist-get 'messageID properties))
          (state (and message-id
-                     (org-opencode--state-for-event session-id message-id)))
+                     (org-opencode--pending-state message-id)))
          (part-id (alist-get 'partID properties))
          (field (alist-get 'field properties))
          (delta (alist-get 'delta properties)))
@@ -670,14 +771,21 @@ since part carries its own sessionID."
 
 (defun org-opencode--event-session-idle (session-id _properties)
   "Handle `session.idle` event for SESSION-ID.
-Sets status to Idle in all buffers that have pending render states
-for this session."
-  (let ((states (org-opencode--pending-session-states session-id)))
+Finishes all pending render states for this session (streaming is done)
+and sets status to Idle."
+  (let ((states (copy-sequence (org-opencode--pending-session-states session-id))))
     (if states
         (dolist (state states)
-          (org-opencode--set-status-in-buffer state "Idle"))
+          ;; Do a final full refresh from accumulated parts.
+          (org-opencode--refresh-render-state state)
+          (org-opencode--set-status-in-buffer state "Idle")
+          (let ((buffer (gethash :buffer state)))
+            (when (buffer-live-p buffer)
+              (with-current-buffer buffer
+                (run-hooks 'org-opencode-after-response-hook))))
+          (org-opencode--finish-render-state state)
+          (message "Inserted streamed opencode response"))
       ;; No pending states — try to update any buffer whose session matches.
-      ;; Walk all live buffers that have org-opencode-mode active.
       (dolist (buf (buffer-list))
         (when (buffer-live-p buf)
           (with-current-buffer buf
@@ -741,6 +849,27 @@ Updates the status line with a summary of agent todo progress."
                          (equal (org-opencode--session-id) session-id))
                 (org-opencode--set-status status-text)))))))))
 
+(defun org-opencode--event-session-status (session-id properties)
+  "Handle `session.status` event for SESSION-ID with PROPERTIES.
+Updates mode (plan/build/code), model, and provider in matching buffers."
+  (let* ((status (alist-get 'status properties))
+         (mode (alist-get 'mode status))
+         (model (alist-get 'model status))
+         (provider (alist-get 'provider status))
+         (model-id (alist-get 'modelID status)))
+    (dolist (buf (buffer-list))
+      (when (buffer-live-p buf)
+        (with-current-buffer buf
+          (when (and (bound-and-true-p org-opencode-mode)
+                     (equal (org-opencode--session-id) session-id))
+            (when mode
+              (setq org-opencode--session-mode mode))
+            (when (or model model-id)
+              (setq org-opencode--session-model (or model model-id)))
+            (when provider
+              (setq org-opencode--session-provider provider))
+            (force-mode-line-update t)))))))
+
 ;; ---------------------------------------------------------------------------
 ;; Register Event Handlers
 ;; ---------------------------------------------------------------------------
@@ -750,6 +879,7 @@ Updates the status line with a summary of agent todo progress."
 (org-opencode-register-event-handler "message.part.delta" #'org-opencode--event-part-delta)
 (org-opencode-register-event-handler "session.idle" #'org-opencode--event-session-idle)
 (org-opencode-register-event-handler "session.error" #'org-opencode--event-session-error)
+(org-opencode-register-event-handler "session.status" #'org-opencode--event-session-status)
 (org-opencode-register-event-handler "todo.updated" #'org-opencode--event-todo-updated)
 
 (provide 'org-opencode-render)

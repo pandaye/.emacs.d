@@ -39,6 +39,21 @@
         ("DONE" . (:foreground "green"  :weight bold))
         ("CANCEL" . (:foreground "grey"  :weight bold))))
 
+;; ============================================================
+;; 优先级配置
+;; ============================================================
+
+;; 优先级标记颜色（#A #B #C，A 最高）
+(setq org-priority-faces
+      '((?A . (:foreground "#ff5555" :background "#3c1515" :weight bold :box t))
+        (?B . (:foreground "#ffb86c" :weight bold))
+        (?C . (:foreground "#6272a4"))))
+
+;; 调整优先级范围（默认 A/B/C，可以不改）
+(setq org-priority-highest ?A)
+(setq org-priority-lowest ?C)
+(setq org-priority-default ?B)
+
 (setq org-log-into-drawer t)
 
 ;; ============================================================
@@ -64,6 +79,7 @@
 ;; ============================================================
 
 (setq org-agenda-files (list org-base-path))
+
 (setq org-agenda-skip-timestamp-if-done t)
 ;; 允许 refile 到 agenda 文件
 (setq org-refile-targets '((org-agenda-files :maxlevel . 3)))

@@ -68,6 +68,7 @@
 (declare-function org-opencode-revert-last-message "org-opencode-checkpoint")
 (declare-function org-opencode-unrevert-last-message "org-opencode-checkpoint")
 (declare-function org-opencode-review-session-diff "org-opencode-files")
+(declare-function org-opencode--fetch-initial-session-status "org-opencode-render")
 
 ;;; ============================================================
 ;;; Keymap
@@ -126,7 +127,7 @@ Prompts for the command name interactively.  Common commands include
   (message "OpenCode: executed /%s" command))
 
 (defun org-opencode-send (prompt)
-  "Send PROMPT to the current opencode session and insert the reply.
+  "Send PROMPT to the current opencode session and stream the reply.
 PROMPT source priority: active region, current headline content,
 then minibuffer input.  Use prefix argument to force minibuffer."
   (interactive (list (org-opencode--read-prompt current-prefix-arg)))
@@ -139,38 +140,33 @@ then minibuffer input.  Use prefix argument to force minibuffer."
   (org-opencode--checkpoint-before-send)
   (let* ((session-id (org-opencode--session-id))
          (path (org-opencode--path-with-query
-                (format "/session/%s/message" session-id)
+                (format "/session/%s/prompt_async" session-id)
                 (org-opencode--session-query)))
          (payload `((parts . [((type . "text") (text . ,prompt))])
                     ,@(when (bound-and-true-p org-opencode-selected-model)
-                        `((providerID . ,(car (split-string org-opencode-selected-model "/")))
-                          (modelID . ,(mapconcat #'identity (cdr (split-string org-opencode-selected-model "/")) "/"))))
+                        `((model . ,org-opencode-selected-model)))
                     ,@(when (bound-and-true-p org-opencode-selected-agent)
-                        `((agentID . ,org-opencode-selected-agent)))))
+                        `((agent . ,org-opencode-selected-agent)))))
          (marker nil)
          (state nil))
     (org-opencode-start-event-stream)
     (setq marker (org-opencode--prepare-response-marker prompt session-id))
     (setq state (org-opencode--start-render-state session-id marker))
-    (org-opencode--set-status "Streaming")
+    (org-opencode--set-status "Sending")
     (set-marker marker nil)
     (message "Sending prompt to opencode session %s..." session-id)
+    ;; Use prompt_async: returns 204 immediately, SSE events drive rendering.
+    ;; The render state is finished when session.idle arrives.
     (org-opencode--http-json-async
      "POST"
      path
      payload
-     (lambda (reply error-message)
-       (cond
-        (error-message
+     (lambda (_reply error-message)
+       (when error-message
          (org-opencode--set-error-text state error-message)
          (org-opencode--set-status-in-buffer state (format "Error: %s" error-message))
-         (message "opencode request failed: %s" error-message))
-        (t
-         (org-opencode--merge-final-reply state reply)
-         (org-opencode--set-status-in-buffer state "Idle")
-         (run-hooks 'org-opencode-after-response-hook)
-         (message "Inserted streamed opencode response")))
-       (org-opencode--finish-render-state state)))))
+         (org-opencode--finish-render-state state)
+         (message "opencode request failed: %s" error-message))))))
 
 ;;; ============================================================
 ;;; Minor Mode
@@ -198,6 +194,7 @@ Key bindings:
         (org-opencode--set-status "Idle")
         (org-opencode--maybe-auto-session)
         (when org-opencode-show-header-status
+          (org-opencode--fetch-initial-session-status)
           (org-opencode-start-event-stream)))
     ;; Cleanup on disable
     (org-opencode--cleanup-buffer-render-states)
@@ -209,6 +206,9 @@ Key bindings:
     (kill-local-variable 'org-opencode-selected-agent)
     (kill-local-variable 'org-opencode--token-input)
     (kill-local-variable 'org-opencode--token-output)
+    (kill-local-variable 'org-opencode--session-mode)
+    (kill-local-variable 'org-opencode--session-model)
+    (kill-local-variable 'org-opencode--session-provider)
     (kill-local-variable 'org-opencode--checkpoint-ref)
     (kill-local-variable 'org-opencode--checkpoint-directory)))
 

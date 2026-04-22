@@ -96,6 +96,12 @@ Returns non-nil if handler was found and removed."
   "Process object for the shared opencode SSE event stream.
 There is at most one event stream process shared across all sessions.")
 
+(defvar org-opencode--event-stream-directory nil
+  "The directory used when the current SSE event stream was started.
+Used to detect directory mismatches: when a prompt targets a different
+directory than the running stream, the stream must be restarted so
+events are received from the correct opencode Instance.")
+
 (defvar org-opencode--event-reconnect-timer nil
   "Timer for SSE auto-reconnect, or nil when no reconnect is pending.")
 
@@ -115,33 +121,47 @@ Contains raw SSE traffic for troubleshooting.")
        (process-live-p org-opencode--event-process)))
 
 (defun org-opencode--event-url ()
-  "Return the SSE endpoint URL."
-  (concat (org-opencode--base-url) "/event"))
+  "Return the SSE endpoint URL, scoped to the current directory."
+  (concat (org-opencode--base-url)
+          (org-opencode--path-with-query "/event" (org-opencode--session-query))))
 
 (defun org-opencode-start-event-stream ()
   "Start the shared `/event` subscription if not already running.
 Ensures the opencode server is healthy before starting the stream.
+If the stream is already running but connected to a different directory,
+restarts it so events come from the correct opencode Instance.
 Idempotent - safe to call multiple times."
   (interactive)
   (org-opencode--ensure-server)
-  (unless (org-opencode--event-process-live-p)
-    (let ((buffer (get-buffer-create org-opencode--event-buffer-name)))
-      (setq org-opencode--event-process
-            (make-process
-             :name "org-opencode-events"
-             :buffer buffer
-             :command (list (org-opencode--curl-executable)
-                            "-NsS"
-                            (org-opencode--event-url))
-             :coding 'utf-8
-             :connection-type 'pipe
-             :filter #'org-opencode--event-filter
-             :sentinel #'org-opencode--event-sentinel
-             :noquery t))
-      ;; Initialize process state for SSE parsing
-      (process-put org-opencode--event-process :remainder "")
-      (process-put org-opencode--event-process :data-lines nil)
-      (message "Subscribed to opencode /event stream"))))
+  (let ((target-dir (org-opencode--session-directory)))
+    ;; Restart if directory changed (events come from wrong Instance otherwise)
+    (when (and (org-opencode--event-process-live-p)
+               (not (equal target-dir org-opencode--event-stream-directory)))
+      (org-opencode--log-debug
+       "Event stream directory mismatch: stream=%s target=%s, restarting"
+       org-opencode--event-stream-directory target-dir)
+      (process-put org-opencode--event-process :stopping t)
+      (delete-process org-opencode--event-process)
+      (setq org-opencode--event-process nil))
+    (unless (org-opencode--event-process-live-p)
+      (let ((buffer (get-buffer-create org-opencode--event-buffer-name)))
+        (setq org-opencode--event-stream-directory target-dir)
+        (setq org-opencode--event-process
+              (make-process
+               :name "org-opencode-events"
+               :buffer buffer
+               :command (list (org-opencode--curl-executable)
+                              "-NsS"
+                              (org-opencode--event-url))
+               :coding 'utf-8
+               :connection-type 'pipe
+               :filter #'org-opencode--event-filter
+               :sentinel #'org-opencode--event-sentinel
+               :noquery t))
+        ;; Initialize process state for SSE parsing
+        (process-put org-opencode--event-process :remainder "")
+        (process-put org-opencode--event-process :data-lines nil)
+        (message "Subscribed to opencode /event stream")))))
 
 (defun org-opencode-stop-event-stream ()
   "Stop the shared `/event` subscription.
@@ -155,6 +175,7 @@ Cancels any pending reconnect timer."
   (process-put org-opencode--event-process :stopping t)
   (delete-process org-opencode--event-process)
   (setq org-opencode--event-process nil)
+  (setq org-opencode--event-stream-directory nil)
   (message "Stopped opencode /event stream"))
 
 ;; ============================================================================

@@ -65,6 +65,15 @@ When auto session mode is enabled, this keyword is read when
   :type 'string
   :group 'org-opencode-session)
 
+(defcustom org-opencode-file-directory-keyword "OPENCODE_DIR"
+  "File keyword used to persist the project directory for opencode.
+
+When `org-opencode-mode' turns on, this keyword is read.  If absent,
+the user is prompted via `read-directory-name' and the chosen path
+is written back to the file."
+  :type 'string
+  :group 'org-opencode-session)
+
 (defcustom org-opencode-auto-session-on-mode-enable t
   "When non-nil, auto-load or auto-create a session on mode enable.
 

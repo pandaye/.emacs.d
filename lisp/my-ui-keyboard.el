@@ -5,7 +5,9 @@
 
 (use-package gruvbox-theme
   :config
-  (load-theme 'gruvbox-dark-medium t))
+  (load-theme 'gruvbox-dark-medium t)
+  ;; 终端下 fringe background 为 nil 会导致警告，设为 unspecified
+  (set-face-attribute 'fringe nil :background 'unspecified))
 
 ;; 启用行号
 (add-hook 'prog-mode-hook #'display-line-numbers-mode)
@@ -165,27 +167,27 @@ standard Emacs keybindings, respecting the current mode's keymap."
 ;; ── Faces ────────────────────────────────────────────────
 
 (defface custom-modeline-meow-normal
-  '((t :foreground "#83a598" :weight bold))
+  '((t :foreground "#282828" :background "#83a598" :weight bold))
   "Face for Meow normal state."
   :group 'faces)
 
 (defface custom-modeline-meow-motion
-  '((t :foreground "#8ec07c" :weight bold))
+  '((t :foreground "#282828" :background "#fe8019" :weight bold))
   "Face for Meow motion state."
   :group 'faces)
 
 (defface custom-modeline-meow-insert
-  '((t :foreground "#fb4934" :weight bold))
+  '((t :foreground "#282828" :background "#fb4934" :weight bold))
   "Face for Meow insert state."
   :group 'faces)
 
 (defface custom-modeline-meow-keypad
-  '((t :foreground "#d3869b" :weight bold))
+  '((t :foreground "#282828" :background "#d3869b" :weight bold))
   "Face for Meow keypad state."
   :group 'faces)
 
 (defface custom-modeline-meow-beacon
-  '((t :foreground "#fabd2f" :weight bold))
+  '((t :foreground "#282828" :background "#b16286" :weight bold))
   "Face for Meow beacon state."
   :group 'faces)
 
@@ -221,12 +223,12 @@ standard Emacs keybindings, respecting the current mode's keymap."
   (when (and (fboundp 'meow--current-state) (bound-and-true-p meow-mode))
     (let ((state (meow--current-state)))
       (pcase state
-        ('normal (propertize "N" 'face 'custom-modeline-meow-normal))
-        ('insert (propertize "I" 'face 'custom-modeline-meow-insert))
-        ('motion (propertize "M" 'face 'custom-modeline-meow-motion))
-        ('keypad (propertize "K" 'face 'custom-modeline-meow-keypad))
-        ('beacon (propertize "B" 'face 'custom-modeline-meow-beacon))
-        (_       (propertize "?" 'face 'font-lock-warning-face))))))
+        ('normal (propertize "  N " 'face 'custom-modeline-meow-normal))
+        ('insert (propertize "  I " 'face 'custom-modeline-meow-insert))
+        ('motion (propertize "  M " 'face 'custom-modeline-meow-motion))
+        ('keypad (propertize "  K " 'face 'custom-modeline-meow-keypad))
+        ('beacon (propertize "  B " 'face 'custom-modeline-meow-beacon))
+        (_       (propertize "  ? " 'face 'font-lock-warning-face))))))
 
 (defun custom-modeline-buffer-status ()
   "Return buffer modification status."
@@ -281,7 +283,7 @@ standard Emacs keybindings, respecting the current mode's keymap."
 (setq-default mode-line-format
   '(;; 左侧：Meow 状态
     (:eval (let ((state (custom-modeline-meow-state)))
-             (when state (concat " " state " "))))
+             (when state (concat state))))
     " "
     ;; Projectile 项目名
     (:eval (when (featurep 'projectile)
@@ -324,8 +326,5 @@ standard Emacs keybindings, respecting the current mode's keymap."
                     :height 100
                     :box '(:line-width 1 :color "#3c3836"))
 
-;; Meow 状态变化时刷新 modeline（Emacs 自身已处理大多数 modeline 更新场景）
-(when (boundp 'meow-state-change-hook)
-  (add-hook 'meow-state-change-hook (lambda () (force-mode-line-update))))
 
 (provide 'my-ui-keyboard)

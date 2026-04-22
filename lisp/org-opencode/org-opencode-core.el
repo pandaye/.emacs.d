@@ -78,6 +78,12 @@
   :type 'function
   :group 'org-opencode)
 
+(defvar-local org-opencode--project-directory nil
+  "Buffer-local project directory for opencode API requests.
+When non-nil, this overrides the default directory.  Set by
+`org-opencode--ensure-directory' during mode enable and persisted
+to the Org file via the #+OPENCODE_DIR keyword.")
+
 (defvar org-opencode--server-process nil
   "Process object for the locally managed opencode server.")
 
@@ -85,8 +91,10 @@
   "Buffer used for the locally managed opencode server logs.")
 
 (defun org-opencode-default-directory ()
-  "Return the default project directory for the current buffer."
-  (expand-file-name default-directory))
+  "Return the project directory for the current buffer.
+If `org-opencode--project-directory' is set (from file keyword or
+user selection), use that.  Otherwise fall back to `default-directory'."
+  (expand-file-name (or org-opencode--project-directory default-directory)))
 
 (defun org-opencode-default-session-title ()
   "Return the default session title for the current buffer."
@@ -368,6 +376,12 @@ Returns the summary data."
   "Get the todo list for SESSION-ID.
 Returns a list of todo item alists."
   (org-opencode--http-json "GET" (format "/session/%s/todo" session-id)))
+
+(defun org-opencode-api-session-status ()
+  "Get the status of all sessions.
+Returns an alist mapping session-id to status objects containing
+mode, model, provider, etc."
+  (org-opencode--http-json "GET" "/session/status"))
 
 (provide 'org-opencode-core)
 ;;; org-opencode-core.el ends here

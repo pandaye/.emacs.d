@@ -395,9 +395,9 @@ Returns the diff alist or nil if no changes."
 ;; ---------------------------------------------------------------------------
 
 (defun org-opencode--current-session-id ()
-  "Get the current session ID from buffer-local variable or global state."
+  "Get the current session ID from buffer-local variable or session state."
   (or (bound-and-true-p org-opencode-current-session-id)
-      (bound-and-true-p org-opencode-session-id)))
+      (org-opencode--session-id)))
 
 ;; ---------------------------------------------------------------------------
 ;; Event Handler Registration

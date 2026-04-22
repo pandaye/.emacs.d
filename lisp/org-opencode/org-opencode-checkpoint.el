@@ -103,14 +103,16 @@ that point."
            (relative (file-relative-name
                       (expand-file-name filepath)
                       org-opencode--checkpoint-directory))
+           (exit-code nil)
            (output (with-output-to-string
                      (with-current-buffer standard-output
-                       (process-file "git" nil t nil
-                                     "show"
-                                     (format "%s:%s"
-                                             org-opencode--checkpoint-ref
-                                             relative))))))
-      (unless (string-empty-p output)
+                       (setq exit-code
+                             (process-file "git" nil t nil
+                                           "show"
+                                           (format "%s:%s"
+                                                   org-opencode--checkpoint-ref
+                                                   relative)))))))
+      (when (and (eq exit-code 0) (not (string-empty-p output)))
         output))))
 
 (defun org-opencode--checkpoint-restore-file (filepath)

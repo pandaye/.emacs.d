@@ -299,7 +299,6 @@
   (add-hook 'slime-repl-mode-hook (lambda () (subword-mode 1))))
 
 (use-package markdown-mode
-
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.md\\'" . markdown-mode)
@@ -310,14 +309,12 @@
 ;; ============================================================
 
 (use-package yasnippet
-
   :defer 2
   :config
   (yas-global-mode 1)
   (define-key yas-minor-mode-map (kbd "<tab>") 'yas-expand))
 
 (use-package yasnippet-snippets
-
   :after yasnippet)
 
 ;; ============================================================
@@ -341,9 +338,19 @@
 ;; ============================================================
 
 (use-package logview
-
   :commands (logview-mode))
 
+;; ============================================================
+;; RSS 订阅
+;; ============================================================
+(use-package elfeed
+  :config (setq elfeed-feeds
+				'(("https://emacs-china.org/latest.rss" emacs-china)
+				  ("https://taxodium.ink/rss.xml" taxodium)
+				  ("http://www.ruanyifeng.com/blog/atom.xml" ruanyifeng)
+				  ("https://hnrss.org/newest?q=kubernetes+OR+linux+OR+golang+OR+ai+OR+lisp" hnnews)
+				  ("https://hnrss.org/bestcomments" hncomments)
+				  ("https://hnrss.org/jobs" hnjobs))))
 ;; ============================================================
 ;; 快捷键
 ;; ============================================================

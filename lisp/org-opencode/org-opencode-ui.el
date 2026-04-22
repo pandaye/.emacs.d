@@ -38,6 +38,10 @@
 (require 'org)
 (require 'org-opencode-core)
 
+;; Forward declaration — org-opencode-send is defined in org-opencode.el
+;; which requires this module, so we cannot require it here.
+(declare-function org-opencode-send "org-opencode")
+
 ;; -----------------------------------------------------------------------------
 ;; Customization
 ;; -----------------------------------------------------------------------------
@@ -140,23 +144,36 @@ Shows available models from all connected providers and lets the user pick one."
   (let* ((providers (org-opencode-api-providers))
          (connected (alist-get 'connected providers))
          (all-providers (alist-get 'all providers))
-         (models (org-opencode--flatten-models all-providers connected))
+         (defaults (alist-get 'default providers))
+         (models (org-opencode--flatten-models all-providers connected defaults))
          (choice (completing-read "Select model: " models nil t)))
     (when (and choice (not (string-empty-p choice)))
-      (setq-local org-opencode-selected-model choice)
-      (message "OpenCode model: %s" choice))))
+      ;; Strip default marker " *" if present
+      (let ((clean (replace-regexp-in-string " \\*$" "" choice)))
+        (setq-local org-opencode-selected-model clean)
+        (message "OpenCode model: %s" clean)))))
 
-(defun org-opencode--flatten-models (all-providers connected)
+(defun org-opencode--flatten-models (all-providers connected defaults)
   "Flatten ALL-PROVIDERS into a list of \"provider/model\" strings.
-Only include providers in CONNECTED list."
+Only include providers in CONNECTED list.
+DEFAULTS is an alist mapping provider-id to default model name;
+default models are marked with a star."
   (let (result)
     (dolist (provider all-providers)
-      (let ((provider-id (alist-get 'id provider))
-            (provider-models (alist-get 'models provider)))
+      (let* ((provider-id (alist-get 'id provider))
+             (provider-models (alist-get 'models provider)))
         (when (member provider-id connected)
-          (dolist (model-entry (if (listp provider-models) provider-models (list provider-models)))
-            (let ((model-name (if (listp model-entry) (alist-get 'name model-entry) (car model-entry))))
-              (push (format "%s/%s" provider-id model-name) result))))))
+          (dolist (model-entry (if (listp provider-models) provider-models nil))
+            (let* ((model-id (cond
+                              ((stringp model-entry) model-entry)
+                              ((listp model-entry) (or (alist-get 'id model-entry)
+                                                       (alist-get 'name model-entry)))
+                              (t (format "%s" model-entry))))
+                   (is-default (and defaults
+                                    (equal model-id (alist-get (intern provider-id) defaults))))
+                   (display (format "%s/%s%s" provider-id model-id
+                                    (if is-default " *" ""))))
+              (push display result))))))
     (nreverse result)))
 
 ;; -----------------------------------------------------------------------------
@@ -192,6 +209,19 @@ Only include providers in CONNECTED list."
   (message "OpenCode selections - Model: %s, Agent: %s"
            (or org-opencode-selected-model "default")
            (or org-opencode-selected-agent "default")))
+
+;; -----------------------------------------------------------------------------
+;; Send as Entry
+;; -----------------------------------------------------------------------------
+
+(defun org-opencode-send-as-entry (prompt)
+  "Send PROMPT using the structured Org entry layout.
+Like `org-opencode-send' but forces `org-opencode-response-layout'
+to \\='entry so the exchange is rendered as a proper Org subtree
+regardless of the user's default setting."
+  (interactive (list (org-opencode--read-prompt current-prefix-arg)))
+  (let ((org-opencode-response-layout 'entry))
+    (org-opencode-send prompt)))
 
 (provide 'org-opencode-ui)
 ;;; org-opencode-ui.el ends here
