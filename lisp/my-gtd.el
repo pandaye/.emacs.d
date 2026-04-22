@@ -54,6 +54,10 @@
 (setq org-priority-lowest ?C)
 (setq org-priority-default ?B)
 
+;; LOGBOOK / PROPERTIES drawer 颜色淡化，避免干扰 TODO 关键字
+(set-face-attribute 'org-drawer nil :foreground "#665c54")
+(set-face-attribute 'org-special-keyword nil :foreground "#7c6f64")
+
 (setq org-log-into-drawer t)
 
 ;; ============================================================

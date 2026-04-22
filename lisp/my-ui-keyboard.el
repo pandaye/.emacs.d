@@ -223,12 +223,12 @@ standard Emacs keybindings, respecting the current mode's keymap."
   (when (and (fboundp 'meow--current-state) (bound-and-true-p meow-mode))
     (let ((state (meow--current-state)))
       (pcase state
-        ('normal (propertize "  N " 'face 'custom-modeline-meow-normal))
-        ('insert (propertize "  I " 'face 'custom-modeline-meow-insert))
-        ('motion (propertize "  M " 'face 'custom-modeline-meow-motion))
-        ('keypad (propertize "  K " 'face 'custom-modeline-meow-keypad))
-        ('beacon (propertize "  B " 'face 'custom-modeline-meow-beacon))
-        (_       (propertize "  ? " 'face 'font-lock-warning-face))))))
+        ('normal (propertize "  N  " 'face 'custom-modeline-meow-normal))
+        ('insert (propertize "  I  " 'face 'custom-modeline-meow-insert))
+        ('motion (propertize "  M  " 'face 'custom-modeline-meow-motion))
+        ('keypad (propertize "  K  " 'face 'custom-modeline-meow-keypad))
+        ('beacon (propertize "  B  " 'face 'custom-modeline-meow-beacon))
+        (_       (propertize "  ?  " 'face 'font-lock-warning-face))))))
 
 (defun custom-modeline-buffer-status ()
   "Return buffer modification status."
