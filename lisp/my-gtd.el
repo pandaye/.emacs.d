@@ -31,13 +31,13 @@
       '((sequence "TODO(t!)" "PROCESSING(p!)" "REVIEWING(r!)" "BLOCK(b!)" "LATER(l!)" "|" "DONE(d!)" "CANCEL(c@/!)")))
 
 (setq org-todo-keyword-faces
-      '(("TODO"  . (:foreground "#66cccc"    :weight bold))
-        ("BLOCK" . (:foreground "red"    :weight bold))
-        ("LATER" . (:foreground "yellow"    :weight bold))
-        ("PROCESSING" . (:foreground "orange" :weight bold))
-        ("REVIEWING" . (:foreground "#a5d6ff" :weight bold))
-        ("DONE" . (:foreground "green"  :weight bold))
-        ("CANCEL" . (:foreground "grey"  :weight bold))))
+      '(        ("TODO"       . (:foreground "#fb4934" :weight bold))   ; 醒目 - 亮红
+        ("PROCESSING" . (:foreground "#fe8019" :weight bold))   ; 醒目 - 亮橙
+        ("BLOCK"      . (:foreground "#af3a03" :weight bold))   ; 中性 - 暗棕
+        ("REVIEWING"  . (:foreground "#928374" :weight bold))   ; 低调 - 暖灰
+        ("LATER"      . (:foreground "#458588" :weight bold))   ; 低调 - 冷青
+        ("DONE"       . (:foreground "green"   :weight bold))
+        ("CANCEL"     . (:foreground "grey"    :weight bold))))
 
 ;; ============================================================
 ;; 优先级配置
