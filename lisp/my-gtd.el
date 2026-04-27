@@ -28,10 +28,10 @@
 ;; ============================================================
 
 (setq org-todo-keywords
-      '((sequence "TODO(t!)" "PROCESSING(p!)" "REVIEWING(r!)" "BLOCK(b!)" "LATER(l!)" "|" "DONE(d!)" "CANCEL(c@/!)")))
+      '((sequence "TODO(t!)" "PROCESSING(p!)" "BLOCK(b!)" "LATER(l!)" "|" "REVIEWING(r!)" "DONE(d!)" "CANCEL(c@/!)")))
 
 (setq org-todo-keyword-faces
-      '(        ("TODO"       . (:foreground "#fb4934" :weight bold))   ; 醒目 - 亮红
+      '(("TODO"       . (:foreground "#fb4934" :weight bold))   ; 醒目 - 亮红
         ("PROCESSING" . (:foreground "#fe8019" :weight bold))   ; 醒目 - 亮橙
         ("BLOCK"      . (:foreground "#af3a03" :weight bold))   ; 中性 - 暗棕
         ("REVIEWING"  . (:foreground "#928374" :weight bold))   ; 低调 - 暖灰
@@ -58,6 +58,7 @@
 (set-face-attribute 'org-drawer nil :foreground "#665c54")
 (set-face-attribute 'org-special-keyword nil :foreground "#7c6f64")
 
+(setq org-log-done 'time)
 (setq org-log-into-drawer t)
 
 ;; ============================================================
@@ -93,7 +94,97 @@
 (setq org-outline-path-complete-in-steps nil)
 
 ;; 自定义 Agenda 命令 - Weekly Review
+(defun my/org-last-week-range ()
+  "Return the start and end time of last week as a cons cell.
+Weeks start on Monday, matching the agenda configuration."
+  (let* ((now (decode-time (current-time)))
+         (day-of-week (decoded-time-weekday now))
+         (days-since-monday (mod (- day-of-week 1) 7))
+         (today-midnight (encode-time 0 0 0
+                                      (decoded-time-day now)
+                                      (decoded-time-month now)
+                                      (decoded-time-year now)))
+         (this-monday (time-subtract today-midnight
+                                     (days-to-time days-since-monday)))
+         (last-monday (time-subtract this-monday (days-to-time 7))))
+    (cons last-monday this-monday)))
+
+(defun my/org-agenda-skip-not-completed-last-week ()
+  "Skip entries not completed during last week."
+  (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+         (completed-time (my/org-entry-completed-time subtree-end))
+         (range (my/org-last-week-range))
+         (start (car range))
+         (end (cdr range)))
+    (if (and completed-time
+             (not (time-less-p completed-time start))
+             (time-less-p completed-time end))
+        nil
+      subtree-end)))
+
+(defun my/org-entry-completed-time (subtree-end)
+  "Return completion time for current entry before SUBTREE-END.
+Prefer CLOSED, then the latest done-state transition in LOGBOOK,
+then ARCHIVE_TIME for archived entries."
+  (or (let ((closed (org-entry-get (point) "CLOSED")))
+        (and closed (org-time-string-to-time closed)))
+      (save-excursion
+        (let ((case-fold-search nil)
+              (latest nil)
+              (done-regexp (regexp-opt org-done-keywords)))
+          (while (re-search-forward
+                  (format "^[ \t]*- State \"%s\".*\\(\\[[^]]+\\]\\)" done-regexp)
+                  subtree-end t)
+            (setq latest (org-time-string-to-time (match-string 1))))
+          latest))
+      (let ((archive-time (org-entry-get (point) "ARCHIVE_TIME")))
+        (and archive-time
+             (org-time-string-to-time
+              (concat "[" archive-time "]"))))))
+
+(defun my/org-agenda-files-with-archives ()
+  "Return agenda files plus archived Org files under `org-base-path'."
+  (delete-dups
+   (append (org-agenda-files t)
+           (directory-files-recursively org-base-path "\\.org_archive\\'"))))
+
+(defun my/org-done-keywords ()
+  "Return configured done keywords reliably."
+  (or org-done-keywords
+      (let (done-seen done-keywords)
+        (dolist (sequence org-todo-keywords)
+          (when (eq (car sequence) 'sequence)
+            (dolist (keyword (cdr sequence))
+              (cond
+               ((string= keyword "|")
+                (setq done-seen t))
+               (done-seen
+                (push (car (split-string keyword "[({]" t)) done-keywords))))))
+        (nreverse done-keywords))))
+
+(defun my/org-last-week-completed-blocks ()
+  "Return agenda blocks for last week's completed items, grouped by state."
+  (mapcar (lambda (keyword)
+            `(todo ,keyword
+                   ((org-agenda-overriding-header ,(format "%s Last Week" keyword))
+                    (org-agenda-files (my/org-agenda-files-with-archives))
+                    (org-agenda-skip-function #'my/org-agenda-skip-not-completed-last-week)
+                    (org-agenda-prefix-format '((todo . " %(my/org-agenda-completed-time-prefix) %-12:c")))
+                    (org-agenda-sorting-strategy '(time-down priority-down category-keep)))))
+          (my/org-done-keywords)))
+
+(defun my/org-agenda-completed-time-prefix ()
+  "Return a formatted completion timestamp for agenda prefixes."
+  (let ((completed-time (my/org-entry-completed-time
+                         (save-excursion (org-end-of-subtree t)))))
+    (if completed-time
+        (format-time-string "%m-%d %a %H:%M " completed-time)
+      "")))
+
 (with-eval-after-load 'org-agenda
+  ;; Use a quieter separator in multi-block agenda views.
+  (setq org-agenda-block-separator ?─)
+  (set-face-attribute 'org-time-grid nil :foreground "#665c54")
   (add-to-list 'org-agenda-custom-commands
                '("w" "Weekly Review"
                  ((agenda "" ((org-agenda-span 'week)
@@ -107,7 +198,10 @@
                   (todo "BLOCK"
                         ((org-agenda-overriding-header "Blocked Tasks")))
                   (todo "LATER"
-                        ((org-agenda-overriding-header "Scheduled for Later")))))))
+                        ((org-agenda-overriding-header "Scheduled for Later"))))))
+  (add-to-list 'org-agenda-custom-commands
+               `("W" "Last Week Completed"
+                 ,(my/org-last-week-completed-blocks))))
 
 ;; ============================================================
 ;; 快捷键
@@ -147,7 +241,22 @@
     ("daily" . "#a5d6ff"))
   "文件名到颜色的映射，用于 agenda 条目分类着色。")
 
+(defun my/org-agenda-dim-block-separators ()
+  "Tone down block separators in agenda buffers."
+  (let ((separator org-agenda-block-separator))
+    (when separator
+      (save-excursion
+        (goto-char (point-min))
+        (let ((regexp (if (stringp separator)
+                          (format "^%s$" (regexp-quote separator))
+                        (format "^%c+$" separator))))
+          (while (re-search-forward regexp nil t)
+            (add-face-text-property
+             (match-beginning 0) (match-end 0)
+             '(:foreground "#665c54"))))))))
+
 (add-hook 'org-agenda-finalize-hook #'my/org-agenda-colorize-category)
+(add-hook 'org-agenda-finalize-hook #'my/org-agenda-dim-block-separators)
 
 (provide 'my-gtd)
 ;;; my-gtd.el ends here
