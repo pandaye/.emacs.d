@@ -2,42 +2,93 @@
 ;;; my-rime.el --- Rime 中文输入法配置
 
 ;;; Commentary:
-;; Rime 输入法配置，包括输入方案切换。
+;; Rimel 输入法配置，包括输入方案切换。
 ;; 光标颜色联动由 my-cursor.el 统一管理。
 
 ;;; Code:
 
+(setq liberime-user-data-dir (locate-user-emacs-file "rime/")
+      liberime-auto-build t
+      default-input-method "rimel"
+      rimel-schema "tigress"
+      ;; rimel-show-candidate 'posframe
+      rimel-posframe-style 'horizontal
+      rimel-disable-predicates
+      '(meow-not-insert-p
+        my/rimel-predicate-after-digit-p
+        my/rimel-predicate-hyphen-after-alphabet-p
+        my/rimel-predicate-space-after-cjk-p
+        rimel-predicate-after-alphabet-char-p
+        rimel-predicate-prog-in-code-p))
+
+(defun my/ensure-rimel-loaded ()
+  "Load Rimel and Liberime on demand."
+  (unless (featurep 'liberime)
+    (require 'liberime))
+  (unless (featurep 'rimel)
+    (require 'rimel)))
+
+(defun my/set-rimel-schema (schema)
+  "Switch Rimel schema to SCHEMA and persist it for later activations."
+  (my/ensure-rimel-loaded)
+  (setq rimel-schema schema)
+  (when (and (equal current-input-method "rimel")
+             (fboundp 'liberime-try-select-schema))
+    (liberime-try-select-schema schema)))
+
+(defun my/rimel-toggle-ascii-punct ()
+  "Toggle Rime ascii punctuation for the active Rimel session."
+  (interactive)
+  (my/ensure-rimel-loaded)
+  (unless (equal current-input-method "rimel")
+    (user-error "Current input method is not rimel"))
+  (unless (fboundp 'liberime-process-keys)
+    (user-error "liberime is not available"))
+  (liberime-process-keys (kbd "C-."))
+  (message "Sent C-. to Rimel"))
+
+(defun my/rimel-predicate-after-digit-p ()
+  "光标前一个字符是数字时，不触发候选，后续统一按英文处理。"
+  (let ((ch (char-before)))
+    (and ch (>= ch ?0) (<= ch ?9))))
+
+(defun my/rimel-predicate-hyphen-after-alphabet-p ()
+  "光标前一个字符是半角 `-' 时不触发候选。
+适配英文连字符词（foo-bar）的输入习惯；中文场景下 `-' 周围一般有空格隔开，不受影响。"
+  (eq (char-before) ?-))
+
+(defun my/rimel-predicate-space-after-cjk-p ()
+  "光标前是「CJK + 空格」时不触发候选。
+中文句子里出现空格通常意味着接下来要敲英文，避免后续字母被当作拼音。"
+  (let ((p (point)))
+    (and (> p (+ (point-min) 1))
+         (eq (char-before p) ?\s)
+         (let ((ch (char-before (1- p))))
+           (and ch
+                (or (and (>= ch #x3400) (<= ch #x9FFF))    ; CJK 基本 + 扩展 A
+                    (and (>= ch #x20000) (<= ch #x2FFFF))  ; 扩展 B/C/D/E/F
+                    (and (>= ch #x3000) (<= ch #x303F))    ; CJK 符号与标点
+                    (and (>= ch #xFF00) (<= ch #xFFEF)))))))) ; 全角 ASCII / 标点
+
 (defun my/set-rime-jp ()
   "切换到日语输入方案。"
   (interactive)
-  (rime-lib-select-schema "jaroomaji"))
+  (my/set-rimel-schema "jaroomaji"))
 
 (defun my/set-rime-zh ()
   "切换到中文输入方案。"
   (interactive)
-  (rime-lib-select-schema "tigress"))
+  (my/set-rimel-schema "tigress"))
 
-(use-package rime
-  :init
-  (let ((librime-path (expand-file-name "~/.emacs.d/librime")))
-    (when (file-directory-p librime-path)
-      (setq rime-librime-root librime-path)))
-  :config
-  ;; 在非插入模式、字母后、代码中禁用输入法
-  (setq rime-disable-predicates
-        '(meow-not-insert-p
-          rime-predicate-after-alphabet-char-p
-	  rime-predicate-space-after-cc-p
-          rime-predicate-prog-in-code-p))
-  (add-hook 'kill-emacs-hook #'rime-lib-finalize)
-  :bind
-  (("C-c i j" . my/set-rime-jp)
-   ("C-c i f" . my/set-rime-zh))
-  :custom
-  (default-input-method "rime"))
+(with-eval-after-load 'liberime
+  (add-hook 'kill-emacs-hook #'liberime-finalize))
 
 ;; 输入法切换快捷键
 (global-set-key (kbd "C-c i i") 'toggle-input-method)
+(global-set-key (kbd "C-c i j") #'my/set-rime-jp)
+(global-set-key (kbd "C-c i f") #'my/set-rime-zh)
+(global-set-key (kbd "C-c .") #'my/rimel-toggle-ascii-punct)
+(global-set-key (kbd "C-.") #'my/rimel-toggle-ascii-punct)
 
 (provide 'my-rime)
 ;;; my-rime.el ends here

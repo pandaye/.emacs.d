@@ -270,9 +270,11 @@ standard Emacs keybindings, respecting the current mode's keymap."
       (propertize name 'face 'custom-modeline-major-mode-face))))
 
 (defun custom-modeline-position ()
-  "Return cursor position info (line:col)."
-  (propertize (format "%d:%d" (line-number-at-pos) (current-column))
-              'face 'font-lock-type-face))
+  "Return cursor position info (line:col).
+Uses `%l'/`%c' format specifiers so Emacs redisplay engine refreshes
+them after every command (requires `line-number-mode' and
+`column-number-mode' to be enabled)."
+  (propertize "%l:%c" 'face 'font-lock-type-face))
 
 (defun custom-modeline-separator ()
   "Return a separator."

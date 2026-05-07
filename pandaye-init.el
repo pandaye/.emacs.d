@@ -15,7 +15,9 @@
       mouse-wheel-scroll-amount '(1)
       mouse-wheel-progressive-speed nil)
 
+;; CJK 和 emoji 宽字符设置（TUI 专属）
 (setopt cjk-ambiguous-chars-are-wide nil)
+(setq-default auto-composition-mode nil)
 
 ;; 剪贴板基础设置（GUI / 终端通用）
 (setq select-enable-clipboard t
@@ -51,8 +53,9 @@
 (define-fringe-bitmap 'left-curly-arrow [])
 (define-fringe-bitmap 'left-triangle [])
 
-;; 列号显示
-(setq column-number-mode t)
+;; 行号/列号显示（modeline 中 %l/%c 依赖这两个 mode 开启才会随光标实时刷新）
+(line-number-mode 1)
+(column-number-mode 1)
 
 ;; 当前行高亮
 (global-hl-line-mode t)
@@ -76,20 +79,17 @@
   :commands (try))
 
 (use-package which-key
-
   :defer 2
   :config (which-key-mode))
 
 ;; 安装 diminish 以支持 :diminish 关键字
-(use-package diminish
-)
+(use-package diminish)
 
 ;; ============================================================
 ;; 导航框架 - Ivy/Counsel/Swiper
 ;; ============================================================
 
 (use-package ivy
-
   :diminish
   :init
   (setq ivy-use-virtual-buffers t
@@ -112,7 +112,6 @@
    ("C-x B" . ivy-switch-buffer-other-window)))
 
 (use-package counsel
-
   :diminish
   :after ivy
   :init
@@ -125,14 +124,12 @@
    ("C-c f f" . counsel-file-jump)))
 
 (use-package swiper
-
   :after ivy
   :bind
   (("C-s" . swiper)
    ("C-r" . swiper-backward)))
 
 (use-package ivy-rich
-
   :after (ivy counsel)
   :config
   (ivy-rich-mode 1)
@@ -143,7 +140,6 @@
 ;; ============================================================
 
 (use-package projectile
-
   :defer 3
   :init
   (setq projectile-project-search-path '("~/Project/")
@@ -154,7 +150,6 @@
   (("C-c f p" . projectile-find-file)))
 
 (use-package neotree
-
   :commands (neotree-show neotree-toggle neotree-find)
   :bind
   ("C-c t p" . neotree-show)
@@ -164,7 +159,6 @@
         neo-vc-integration '(face char)))
 
 (use-package rg
-
   :defer t)
 
 (defalias 'list-buffers 'ibuffer)
@@ -176,18 +170,15 @@
 (winner-mode 1)
 
 (use-package all-the-icons
-
   :if (display-graphic-p)
   :commands (all-the-icons-install-fonts))
 
 (use-package ace-window
-
   :commands (ace-window)
   :init
   (global-set-key [remap other-window] 'ace-window))
 
 (use-package rainbow-delimiters
-
   :hook (scheme-mode . rainbow-delimiters-mode)
   (emacs-lisp-mode . rainbow-delimiters-mode)
   (lisp-mode . rainbow-delimiters-mode)
@@ -198,14 +189,12 @@
 ;; ============================================================
 
 (use-package magit
-
   :commands (magit-status magit-dispatch)
   :bind
   (("C-c j s" . magit-status)
    ("C-c j p" . magit-dispatch)))
 
 (use-package diff-hl
-
   :hook (after-init . global-diff-hl-mode)
   :config
   (diff-hl-flydiff-mode)
@@ -244,7 +233,6 @@
 ;; ============================================================
 
 (use-package paredit
-
   :hook (racket-mode . paredit-mode)
   (emacs-lisp-mode . paredit-mode)
   (lisp-mode . paredit-mode)
@@ -253,7 +241,6 @@
   (ielm-mode . paredit-mode))
 
 (use-package racket-mode
-
   :mode (("\\.rkt\\'" . racket-mode)
          ("\\.scrbl\\'" . racket-mode))
   :config
@@ -262,7 +249,6 @@
   (racket-mode . racket-xp-mode))
 
 (use-package beancount
-
   :mode
   ("\\.beancount\\'" . beancount-mode)
   ("\\.bean\\'" . beancount-mode)
@@ -270,24 +256,19 @@
   (define-key beancount-mode-map (kbd "TAB") nil))
 
 (use-package go-mode
-
   :mode
   ("\\.go\\'" . go-mode))
 
 (use-package yaml-mode
-
   :mode ("\\.ya?ml\\'" . yaml-mode))
 
 (use-package clojure-mode
-
   :hook ((clojure-mode . rainbow-delimiters-mode)))
 
 (use-package cmake-mode
-
   :mode ("\\(?:CMakeLists\\.txt\\|\\.cmake\\)\\'" . cmake-mode))
 
 (use-package slime
-
   :commands (slime)
   :init
   (setq inferior-lisp-program "ros run")
@@ -348,7 +329,7 @@
 				'(("https://emacs-china.org/latest.rss" emacs-china)
 				  ("https://taxodium.ink/rss.xml" taxodium)
 				  ("http://www.ruanyifeng.com/blog/atom.xml" ruanyifeng)
-				  ("https://hnrss.org/newest?q=kubernetes+OR+linux+OR+golang+OR+ai+OR+lisp" hnnews)
+				  ("https://hnrss.org/newest?q=kubernetes+OR+linux+OR+golang+OR+lisp" hnnews)
 				  ("https://hnrss.org/bestcomments" hncomments)
 				  ("https://hnrss.org/jobs" hnjobs))))
 ;; ============================================================

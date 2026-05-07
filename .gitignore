@@ -32,3 +32,4 @@ racket-mode/
 eln-cache/
 projects
 tree-sitter
+.codex/

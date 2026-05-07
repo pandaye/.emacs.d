@@ -31,13 +31,13 @@
       '((sequence "TODO(t!)" "PROCESSING(p!)" "BLOCK(b!)" "LATER(l!)" "|" "REVIEWING(r!)" "DONE(d!)" "CANCEL(c@/!)")))
 
 (setq org-todo-keyword-faces
-      '(("TODO"       . (:foreground "#fb4934" :weight bold))   ; 醒目 - 亮红
-        ("PROCESSING" . (:foreground "#fe8019" :weight bold))   ; 醒目 - 亮橙
-        ("BLOCK"      . (:foreground "#af3a03" :weight bold))   ; 中性 - 暗棕
-        ("REVIEWING"  . (:foreground "#928374" :weight bold))   ; 低调 - 暖灰
-        ("LATER"      . (:foreground "#458588" :weight bold))   ; 低调 - 冷青
-        ("DONE"       . (:foreground "green"   :weight bold))
-        ("CANCEL"     . (:foreground "grey"    :weight bold))))
+      '(("TODO"       . (:foreground "#ff5f5f" :weight bold))   ; 更鲜艳的亮红
+        ("PROCESSING" . (:foreground "#ff9f1c" :weight bold))   ; 更鲜艳的亮橙
+        ("BLOCK"      . (:foreground "#ff6b2c" :weight bold))   ; 更醒目的阻塞态
+        ("LATER"      . (:foreground "#4db6ff" :weight bold))   ; 更鲜艳的冷蓝
+        ("REVIEWING"  . (:foreground "#7c6f64" :weight bold))   ; 完成态压暗
+        ("DONE"       . (:foreground "#5a8f63" :weight bold))   ; 完成态压暗
+        ("CANCEL"     . (:foreground "#6c6f73" :weight bold)))) ; 完成态压暗
 
 ;; ============================================================
 ;; 优先级配置
@@ -57,6 +57,18 @@
 ;; LOGBOOK / PROPERTIES drawer 颜色淡化，避免干扰 TODO 关键字
 (set-face-attribute 'org-drawer nil :foreground "#665c54")
 (set-face-attribute 'org-special-keyword nil :foreground "#7c6f64")
+;; 时间戳单独降饱和，避免和一级标题抢视觉重心。
+(set-face-attribute 'org-date nil :foreground "#6f8f8f")
+;; Headline 加粗，增强 GTD 文件层级可读性。
+(dolist (face '(org-level-1
+                org-level-2
+                org-level-3
+                org-level-4
+                org-level-5
+                org-level-6
+                org-level-7
+                org-level-8))
+  (set-face-attribute face nil :weight 'bold))
 
 (setq org-log-done 'time)
 (setq org-log-into-drawer t)

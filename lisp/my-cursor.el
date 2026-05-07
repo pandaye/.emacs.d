@@ -1,7 +1,7 @@
 ;;; my-cursor.el --- Dynamic cursor color management  -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; 终端下根据 Meow 模式状态和 Rime 输入法动态改变光标颜色（OSC 12）。
+;; 终端下根据 Meow 模式状态和 Rime/Rimel 输入法动态改变光标颜色（OSC 12）。
 ;;
 ;; 逻辑：
 ;;   Insert + Rime → 红色（提醒输入法已激活）
@@ -17,13 +17,9 @@
 ;; - window-* hook 回调时 current-buffer 不可控，必须用
 ;;   `(window-buffer (selected-window))` + `with-current-buffer` 显式定位。
 ;;
-;; Rime 状态检测：
-;;   不能仅依赖 `rime-mode'，因为它是 buffer-local minor mode，
-;;   在新 buffer 中默认为 nil（:init-value nil），只有 rime-activate
-;;   才会将其设为 t。切 buffer 后 rime-mode 可能为 nil 即使
-;;   current-input-method 仍然是 "rime"，导致光标颜色不正确。
-;;   因此同时检查 `current-input-method'，与 rime 自身的
-;;   rime-lighter 保持一致的判断逻辑。
+;; 输入法状态检测：
+;;   Rimel 直接注册为原生 input method，不提供 `rime-mode' 这类 minor mode。
+;;   因此统一以 `current-input-method' 为准，兼容后续输入法实现切换。
 
 ;;; Code:
 
@@ -36,13 +32,8 @@
 ;; ── Rime 状态检测 ─────────────────────────────────────────
 
 (defun my/rime-active-p ()
-  "Return non-nil if Rime is the active input method in the current buffer.
-同时检查 `rime-mode' 和 `current-input-method'：
-- `rime-mode' 在首次 toggle input method 后才为 t（buffer-local）
-- `current-input-method' 反映 Emacs 的 input method 激活状态
-二者任一为 rime 即视为激活，与 rime-lighter 判断逻辑一致。"
-  (or (bound-and-true-p rime-mode)
-      (equal current-input-method "rime")))
+  "Return non-nil if a Rime-family input method is active in the current buffer."
+  (member current-input-method '("rime" "rimel")))
 
 ;; ── 核心函数 ─────────────────────────────────────────────
 
@@ -88,15 +79,22 @@
     (when (bound-and-true-p meow-mode)
       (my/cursor--set-color (my/cursor--compute-color (meow--current-state))))))
 
+(defun my/refresh-cursor-color-after-input-method (&rest _args)
+  "Refresh cursor color after input-method related commands."
+  (my/update-cursor-color-for-buffer))
+
 ;; ── Hook 注册 ────────────────────────────────────────────
 
 ;; meow-switch-state-hook: run-hook-with-args 传入新 state
 (with-eval-after-load 'meow
   (add-hook 'meow-switch-state-hook #'my/update-cursor-color-for-state))
 
-;; Insert 下切换 Rime 时重新判断颜色
-(with-eval-after-load 'rime
-  (add-hook 'rime-mode-hook #'my/update-cursor-color-for-buffer))
+;; 输入法激活/停用时重新判断颜色
+(add-hook 'input-method-activate-hook #'my/update-cursor-color-for-buffer)
+(add-hook 'input-method-deactivate-hook #'my/update-cursor-color-for-buffer)
+(advice-add 'activate-input-method :after #'my/refresh-cursor-color-after-input-method)
+(advice-add 'deactivate-input-method :after #'my/refresh-cursor-color-after-input-method)
+(advice-add 'toggle-input-method :after #'my/refresh-cursor-color-after-input-method)
 
 ;; 窗口 / buffer 切换
 (add-hook 'window-buffer-change-functions    #'my/update-cursor-color-for-buffer)
