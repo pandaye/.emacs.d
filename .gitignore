@@ -19,6 +19,7 @@ transient/
 custom/
 config.el
 myinit.el
+local-vars.local.el
 custom.el
 package-quickstart.el
 amx-items

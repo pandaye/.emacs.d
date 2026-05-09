@@ -1,6 +1,11 @@
 ;; -*- lexical-binding: t; -*-
 
 ;; ============================================================
+;; 加载自定义常量
+;; ============================================================
+(require 'my-local-vars)
+(require 'my-common-dirs)
+;; ============================================================
 ;; 环境与基础设置
 ;; ============================================================
 
@@ -104,7 +109,9 @@
                                 (ivy-switch-buffer . ivy--regex-plus)
                                 (t . ivy--regex-plus))
         ivy-case-fold-search-default t
-        ivy-initial-inputs-alist nil)
+        ivy-initial-inputs-alist nil
+		;; 对于 a.example 改成 a.ex 的场景，C-p/C-n 选择
+		ivy-use-selectable-prompt t)
   (ivy-mode 1)
   :bind
   (("C-c C-r" . ivy-resume)
@@ -233,7 +240,8 @@
 ;; ============================================================
 
 (use-package paredit
-  :hook (racket-mode . paredit-mode)
+  :hook
+  (racket-mode . paredit-mode)
   (emacs-lisp-mode . paredit-mode)
   (lisp-mode . paredit-mode)
   (clojure-mode . paredit-mode)
@@ -324,20 +332,22 @@
 ;; ============================================================
 ;; RSS 订阅
 ;; ============================================================
+(defvar my/elfeed-feeds nil
+  "User-local Elfeed subscriptions loaded from local vars.")
+
+(defun my/elfeed-apply-feeds ()
+  "Apply local or default Elfeed subscriptions to `elfeed-feeds'."
+  (setq elfeed-feeds my/elfeed-feeds))
+
 (use-package elfeed
-  :config (setq elfeed-feeds
-				'(("https://emacs-china.org/latest.rss" emacs-china)
-				  ("https://taxodium.ink/rss.xml" taxodium)
-				  ("http://www.ruanyifeng.com/blog/atom.xml" ruanyifeng)
-				  ("https://hnrss.org/newest?q=kubernetes+OR+linux+OR+golang+OR+lisp" hnnews)
-				  ("https://hnrss.org/bestcomments" hncomments)
-				  ("https://hnrss.org/jobs" hnjobs))))
+  :config
+  (my/elfeed-apply-feeds))
 ;; ============================================================
 ;; 快捷键
 ;; ============================================================
 
-(global-set-key (kbd "<f9>") 'eshell)
 (global-set-key (kbd "C-c f s") 'save-buffer)
+(global-set-key (kbd "C-c f r") 'projectile-ripgrep)
 (global-set-key (kbd "C-c w o") 'ace-window)
 (global-set-key (kbd "C-c w w") 'delete-other-windows)
 (global-set-key (kbd "C-c w 2") 'split-window-below)

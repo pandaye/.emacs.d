@@ -159,6 +159,7 @@ standard Emacs keybindings, respecting the current mode's keymap."
                        'my/meow--inner-of-line-trimmed
                        'my/meow--bounds-of-line-trimmed)
   (add-to-list 'meow-char-thing-table '(?t . line-trimmed))
+  (add-to-list 'meow-mode-state-list '(my/org-list-mode . motion))
   (meow-setup)
   (meow-global-mode 1))
 
