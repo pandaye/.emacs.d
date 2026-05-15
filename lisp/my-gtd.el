@@ -121,21 +121,56 @@ Weeks start on Monday, matching the agenda configuration."
          (last-monday (time-subtract this-monday (days-to-time 7))))
     (cons last-monday this-monday)))
 
-(defun my/org-agenda-skip-not-completed-last-week ()
-  "Skip entries not completed during last week."
+(defun my/org-this-week-range ()
+  "Return the start and end time of this week as a cons cell.
+Weeks start on Monday, matching the agenda configuration."
+  (let* ((now (decode-time (current-time)))
+         (day-of-week (decoded-time-weekday now))
+         (days-since-monday (mod (- day-of-week 1) 7))
+         (today-midnight (encode-time 0 0 0
+                                      (decoded-time-day now)
+                                      (decoded-time-month now)
+                                      (decoded-time-year now)))
+         (this-monday (time-subtract today-midnight
+                                     (days-to-time days-since-monday)))
+         (next-monday (time-add this-monday (days-to-time 7))))
+    (cons this-monday next-monday)))
+
+(defun my/org-agenda-skip-not-updated-last-week ()
+  "Skip entries whose latest state change did not happen during last week."
   (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
-         (completed-time (my/org-entry-completed-time subtree-end))
+         (state-change-time (my/org-entry-last-state-change-time subtree-end))
          (range (my/org-last-week-range))
          (start (car range))
          (end (cdr range)))
-    (if (and completed-time
-             (not (time-less-p completed-time start))
-             (time-less-p completed-time end))
+    (if (and state-change-time
+             (not (time-less-p state-change-time start))
+             (time-less-p state-change-time end))
         nil
       subtree-end)))
 
-(defun my/org-entry-completed-time (subtree-end)
-  "Return completion time for current entry before SUBTREE-END.
+(defun my/org-entry-last-state-change-time (subtree-end)
+  "Return latest state change time for current entry before SUBTREE-END.
+Prefer the latest TODO state transition in LOGBOOK, then CLOSED,
+then ARCHIVE_TIME for archived entries."
+  (or (save-excursion
+        (let ((case-fold-search nil)
+              (latest nil)
+              (todo-regexp (regexp-opt (my/org-all-todo-keywords))))
+          (while (re-search-forward
+                  (format "^[ \t]*- State \"%s\".*\\(\\[[^]]+\\]\\)" todo-regexp)
+                  subtree-end t)
+            (setq latest (org-time-string-to-time (match-string 1))))
+          latest))
+      (let ((closed (org-entry-get (point) "CLOSED")))
+        (and closed (org-time-string-to-time closed)))
+      (let ((archive-time (org-entry-get (point) "ARCHIVE_TIME")))
+        (and archive-time
+             (org-time-string-to-time
+              (concat "[" archive-time "]"))))))
+
+(defun my/org-entry-closed-time (subtree-end)
+  "Return closing time for current entry before SUBTREE-END.
 Prefer CLOSED, then the latest done-state transition in LOGBOOK,
 then ARCHIVE_TIME for archived entries."
   (or (let ((closed (org-entry-get (point) "CLOSED")))
@@ -143,7 +178,7 @@ then ARCHIVE_TIME for archived entries."
       (save-excursion
         (let ((case-fold-search nil)
               (latest nil)
-              (done-regexp (regexp-opt org-done-keywords)))
+              (done-regexp (regexp-opt (my/org-done-keywords))))
           (while (re-search-forward
                   (format "^[ \t]*- State \"%s\".*\\(\\[[^]]+\\]\\)" done-regexp)
                   subtree-end t)
@@ -171,26 +206,75 @@ then ARCHIVE_TIME for archived entries."
                ((string= keyword "|")
                 (setq done-seen t))
                (done-seen
-                (push (car (split-string keyword "[({]" t)) done-keywords))))))
+                 (push (car (split-string keyword "[({]" t)) done-keywords))))))
         (nreverse done-keywords))))
 
-(defun my/org-last-week-completed-blocks ()
-  "Return agenda blocks for last week's completed items, grouped by state."
+(defun my/org-closed-keywords ()
+  "Return keywords treated as truly closed items."
+  (seq-filter (lambda (keyword)
+                (member keyword '("DONE" "CANCEL")))
+              (my/org-done-keywords)))
+
+(defun my/org-all-todo-keywords ()
+  "Return configured TODO keywords reliably."
+  (or org-todo-keywords-1
+      (let (todo-keywords)
+        (dolist (sequence org-todo-keywords)
+          (when (eq (car sequence) 'sequence)
+            (dolist (keyword (cdr sequence))
+              (unless (string= keyword "|")
+                (push (car (split-string keyword "[({]" t)) todo-keywords)))))
+        (nreverse todo-keywords))))
+
+(defun my/org-agenda-skip-not-closed-this-week ()
+  "Skip entries not closed during this week."
+  (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+         (closed-time (my/org-entry-closed-time subtree-end))
+         (range (my/org-this-week-range))
+         (start (car range))
+         (end (cdr range)))
+    (if (and closed-time
+             (not (time-less-p closed-time start))
+             (time-less-p closed-time end))
+        nil
+      subtree-end)))
+
+(defun my/org-last-week-status-update-blocks ()
+  "Return agenda blocks for items updated last week, grouped by current state."
   (mapcar (lambda (keyword)
             `(todo ,keyword
-                   ((org-agenda-overriding-header ,(format "%s Last Week" keyword))
+                   ((org-agenda-overriding-header ,(format "%s Updated Last Week" keyword))
                     (org-agenda-files (my/org-agenda-files-with-archives))
-                    (org-agenda-skip-function #'my/org-agenda-skip-not-completed-last-week)
-                    (org-agenda-prefix-format '((todo . " %(my/org-agenda-completed-time-prefix) %-12:c")))
+                    (org-agenda-skip-function #'my/org-agenda-skip-not-updated-last-week)
+                    (org-agenda-prefix-format '((todo . " %(my/org-agenda-state-change-time-prefix) %-12:c")))
                     (org-agenda-sorting-strategy '(time-down priority-down category-keep)))))
-          (my/org-done-keywords)))
+          (my/org-all-todo-keywords)))
 
-(defun my/org-agenda-completed-time-prefix ()
-  "Return a formatted completion timestamp for agenda prefixes."
-  (let ((completed-time (my/org-entry-completed-time
-                         (save-excursion (org-end-of-subtree t)))))
-    (if completed-time
-        (format-time-string "%m-%d %a %H:%M " completed-time)
+(defun my/org-this-week-closed-blocks ()
+  "Return agenda blocks for items closed this week, grouped by state."
+  (mapcar (lambda (keyword)
+            `(todo ,keyword
+                   ((org-agenda-overriding-header ,(format "%s Closed This Week" keyword))
+                    (org-agenda-files (my/org-agenda-files-with-archives))
+                    (org-agenda-skip-function #'my/org-agenda-skip-not-closed-this-week)
+                    (org-agenda-prefix-format '((todo . " %(my/org-agenda-closed-time-prefix) %-12:c")))
+                    (org-agenda-sorting-strategy '(time-down priority-down category-keep)))))
+          (my/org-closed-keywords)))
+
+(defun my/org-agenda-state-change-time-prefix ()
+  "Return a formatted last state change timestamp for agenda prefixes."
+  (let ((state-change-time (my/org-entry-last-state-change-time
+                            (save-excursion (org-end-of-subtree t)))))
+    (if state-change-time
+        (format-time-string "%m-%d %a %H:%M " state-change-time)
+      "")))
+
+(defun my/org-agenda-closed-time-prefix ()
+  "Return a formatted closing timestamp for agenda prefixes."
+  (let ((closed-time (my/org-entry-closed-time
+                      (save-excursion (org-end-of-subtree t)))))
+    (if closed-time
+        (format-time-string "%m-%d %a %H:%M " closed-time)
       "")))
 
 (with-eval-after-load 'org-agenda
@@ -212,8 +296,11 @@ then ARCHIVE_TIME for archived entries."
                   (todo "LATER"
                         ((org-agenda-overriding-header "Scheduled for Later"))))))
   (add-to-list 'org-agenda-custom-commands
-               `("W" "Last Week Completed"
-                 ,(my/org-last-week-completed-blocks))))
+               `("W" "Last Week Status Updates"
+                 ,(my/org-last-week-status-update-blocks)))
+  (add-to-list 'org-agenda-custom-commands
+               `("C" "This Week Closed"
+                 ,(my/org-this-week-closed-blocks))))
 
 ;; ============================================================
 ;; 快捷键

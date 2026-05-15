@@ -11,6 +11,8 @@
 
 (when (eq system-type 'darwin)
   (add-to-list 'exec-path "/opt/homebrew/bin/"))
+
+;; 这个是 Emacs 28 之后的内置语法检查工具，默认启用但不太好用，先禁用掉
 (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
 
 (setq scroll-step 1
@@ -69,6 +71,7 @@
 (add-hook 'prog-mode-hook #'show-paren-mode)
 
 ;; 终端光标颜色（根据 Meow/Rime 状态动态变化）
+;; TODO: GUI 也需要，但是目前没有使用到
 (unless (display-graphic-p)
   (require 'my-cursor))
 
@@ -228,6 +231,7 @@
 (require 'my-rime)           ;; Rime 中文输入法
 (require 'my-diary)          ;; 日记系统
 (require 'my-org-roam)       ;; Org-roam 双向链接
+(require 'my-translate)      ;; 阅读场景翻译
 
 (unless (featurep 'org-tempo)
   (require 'org-tempo))
@@ -289,9 +293,27 @@
 
 (use-package markdown-mode
   :commands (markdown-mode gfm-mode)
-  :mode (("README\\.md\\'" . gfm-mode)
-         ("\\.md\\'" . markdown-mode)
-         ("\\.markdown\\'" . markdown-mode)))
+  :mode (("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :custom
+  (markdown-fontify-code-blocks-natively t)
+  (markdown-fontify-code-block-default-mode 'fundamental-mode)
+  :config
+  (set-face-attribute 'markdown-code-face nil
+                      :background "#32302f"
+                      :extend t)
+  (set-face-attribute 'markdown-pre-face nil
+                      :background "#32302f"
+                      :extend t)
+  (set-face-attribute 'markdown-inline-code-face nil
+                      :inherit '(font-lock-constant-face)
+                      :background 'unspecified)
+  (set-face-attribute 'markdown-language-keyword-face nil
+                      :background "#32302f"
+                      :foreground "gray35")
+  (set-face-attribute 'markdown-language-info-face nil
+                      :background "#32302f"
+                      :foreground "gray35"))
 
 ;; ============================================================
 ;; Snippets
@@ -346,15 +368,15 @@
 ;; 快捷键
 ;; ============================================================
 
-(global-set-key (kbd "C-c f s") 'save-buffer)
-(global-set-key (kbd "C-c f r") 'projectile-ripgrep)
-(global-set-key (kbd "C-c w o") 'ace-window)
-(global-set-key (kbd "C-c w w") 'delete-other-windows)
-(global-set-key (kbd "C-c w 2") 'split-window-below)
-(global-set-key (kbd "C-c w 3") 'split-window-right)
-(global-set-key (kbd "C-c w q") 'delete-window)
-(global-set-key (kbd "C-c b r") 'revert-buffer)
-(global-set-key (kbd "C-c b p") 'projectile-ibuffer)
+(global-set-key (kbd "C-c f s") #'save-buffer)
+(global-set-key (kbd "C-c f r") #'projectile-ripgrep)
+(global-set-key (kbd "C-c w o") #'ace-window)
+(global-set-key (kbd "C-c w w") #'delete-other-windows)
+(global-set-key (kbd "C-c w 2") #'split-window-below)
+(global-set-key (kbd "C-c w 3") #'split-window-right)
+(global-set-key (kbd "C-c w q") #'delete-window)
+(global-set-key (kbd "C-c b r") #'revert-buffer)
+(global-set-key (kbd "C-c b p") #'projectile-ibuffer)
 
 ;; ============================================================
 ;; 终端剪贴板（终端统一由 my-clipboard 处理）
