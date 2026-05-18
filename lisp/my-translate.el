@@ -2,8 +2,8 @@
 ;;; my-translate.el --- Translation helpers for reading buffers
 
 ;;; Commentary:
-;; 为阅读场景提供一个就地翻译命令：优先用 posframe/child-frame 悬浮显示，
-;; 在不可用时自动回退到 buffer 渲染。
+;; 为阅读场景提供一个就地翻译命令，使用 gt 进行翻译，
+;; 优先选择本地 StarDict 词典（sdcv），找不到时回退到 Google 在线翻译。
 
 ;;; Code:
 
@@ -18,9 +18,6 @@
 
 (defvar my/gt-stardict-dir (expand-file-name "~/.stardict/dic")
   "Directory containing local StarDict dictionaries for sdcv.")
-
-(use-package posframe
-  :defer t)
 
 (use-package gt
   :defer t
@@ -64,10 +61,9 @@
   (when (my/gt--wordbook-eligible-p text)
     (my/gt--append-unique-line my/gt-wordbook-file text)))
 
-(defun my/gt--local-dictionary-hit-p (text)
-  "Return non-nil when local sdcv dictionaries can explain TEXT."
-  (and (my/gt--wordbook-eligible-p text)
-       (executable-find "sdcv")
+(defun my/gt--sdcv-lookup (text)
+  "Run sdcv for TEXT and return parsed JSON entries, or nil on failure."
+  (and (executable-find "sdcv")
        (with-temp-buffer
          (when (eq 0 (call-process "sdcv" nil t nil
                                    "--non-interactive"
@@ -78,100 +74,103 @@
                                    my/gt-stardict-dir
                                    "--only-data-dir"
                                    text))
-            (goto-char (point-min))
-            (condition-case nil
-                (let* ((needle (downcase text))
-                       (entries (json-read)))
-                  (catch 'exact-match
-                    (mapc (lambda (entry)
-                            (let ((word (cdr (assq 'word entry))))
-                              (when (and (stringp word)
-                                         (string= needle (downcase word)))
-                                (throw 'exact-match t))))
-                          entries)
-                    nil))
-              (error nil))))))
+           (goto-char (point-min))
+           (condition-case nil
+               (json-read)
+             (error nil))))))
 
-(defun my/gt--posframe-available-p ()
-  "Return non-nil when posframe can be used for gt rendering."
-  (and (require 'posframe nil t)
-       (fboundp 'posframe-workable-p)
-       (posframe-workable-p)))
+(defun my/gt--exact-word-match-p (entries word)
+  "Return non-nil when JSON ENTRIES has exact WORD match (case-insensitive)."
+  (when (sequencep entries)
+    (let ((needle (downcase word)))
+      (catch 'found
+        (mapc (lambda (entry)
+                (let ((entry-word (cdr (assq 'word entry))))
+                  (when (and (stringp entry-word)
+                             (string= needle (downcase entry-word)))
+                    (throw 'found t))))
+              entries)
+        nil))))
+
+(defun my/gt--local-dictionary-hit-p (text)
+  "Return non-nil when local sdcv dictionaries can explain TEXT."
+  (and (my/gt--wordbook-eligible-p text)
+       (my/gt--exact-word-match-p (my/gt--sdcv-lookup text) text)))
 
 (defun my/gt--render ()
-  "Build a gt renderer suitable for the current frame type."
+  "Build a gt renderer using pop-to-buffer below the selected window."
   (gt-buffer-render
    :name "*gt-reading*"
    :window-config '((display-buffer-below-selected))))
 
-(defun my/gt--simplify-stardict-result (text result)
-  "Remove redundant headword-only lines for TEXT from StarDict RESULT."
-  (let* ((needle (downcase (string-trim text)))
-         (lines (split-string result "\n"))
-         (filtered
-          (seq-remove
-           (lambda (line)
-             (string= needle (downcase (string-trim line))))
-           lines)))
-    (string-join filtered "\n")))
+(defun my/gt--stardict-entry-text (entry dict)
+  "Extract definition text from ENTRY for DICT, pretty-printed if available."
+  (let* ((raw (cdr (assq 'definition entry)))
+         (def (if (and (fboundp 'gt-stardict-pretty-definition) raw)
+                  (gt-stardict-pretty-definition (intern dict) raw)
+                raw)))
+    (when (and (stringp def) (not (string-empty-p def)))
+      def)))
 
 (defun my/gt--clean-stardict-definition (text definition)
-  "Trim and normalize StarDict DEFINITION for TEXT."
+  "Clean and indent a StarDict DEFINITION for TEXT.
+
+Lines matching a label pattern (\"word :\", \"word 1:\", \"1:\")
+are treated as labeled definitions, with labels right-aligned to
+a fixed width of 6 so all colons line up.  Lines indented deeper
+than the current section are treated as continuations."
   (let ((needle (downcase (string-trim text)))
-        cleaned
-        section-type)
-    (dolist (line (split-string (or definition "") "\n")
-				  (string-join (nreverse cleaned) "\n"))
-      (let ((trimmed (string-trim line)))
-        (unless (or (string-empty-p trimmed)
-                    (string= needle (downcase trimmed)))
-          (let ((indent-level
-                 (cond
-                  ((string-match-p "\\`[[:alpha:]]+ [0-9]+:" trimmed)
-                   (setq section-type 'numbered)
-                   0)
-                  ((string-match-p "\\`[0-9]+:" trimmed)
-                   (setq section-type 'numbered)
-                   2)
-                  ((or (string-match-p "\\`\[[^]]+\]\\'" trimmed)
-                       (string-match-p "\\`[[:alpha:]]+\\.\\'" trimmed))
-                   (setq section-type 'plain)
-                   2)
-                  ((eq section-type 'numbered)
-				   5)
-                  (t
-                   (setq section-type 'plain)
-                   2))))
-            (push (concat "  " (make-string indent-level ? ) trimmed) cleaned)))))))
+        (label-re "\\`\\([[:alpha:]]+ \\(?:[0-9]+\\)?\\|[0-9]+\\): ")
+        (label-width 6)
+        result
+		section-indent)
+    (dolist (line (split-string (or definition "") "\n"))
+      (let* ((trimmed (string-trim line))
+             (raw-indent (- (length line) (length trimmed))))
+        (cond
+         ;; Skip blank lines and the headword itself. 
+         ((or (string-empty-p trimmed)
+              (string= needle (downcase trimmed))))
+         ;; Labeled definition: right-align label to LABEL-WIDTH.
+         ((string-match label-re trimmed)
+          (let* ((label (match-string 1 trimmed))
+                 (pad   (max 0 (- label-width (length label)))))
+            (setq section-indent raw-indent)
+            (push (concat "  " (make-string pad ?\s) label
+                          (substring trimmed (match-end 1)))
+                  result)))
+         ;; Continuation of the current section.
+         ((and section-indent (> raw-indent section-indent))
+          (push (concat "          " trimmed) result))
+         ;; Plain new section.
+         (t
+          (setq section-indent raw-indent)
+          (push (concat "    " trimmed) result)))))
+    (string-join (nreverse result) "\n")))
+
 
 (defun my/gt--format-stardict-json (text entries)
-  "Format sdcv JSON ENTRIES for TEXT as grouped dictionary blocks."
-  (let ((groups nil)
-        (order nil))
-    (mapc (lambda (entry)
-            (let* ((dict (or (cdr (assq 'dict entry)) "StarDict"))
-                   (definition (my/gt--clean-stardict-definition
-                                text
-                                (if (and (fboundp 'gt-stardict-pretty-definition)
-                                         (cdr (assq 'definition entry)))
-                                    (gt-stardict-pretty-definition
-                                     (intern dict)
-                                     (cdr (assq 'definition entry)))
-                                  (cdr (assq 'definition entry))))))
-              (when (and (stringp definition)
-                         (not (string-empty-p definition)))
-                (unless (assoc dict groups)
-                  (push dict order)
-                  (push (cons dict nil) groups))
-                (setcdr (assoc dict groups)
-                        (append (cdr (assoc dict groups)) (list definition))))))
-          (append entries nil))
-    (string-join
-     (mapcar (lambda (dict)
-               (let ((definitions (cdr (assoc dict groups))))
-                 (concat dict "\n\n" (string-join definitions "\n"))))
-             (nreverse order))
-     "\n\n")))
+  "Format sdcv JSON ENTRIES for TEXT as grouped dictionary blocks.
+
+Group entries by dict name, extract+clean each definition, then
+assemble per-dictionary blocks separated by blank lines."
+  (let ((by-dict (seq-group-by
+                  (lambda (e) (or (cdr (assq 'dict e)) "StarDict"))
+                  entries))
+        blocks)
+    (dolist (group by-dict)
+      (let* ((dict (car group))
+             (defs (delq nil
+                         (mapcar (lambda (e)
+                                   (let ((cleaned (my/gt--clean-stardict-definition
+                                                   text
+                                                   (my/gt--stardict-entry-text e dict))))
+                                     (unless (string-empty-p cleaned)
+                                       cleaned)))
+                                 (cdr group)))))
+        (when defs
+          (push (concat dict "\n\n" (string-join defs "\n")) blocks))))
+    (string-join (nreverse blocks) "\n\n")))
 
 (defun my/gt--parse-stardict-task (task)
   "Parse local StarDict TASK results with grouped dictionary formatting."
@@ -200,6 +199,15 @@
     :engines (gt-google-engine)
     :render (my/gt--render)))
 
+(defun my/gt--choose-translator (text)
+  "Pick the appropriate translator for TEXT.
+Returns a local StarDict translator when TEXT is a single word that
+exists in local dictionaries; otherwise returns a Google translator."
+  (if (and (my/gt--wordbook-eligible-p text)
+           (my/gt--local-dictionary-hit-p text))
+      (my/gt--dictionary-translator text)
+    (my/gt--google-translator text)))
+
 (defun my/gt-translate-dwim ()
   "Translate active region or word at point.
 Prompt when there is no obvious text under point."
@@ -208,11 +216,7 @@ Prompt when there is no obvious text under point."
   (let ((text (or (my/gt--selection-or-word)
                   (read-string "Translate: "))))
     (my/gt-record-word-to-wordbook text)
-    (gt-start (if (my/gt--wordbook-eligible-p text)
-                  (if (my/gt--local-dictionary-hit-p text)
-                      (my/gt--dictionary-translator text)
-                    (my/gt--google-translator text))
-                (my/gt--google-translator text)))))
+    (gt-start (my/gt--choose-translator text))))
 
 (defun my/gt-open-wordbook ()
   "Open the reading wordbook file."
