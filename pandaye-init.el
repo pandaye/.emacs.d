@@ -189,10 +189,25 @@
   (global-set-key [remap other-window] 'ace-window))
 
 (use-package rainbow-delimiters
-  :hook (scheme-mode . rainbow-delimiters-mode)
+  :hook
+  (scheme-mode . rainbow-delimiters-mode)
   (emacs-lisp-mode . rainbow-delimiters-mode)
   (lisp-mode . rainbow-delimiters-mode)
-  (racket-mode . rainbow-delimiters-mode))
+  (racket-mode . rainbow-delimiters-mode)
+  :config
+  (dolist (face '(rainbow-delimiters-depth-1-face
+                  rainbow-delimiters-depth-2-face
+                  rainbow-delimiters-depth-3-face
+                  rainbow-delimiters-depth-4-face
+                  rainbow-delimiters-depth-5-face
+                  rainbow-delimiters-depth-6-face
+                  rainbow-delimiters-depth-7-face
+                  rainbow-delimiters-depth-8-face
+                  rainbow-delimiters-depth-9-face))
+    (set-face-attribute face nil :inherit 'shadow :weight 'normal))
+  (set-face-attribute 'rainbow-delimiters-unmatched-face nil
+                      :inherit 'error
+                      :weight 'bold))
 
 ;; ============================================================
 ;; Git 与版本控制

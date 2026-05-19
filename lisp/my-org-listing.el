@@ -125,7 +125,7 @@ When INCLUDE-TITLE is non-nil, insert the buffer title first."
         (unless (equal group current-group)
           (when current-group
             (insert "\n"))
-          (insert (format "* %s\n" group))
+          (insert (format "\n* %s\n" group))
           (setq current-group group))
         (funcall my/org-list--insert-item-function item)))))
 
