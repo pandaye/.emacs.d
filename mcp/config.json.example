@@ -1,0 +1,8 @@
+{
+  "org_base": "~/.org-journal",
+  "issue_file": "~/.org-journal/issue.org",
+  "roam_dir": "~/.org-journal/roam",
+  "trash_dir": "~/.org-journal/.mcp-trash",
+  "private_todo_files": ["magic.org"],
+  "private_roam_dirs": ["private"]
+}

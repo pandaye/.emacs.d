@@ -36,3 +36,4 @@ tree-sitter
 .codex/
 .superpowers/
 public/
+mcp/config.json
