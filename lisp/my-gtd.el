@@ -11,8 +11,9 @@
 ;; 基础路径配置
 ;; ============================================================
 
-(defcustom org-base-path (expand-file-name "~/.pandaye-journal")
-  "Org 文件的基础路径，用于 GTD、日记和 Org-roam。"
+(defcustom org-base-path (expand-file-name "~/.org-journal")
+  "Org 文件的基础路径，用于 GTD、日记和 Org-roam。
+请在 local-vars.local.el 中覆盖此值。"
   :type 'string
   :group 'org)
 
