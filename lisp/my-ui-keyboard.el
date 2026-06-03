@@ -11,7 +11,9 @@
 
 ;; 启用行号
 (add-hook 'prog-mode-hook #'display-line-numbers-mode)
-(setq-default tab-width 4)
+;; Org 在 major mode 初始化早期要求默认 `tab-width' 为 8；编程模式再局部使用 4。
+(setq-default tab-width 8)
+(add-hook 'prog-mode-hook (lambda () (setq-local tab-width 4)))
 
 (defun pandaye/meow-execute-key (key-str)
   "Execute the command currently bound to KEY-STR.

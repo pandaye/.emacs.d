@@ -1,5 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 (require 'org)
+(require 'subr-x)
 
 (defun my/get-file-properties ()
   "获取当前文件的全局属性。"
@@ -188,6 +189,29 @@
          (display-name (if (string-empty-p name) host name)))
     (insert (format "[[ssh:%s][%s]]" host display-name))))
 
+(defun my/org-ssh-insert-link-and-open (host &optional name)
+  "Insert an Org SSH link for HOST with NAME and open it in tmux."
+  (unless (and host (not (string-empty-p host)))
+    (user-error "Host is required"))
+  (let ((display-name (if (and name (not (string-empty-p name))) name host)))
+	(insert "| ")
+    (insert (org-link-make-string (concat "ssh:" host) display-name))
+	(insert "\n  ")
+    (my/tmux-ssh-connect-simple host)))
+
+(defun my/org-ssh-create-link-and-open (host name)
+  "Create a new Org SSH link at point and open HOST in tmux."
+  (interactive
+   (let* ((host (read-string "服务器地址: "))
+          (name (read-string "显示名称: " host)))
+     (list host name)))
+  (my/org-ssh-insert-link-and-open host name))
+
+(with-eval-after-load 'hact
+  (defact org-ssh-new ()
+    "Create a new Org SSH link at point and open it in tmux."
+    (call-interactively #'my/org-ssh-create-link-and-open)))
+
 ;; 显示当前文件的 SSH 配置摘要
 (defun my/show-ssh-config-summary ()
   "显示当前文件的 SSH 配置摘要。"
@@ -221,7 +245,7 @@
      (define-key org-mode-map (kbd "C-c s s") 'my/show-ssh-config-summary)
      (define-key org-mode-map (kbd "C-c s n") 'my/create-ssh-template)
      (define-key org-mode-map (kbd "C-c s o") 'my/open-ssh-group-file)
+     (define-key org-mode-map (kbd "C-c s l") 'my/org-ssh-create-link-and-open)
      (define-key org-mode-map (kbd "C-c s d") 'my/debug-ssh-command)))
 
 (provide 'org-ssh)
-

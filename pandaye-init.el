@@ -188,26 +188,31 @@
   :init
   (global-set-key [remap other-window] 'ace-window))
 
-(use-package rainbow-delimiters
-  :hook
-  (scheme-mode . rainbow-delimiters-mode)
-  (emacs-lisp-mode . rainbow-delimiters-mode)
-  (lisp-mode . rainbow-delimiters-mode)
-  (racket-mode . rainbow-delimiters-mode)
+(defun my/hyperbole-assist-key ()
+  "Run Hyperbole Assist Key from a regular key binding."
+  (interactive)
+  (let ((current-prefix-arg '(4)))
+    (call-interactively #'hkey-either)))
+
+(defun my/hyperbole-assist-help ()
+  "Describe what Hyperbole Assist Key would do at point."
+  (interactive)
+  (let ((current-prefix-arg '(4)))
+    (call-interactively #'hkey-help)))
+
+(use-package hyperbole
+  :demand t
+  :commands (hyperbole hyperbole-mode hkey-either hkey-help)
+  :bind (("C-c e h" . hyperbole)
+         ("C-c e a" . hkey-either)
+         ("C-c e s" . my/hyperbole-assist-key)
+         ("C-c e ?" . hkey-help)
+         ("C-c e S" . my/hyperbole-assist-help))
   :config
-  (dolist (face '(rainbow-delimiters-depth-1-face
-                  rainbow-delimiters-depth-2-face
-                  rainbow-delimiters-depth-3-face
-                  rainbow-delimiters-depth-4-face
-                  rainbow-delimiters-depth-5-face
-                  rainbow-delimiters-depth-6-face
-                  rainbow-delimiters-depth-7-face
-                  rainbow-delimiters-depth-8-face
-                  rainbow-delimiters-depth-9-face))
-    (set-face-attribute face nil :inherit 'shadow :weight 'normal))
-  (set-face-attribute 'rainbow-delimiters-unmatched-face nil
-                      :inherit 'error
-                      :weight 'bold))
+  (hyperbole-mode 1))
+
+(require 'my-subtle-delimiter)
+
 
 ;; ============================================================
 ;; Git 与版本控制
@@ -241,7 +246,11 @@
       (require 'tmux-manager))
   (error (message "可选模块加载失败: %s" (error-message-string err))))
 
+(use-package htmlize
+  :defer t)
+
 (require 'my-org-writing)    ;; Org 外观美化
+(require 'my-static-blog)     ;; Org 静态博客发布
 (require 'my-gtd)            ;; GTD 任务管理
 (require 'my-rime)           ;; Rime 中文输入法
 (require 'my-diary)          ;; 日记系统
@@ -289,8 +298,7 @@
 (use-package yaml-mode
   :mode ("\\.ya?ml\\'" . yaml-mode))
 
-(use-package clojure-mode
-  :hook ((clojure-mode . rainbow-delimiters-mode)))
+(use-package clojure-mode)
 
 (use-package cmake-mode
   :mode ("\\(?:CMakeLists\\.txt\\|\\.cmake\\)\\'" . cmake-mode))
@@ -385,11 +393,17 @@
 
 (global-set-key (kbd "C-c f s") #'save-buffer)
 (global-set-key (kbd "C-c f r") #'projectile-ripgrep)
+
 (global-set-key (kbd "C-c w o") #'ace-window)
 (global-set-key (kbd "C-c w w") #'delete-other-windows)
 (global-set-key (kbd "C-c w 2") #'split-window-below)
 (global-set-key (kbd "C-c w 3") #'split-window-right)
+(global-set-key (kbd "C-c w h") #'windmove-left)
+(global-set-key (kbd "C-c w l") #'windmove-right)
+(global-set-key (kbd "C-c w j") #'windmove-down)
+(global-set-key (kbd "C-c w k") #'windmove-up)
 (global-set-key (kbd "C-c w q") #'delete-window)
+
 (global-set-key (kbd "C-c b r") #'revert-buffer)
 (global-set-key (kbd "C-c b p") #'projectile-ibuffer)
 

@@ -34,3 +34,5 @@ eln-cache/
 projects
 tree-sitter
 .codex/
+.superpowers/
+public/
