@@ -6,6 +6,7 @@ elpa/
 eshell/
 *.dat
 recentf
+history
 example/
 auto-save-list/
 snippets/

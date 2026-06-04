@@ -45,8 +45,6 @@ Each entry is (NAME . PATH). NAME is shown in completion, PATH is used as picker
   (interactive)
   (let ((default-directory (file-name-as-directory (my/common-dirs--read-directory))))
     (cond
-     ((fboundp 'counsel-find-file)
-      (counsel-find-file))
      ((fboundp 'helm-find-files)
       (helm-find-files-1 default-directory))
      (t

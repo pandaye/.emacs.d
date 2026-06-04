@@ -94,67 +94,81 @@
 (use-package diminish)
 
 ;; ============================================================
-;; 导航框架 - Ivy/Counsel/Swiper
+;; 导航框架 - Vertico/Consult/Embark/Orderless
 ;; ============================================================
 
-(use-package ivy
-  :diminish
+(setq enable-recursive-minibuffers t
+      completion-ignore-case t
+      read-file-name-completion-ignore-case t
+      read-buffer-completion-ignore-case t
+      minibuffer-prompt-properties
+      '(read-only t cursor-intangible t face minibuffer-prompt))
+
+(add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+(minibuffer-depth-indicate-mode 1)
+
+(use-package savehist
+  :ensure nil
   :init
-  (setq ivy-use-virtual-buffers t
-        ivy-count-format "(%d/%d) "
-        enable-recursive-minibuffers t
-        ivy-wrap t
-        ivy-height 15
-        ivy-re-builders-alist '((counsel-M-x . ivy--regex-plus)
-                                (counsel-find-file . ivy--regex-plus)
-                                (counsel-file-jump . ivy--regex-plus)
-                                (swiper . ivy--regex-plus)
-                                (ivy-switch-buffer . ivy--regex-plus)
-                                (t . ivy--regex-plus))
-        ivy-case-fold-search-default t
-        ivy-initial-inputs-alist nil
-		;; 对于 a.example 改成 a.ex 的场景，C-p/C-n 选择
-		ivy-use-selectable-prompt t)
-  (ivy-mode 1)
-  :bind
-  (("C-c C-r" . ivy-resume)
-   ("C-c b b" . ivy-switch-buffer)
-   ("C-x B" . ivy-switch-buffer-other-window)))
+  (savehist-mode 1))
 
-(use-package counsel
-  :diminish
-  :after ivy
+(use-package recentf
+  :ensure nil
   :init
-  (counsel-mode 1)
+  (recentf-mode 1)
+  :custom
+  (recentf-max-saved-items 200))
+
+(use-package vertico
+  :init
+  (vertico-mode 1)
+  :hook
+  (minibuffer-setup . vertico-repeat-save)
+  :custom
+  (vertico-count 15)
+  (vertico-cycle t)
+  (vertico-resize nil)
   :bind
-  (("M-x"     . counsel-M-x)
-   ("C-x C-f" . counsel-find-file)
-   ("C-c f g" . counsel-git)
-   ("C-c f G" . counsel-git-grep)
-   ("C-c f f" . counsel-file-jump)))
+  ("C-c C-r" . vertico-repeat))
 
-(use-package swiper
-  :after ivy
+(use-package marginalia
+  :after vertico
+  :init
+  (marginalia-mode 1)
   :bind
-  (("C-s" . swiper)
-   ("C-r" . swiper-backward)))
+  (:map minibuffer-local-map
+        ("M-A" . marginalia-cycle)))
 
-(use-package ivy-rich
-  :after (ivy counsel)
-  :config
-  (ivy-rich-mode 1)
-  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
+(use-package orderless
+  :init
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
 
-(with-eval-after-load 'ivy
-  ;; Tame Ivy faces that inherit conspicuous gruvbox colors by default.
-  (set-face-attribute 'ivy-org nil
-                      :inherit 'default
-                      :foreground 'unspecified
-                      :weight 'normal)
-  (set-face-attribute 'ivy-virtual nil
-                      :inherit 'shadow
-                      :foreground 'unspecified
-                      :weight 'normal))
+(use-package consult
+  :after recentf
+  :bind
+  (("C-c b b" . consult-buffer)
+   ("C-x B" . consult-buffer-other-window)
+   ("C-c f g" . consult-git-files)
+   ("C-c f G" . consult-git-grep)
+   ("C-c f f" . consult-find)
+   ("C-s" . consult-line)
+   ("C-r" . consult-line)
+   ("M-y" . consult-yank-pop)))
+
+(use-package embark
+  :init
+  (setq prefix-help-command #'embark-prefix-help-command)
+  :bind
+  (("C-c ;" . embark-act)
+   ("C-;" . embark-dwim)
+   ("C-h B" . embark-bindings)))
+
+(use-package embark-consult
+  :after (embark consult)
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
 
 ;; ============================================================
 ;; 项目与文件管理
