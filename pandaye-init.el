@@ -145,6 +145,17 @@
   (ivy-rich-mode 1)
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
 
+(with-eval-after-load 'ivy
+  ;; Tame Ivy faces that inherit conspicuous gruvbox colors by default.
+  (set-face-attribute 'ivy-org nil
+                      :inherit 'default
+                      :foreground 'unspecified
+                      :weight 'normal)
+  (set-face-attribute 'ivy-virtual nil
+                      :inherit 'shadow
+                      :foreground 'unspecified
+                      :weight 'normal))
+
 ;; ============================================================
 ;; 项目与文件管理
 ;; ============================================================
@@ -210,6 +221,13 @@
          ("C-c e S" . my/hyperbole-assist-help))
   :config
   (hyperbole-mode 1))
+
+(with-eval-after-load 'hycontrol
+  (unless (display-graphic-p)
+    (define-key hycontrol-windows-mode-map "j" nil)
+    (define-key hycontrol-windows-mode-map "k" nil)
+    (define-key hycontrol-windows-mode-map "i" nil)
+    (define-key hycontrol-windows-mode-map "m" nil)))
 
 (require 'my-subtle-delimiter)
 

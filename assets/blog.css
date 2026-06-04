@@ -98,13 +98,6 @@ a {
   line-height: 1.52;
 }
 
-.toc-kicker {
-  margin-bottom: 0.65rem;
-  color: color-mix(in srgb, var(--muted) 62%, transparent);
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
-}
-
 .toc-panel nav {
   display: grid;
   gap: 0.18rem;
@@ -164,7 +157,7 @@ a {
 .post-content {
   margin-top: 2.4rem;
   font-size: 1rem;
-  line-height: 1.64;
+  line-height: 1.54;
 }
 
 .post-content h2,
@@ -177,7 +170,7 @@ a {
 }
 
 .post-content p {
-  margin: 0.72em 0;
+  margin: 0.58em 0;
 }
 
 .post-content ul,
@@ -216,6 +209,27 @@ a {
   color: #62584e;
 }
 
+.post-content .sidenote-number {
+  color: var(--accent);
+  font-size: 0.72em;
+  vertical-align: super;
+}
+
+.post-content .sidenote {
+  float: right;
+  clear: right;
+  width: min(15rem, calc((100vw - 760px) / 2 - 2rem));
+  margin: 0.15rem max(-18rem, calc((720px - 100vw) / 2)) 0.9rem 1.2rem;
+  color: color-mix(in srgb, var(--muted) 86%, var(--text));
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.post-content .sidenote small {
+  font-size: inherit;
+}
+
 .post-content pre,
 .post-content code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -230,13 +244,15 @@ a {
 
 .post-content pre {
   overflow-x: auto;
-  margin: 1.25rem 0;
-  padding: 0.85rem 0.95rem;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--paper);
+  margin: 1.35rem 0;
+  padding: 0.85rem 1rem 0.85rem 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--line) 88%, var(--accent));
+  border-left: 3px solid color-mix(in srgb, var(--accent) 72%, var(--line));
+  border-radius: 0;
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(250, 245, 235, 0.92));
+  box-shadow: 4px 4px 0 rgba(58, 48, 37, 0.06);
   font-size: 0.84rem;
-  line-height: 1.65;
+  line-height: 1.58;
 }
 
 .post-content pre code {
@@ -376,6 +392,16 @@ a {
     display: block;
     width: min(720px, calc(100% - 36px));
     margin-top: 2.4rem;
+  }
+
+  .post-content .sidenote {
+    float: none;
+    clear: none;
+    display: block;
+    width: auto;
+    margin: 0.75rem 0;
+    padding-left: 1rem;
+    border-left: 2px solid var(--line);
   }
 
   .toc-panel {
