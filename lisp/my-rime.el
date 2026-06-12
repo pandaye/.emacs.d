@@ -7,19 +7,22 @@
 
 ;;; Code:
 
+(use-package rimel
+  :defer t)
+
+(use-package posframe
+  :defer rimel)
+
 (setq liberime-user-data-dir (locate-user-emacs-file "rime/")
       liberime-auto-build t
       default-input-method "rimel"
       rimel-schema "tigress"
-      ;; rimel-show-candidate 'posframe
       rimel-posframe-style 'horizontal
-      rimel-disable-predicates
-      '(meow-not-insert-p
-        my/rimel-predicate-after-digit-p
-        my/rimel-predicate-hyphen-after-alphabet-p
-        my/rimel-predicate-space-after-cjk-p
-        rimel-predicate-after-alphabet-char-p
-        rimel-predicate-prog-in-code-p))
+      rimel-disable-predicates '(meow-not-insert-p
+                                 my/rimel-predicate-after-ascii-nonspace-p
+                                 my/rimel-predicate-space-after-cjk-p
+                                 rimel-predicate-after-alphabet-char-p
+                                 rimel-predicate-prog-in-code-p))
 
 (defun my/ensure-rimel-loaded ()
   "Load Rimel and Liberime on demand."
@@ -47,15 +50,11 @@
   (liberime-process-keys (kbd "C-."))
   (message "Sent C-. to Rimel"))
 
-(defun my/rimel-predicate-after-digit-p ()
-  "光标前一个字符是数字时，不触发候选，后续统一按英文处理。"
+(defun my/rimel-predicate-after-ascii-nonspace-p ()
+  "光标前是可打印 ASCII 非空字符时，不触发候选。
+遇到空格、换行、回车、制表等空白字符后恢复 Rime。"
   (let ((ch (char-before)))
-    (and ch (>= ch ?0) (<= ch ?9))))
-
-(defun my/rimel-predicate-hyphen-after-alphabet-p ()
-  "光标前一个字符是半角 `-' 时不触发候选。
-适配英文连字符词（foo-bar）的输入习惯；中文场景下 `-' 周围一般有空格隔开，不受影响。"
-  (eq (char-before) ?-))
+    (and ch (>= ch 33) (<= ch 126))))
 
 (defun my/rimel-predicate-space-after-cjk-p ()
   "光标前是「CJK + 空格」时不触发候选。
@@ -81,7 +80,10 @@
   (my/set-rimel-schema "tigress"))
 
 (with-eval-after-load 'liberime
-  (add-hook 'kill-emacs-hook #'liberime-finalize))
+  (add-hook 'kill-emacs-hook
+            (lambda ()
+              (when (fboundp 'liberime-finalize)
+                (liberime-finalize)))))
 
 ;; 输入法切换快捷键
 (global-set-key (kbd "C-c i i") 'toggle-input-method)

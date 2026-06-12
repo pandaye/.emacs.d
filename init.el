@@ -10,17 +10,16 @@
 (setq package-archives '(("gnu"    . "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
                          ("nongnu" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/nongnu/")
                          ("melpa"  . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
+(setq package-install-upgrade-built-in t)
 (package-initialize)
+
+(unless package-archive-contents
+  (package-refresh-contents))
 
 (setq custom-file (locate-user-emacs-file "custom.el"))
 (load custom-file :no-error)
 
-;; package install
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-
-;; 配置 use-package
+;; 配置 use-package, 某个版本开始 use-package 已经内置在 Emacs 中
 (eval-when-compile
   (require 'use-package))
 
