@@ -90,9 +90,7 @@
 ;; 基础工具 - 需要尽早加载
 ;; ============================================================
 
-(condition-case err
-    (require 'utils)
-  (error (message "utils 加载失败: %s" (error-message-string err))))
+(require 'utils)
 
 (use-package try
   :commands (try))
@@ -108,238 +106,7 @@
 ;; 导航框架 - Vertico/Consult/Embark/Orderless
 ;; ============================================================
 
-(setq enable-recursive-minibuffers t
-      completion-ignore-case t
-      read-file-name-completion-ignore-case t
-      read-buffer-completion-ignore-case t
-      minibuffer-prompt-properties
-      '(read-only t cursor-intangible t face minibuffer-prompt))
-
-(add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-(minibuffer-depth-indicate-mode 1)
-
-(use-package savehist
-  :ensure nil
-  :init
-  (savehist-mode 1))
-
-(use-package recentf
-  :ensure nil
-  :init
-  (recentf-mode 1)
-  :custom
-  (recentf-max-saved-items 200))
-
-(use-package vertico
-  :init
-  (vertico-mode 1)
-  :hook
-  (minibuffer-setup . vertico-repeat-save)
-  :custom
-  (vertico-count 15)
-  (vertico-cycle t)
-  (vertico-resize nil)
-  (vertico-sort-function #'vertico-sort-history-alpha)
-  :custom-face
-  (vertico-current ((t (:inherit hl-line
-                        :foreground "#fdf4c1"
-                        :weight bold
-                        :extend t))))
-  :bind
-  ("C-c C-r" . vertico-repeat))
-
-(use-package orderless
-  :init
-  (setq completion-styles '(orderless basic)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles partial-completion)))))
-
-(use-package consult
-  :after recentf
-  :bind
-  (("C-c b b" . my/consult-buffer)
-   ("C-x B" . consult-buffer-other-window)
-   ("C-c f g" . consult-git-files)
-   ("C-c f G" . consult-git-grep)
-   ("C-c f f" . consult-find)
-   ("C-s" . consult-line)
-   ("C-r" . consult-line)
-   ("M-y" . consult-yank-pop))
-  :config
-  (consult-customize
-   consult-buffer
-   consult-buffer-other-window
-   consult-buffer-other-frame
-   :preview-key nil)
-
-  (defface my/consult-buffer-annotation
-    '((t :inherit font-lock-comment-face :weight normal))
-    "Face for custom `consult-buffer' annotations.")
-
-  (defface my/consult-buffer-directory
-    '((t :inherit font-lock-comment-face :weight normal))
-    "Face for right-aligned buffer directory annotations.")
-
-  (defface my/consult-buffer-virtual-file
-    '((t :inherit shadow))
-    "Face for unopened file candidates in `my/consult-buffer'.")
-
-  (define-minor-mode my/consult-buffer-annotations-mode
-    "Use custom annotations for `my/consult-buffer'."
-    :global t
-    :init-value t)
-
-  (defvar my/consult-buffer--annotation-width 0
-    "Precomputed annotation start column for `my/consult-buffer'.")
-
-  (defvar my/consult-buffer-right-margin 1
-    "Columns reserved at the right edge for `my/consult-buffer' annotations.")
-
-  (defun my/consult-buffer--candidate-buffer (candidate)
-    "Return buffer represented by Consult CANDIDATE metadata."
-    (cond
-     ((bufferp candidate) candidate)
-     ((stringp candidate) (get-buffer candidate))))
-
-  (defun my/consult-buffer--status (buffer)
-    "Return short status string for BUFFER."
-    (concat (if (buffer-modified-p buffer) "*" "-")
-            (if (buffer-local-value 'buffer-read-only buffer) "%" "-")))
-
-  (defun my/consult-buffer--mode-name (buffer)
-    "Return display mode name for BUFFER."
-    (with-current-buffer buffer
-      (truncate-string-to-width
-       (if (stringp mode-name)
-           mode-name
-         (format-mode-line mode-name))
-       18 nil nil "...")))
-
-  (defun my/consult-buffer--truncate-left (text width)
-    "Truncate TEXT to WIDTH columns from the left."
-    (cond
-     ((<= width 0) "")
-     ((<= (string-width text) width) text)
-     (t
-      (let* ((ellipsis "...")
-             (ellipsis-width (string-width ellipsis)))
-        (if (<= width ellipsis-width)
-            (truncate-string-to-width ellipsis width)
-          (nreverse
-           (truncate-string-to-width (reverse text) width 0 nil ellipsis)))))))
-
-  (defun my/consult-buffer--annotation-start (buffer)
-    "Return Consult annotation start column for BUFFER."
-    (min (my/consult-buffer--annotation-width-limit)
-         (max my/consult-buffer--annotation-width
-              (* (ceiling (string-width (buffer-name buffer))
-                          consult--annotate-align-step)
-                 consult--annotate-align-step))))
-
-  (defun my/consult-buffer--annotation-width-limit ()
-    "Return the maximum useful annotation start column."
-    (max 0 (- (window-width (minibuffer-window))
-              my/consult-buffer-right-margin
-              (string-width " --  Lisp Interaction"))))
-
-  (defun my/consult-buffer--source-width (source)
-    "Return maximum visible candidate width in Consult SOURCE."
-    (let ((width 0))
-      (unless (or (plist-get source :hidden)
-                  (plist-get source :async))
-        (when-let* ((items (plist-get source :items)))
-          (dolist (item (ignore-errors
-                          (if (functionp items) (funcall items) items)))
-            (let ((candidate (or (car-safe item) item)))
-              (when (stringp candidate)
-                (setq width
-                      (max width
-                           (string-width
-                            (substring-no-properties candidate)))))))))
-      width))
-
-  (defun my/consult-buffer--compute-annotation-width (sources)
-    "Return the annotation start column for initial Consult SOURCES."
-    (let ((width 0))
-      (dolist (source sources)
-        (setq width
-              (max width
-                   (my/consult-buffer--source-width
-                    (if (symbolp source) (symbol-value source) source)))))
-      (min (my/consult-buffer--annotation-width-limit)
-           (* (ceiling width consult--annotate-align-step)
-              consult--annotate-align-step))))
-
-  (defun my/consult-buffer--align-annotation (orig candidate annotation)
-    "Use real spaces for stable `my/consult-buffer' annotations."
-    (if (zerop my/consult-buffer--annotation-width)
-        (funcall orig candidate annotation)
-      (setq consult--annotate-align-width my/consult-buffer--annotation-width)
-      (when annotation
-        (let* ((candidate (if (fboundp 'consult--tofu-strip)
-                              (consult--tofu-strip candidate)
-                            (substring-no-properties candidate)))
-               (padding (max 1 (- my/consult-buffer--annotation-width
-                                   (string-width candidate)))))
-          (concat (make-string padding ?\s) annotation)))))
-
-  (defun my/consult-buffer--right-directory (buffer left directory)
-    "Return DIRECTORY right-aligned after LEFT for BUFFER."
-    (let* ((available (- (window-width (minibuffer-window))
-                         (my/consult-buffer--annotation-start buffer)
-                         my/consult-buffer-right-margin))
-           (directory-width (max 0 (- available (string-width left))))
-           (directory (my/consult-buffer--truncate-left directory directory-width))
-           (padding (max 0 (- available
-                               (string-width left)
-                               (string-width directory)))))
-      (concat
-       (propertize (make-string padding ?\s) 'face 'my/consult-buffer-annotation)
-       (propertize directory 'face 'my/consult-buffer-directory))))
-
-  (defun my/consult-buffer-annotate (candidate)
-    "Annotate buffer CANDIDATE with status, mode and right-aligned dirname."
-    (when-let* ((buffer (my/consult-buffer--candidate-buffer candidate)))
-      (let* ((file (buffer-file-name buffer))
-             (directory (and file
-                             (abbreviate-file-name
-                              (file-name-directory file))))
-             (left (format " %s  %-18s"
-                           (my/consult-buffer--status buffer)
-                           (my/consult-buffer--mode-name buffer))))
-        (concat
-         (propertize left 'face 'my/consult-buffer-annotation)
-         (when directory
-           (my/consult-buffer--right-directory buffer left directory))))))
-
-  (defun my/consult-buffer--annotated-source (source)
-    "Return Consult SOURCE with custom display settings."
-    (let ((source (copy-sequence (if (symbolp source) (symbol-value source) source))))
-      (setq source (plist-put source :name nil))
-      (pcase (plist-get source :category)
-        ('buffer
-         (setq source (plist-put source :annotate #'my/consult-buffer-annotate)))
-        ('file
-         (setq source (plist-put source :face 'my/consult-buffer-virtual-file))))
-      source))
-
-  (defun my/consult-buffer--sources ()
-    "Return `consult-buffer-sources' with custom buffer annotations."
-    (if my/consult-buffer-annotations-mode
-        (mapcar #'my/consult-buffer--annotated-source consult-buffer-sources)
-      consult-buffer-sources))
-
-  (defun my/consult-buffer ()
-    "Run `consult-buffer' with custom buffer annotations."
-    (interactive)
-    (let* ((sources (my/consult-buffer--sources))
-           (my/consult-buffer--annotation-width
-            (my/consult-buffer--compute-annotation-width sources))
-           (consult-preview-key nil))
-      (consult-buffer sources)))
-
-  (advice-add 'consult--annotate-align
-              :around #'my/consult-buffer--align-annotation))
+(require 'my-completion)
 
 ;; ============================================================
 ;; 项目与文件管理
@@ -355,14 +122,65 @@
   :bind
   (("C-c f p" . projectile-find-file)))
 
-(use-package neotree
-  :commands (neotree-show neotree-toggle neotree-find)
-  :bind
-  ("C-c t p" . neotree-show)
-  ("C-c t t" . neotree-toggle)
+(defun my/dirvish-subtree-hide-total-line (readin dir)
+  "Hide localized ls total line from Dirvish subtree READIN for DIR."
+  ;; Dirvish currently strips the English "total used in directory" line in
+  ;; `dirvish-subtree--readin', but GNU ls under a Chinese locale emits
+  ;; "总计 ..." instead.  Keep this advice narrow so it only affects subtree
+  ;; strings and can be removed if Dirvish handles localized totals upstream.
+  (replace-regexp-in-string
+   "\\`[[:space:]]*\\(total\\|总计\\)\\b[^\n]*\n"
+   ""
+   (funcall readin dir)))
+
+(use-package dired
+  :ensure nil
+  :commands (dired)
+  :custom
+  (dired-auto-revert-buffer t)
+  (dired-dwim-target t)
+  (dired-listing-switches "-l --almost-all --human-readable --group-directories-first --time-style=long-iso")
+  :custom-face
+  (dired-header ((t (:inherit shadow :weight normal))))
+  :hook
+  ((dired-mode . dired-hide-details-mode)))
+
+(use-package dirvish
+  :after dired
+  :init
+  (dirvish-override-dired-mode)
+  :custom
+  (dirvish-hide-details t)
+  (dirvish-attributes '(vc-state subtree-state collapse file-size))
+  (dirvish-subtree-state-style 'plus)
+  (dirvish-use-header-line nil)
+  (dirvish-use-mode-line nil)
+  :custom-face
+  (dirvish-hl-line ((t (:inherit hl-line :extend t))))
+  (dirvish-hl-line-inactive ((t (:inherit hl-line :extend t))))
+  (dirvish-subtree-state ((t (:inherit shadow :underline nil :background unspecified))))
+  (dirvish-subtree-guide ((t (:inherit shadow :underline nil :background unspecified))))
   :config
-  (setq neo-smart-open t
-        neo-vc-integration '(face char)))
+  (advice-add 'dirvish-subtree--readin
+              :around #'my/dirvish-subtree-hide-total-line)
+  :bind
+  (:map dirvish-mode-map
+        ("TAB" . dirvish-subtree-toggle)
+        ("?" . dirvish-dispatch)
+        ("a" . dirvish-setup-menu)
+        ("s" . dirvish-quicksort)
+        ("v" . dirvish-vc-menu)))
+
+(defun my/dired-project-root ()
+  "Open Dired at the current project root."
+  (interactive)
+  (let ((dir (or (when (require 'projectile nil t)
+                   (projectile-project-root))
+                 default-directory)))
+    (dired dir)))
+
+(global-set-key (kbd "C-c t p") #'my/dired-project-root)
+(global-set-key (kbd "C-c t t") #'my/dired-project-root)
 
 (use-package rg
   :defer t)
@@ -384,39 +202,20 @@
   :init
   (global-set-key [remap other-window] 'ace-window))
 
-(defun my/hyperbole-assist-key ()
-  "Run Hyperbole Assist Key from a regular key binding."
-  (interactive)
-  (let ((current-prefix-arg '(4)))
-    (call-interactively #'hkey-either)))
-
-(defun my/hyperbole-assist-help ()
-  "Describe what Hyperbole Assist Key would do at point."
-  (interactive)
-  (let ((current-prefix-arg '(4)))
-    (call-interactively #'hkey-help)))
-
 (defun my/hyperbole-action-key ()
   "Run Hyperbole Action Key, loading Hyperbole on first use."
   (interactive)
   (require 'hyperbole)
+  (hyperbole-mode 1)
   (call-interactively #'hkey-either))
 
 (use-package hyperbole
   :commands (hyperbole hyperbole-mode hkey-either hkey-help)
   :bind (("C-c e h" . hyperbole)
          ("C-c e a" . hkey-either)
-         ("C-c e s" . my/hyperbole-assist-key)
-         ("C-c e ?" . hkey-help)
-         ("C-c e S" . my/hyperbole-assist-help)
-         ("M-RET" . my/hyperbole-action-key)))
-
-(with-eval-after-load 'hycontrol
-  (unless (display-graphic-p)
-    (define-key hycontrol-windows-mode-map "j" nil)
-    (define-key hycontrol-windows-mode-map "k" nil)
-    (define-key hycontrol-windows-mode-map "i" nil)
-    (define-key hycontrol-windows-mode-map "m" nil)))
+         ("C-c e ?" . hkey-help))
+  :config
+  (hkey-set-key (kbd "M-o") #'hkey-either))
 
 (require 'my-subtle-delimiter)
 
@@ -433,10 +232,13 @@
    ("C-c j p" . magit-dispatch)))
 
 (use-package diff-hl
-  :hook (after-init . global-diff-hl-mode)
+  :hook ((after-init . global-diff-hl-mode)
+         (dired-mode . diff-hl-dired-mode))
   :config
   (diff-hl-flydiff-mode)
   (diff-hl-show-hunk-mouse-mode)
+  (unless (display-graphic-p)
+    (diff-hl-margin-mode))
   :custom
   (diff-hl-draw-borders nil)
   :custom-face
@@ -448,11 +250,8 @@
 ;; Org 与写作系统
 ;; ============================================================
 
-(condition-case err
-    (progn
-      (require 'org-ssh)
-      (require 'tmux-manager))
-  (error (message "可选模块加载失败: %s" (error-message-string err))))
+(require 'org-ssh)
+(require 'tmux-manager)
 
 (use-package htmlize
   :defer t)
@@ -475,13 +274,29 @@
 ;; 编程语言支持
 ;; ============================================================
 
+(declare-function paredit-mode "paredit")
+(defvar paredit-mode-map)
+
+(defun my/eval-expression-paredit-setup ()
+  "Enable Paredit in `eval-expression' without stealing RET."
+  (require 'paredit)
+  (paredit-mode 1)
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map paredit-mode-map)
+    (define-key map (kbd "RET") #'exit-minibuffer)
+    (define-key map (kbd "<return>") #'exit-minibuffer)
+    (define-key map "\C-m" #'exit-minibuffer)
+    (setq-local minor-mode-overriding-map-alist
+                (assq-delete-all 'paredit-mode minor-mode-overriding-map-alist))
+    (push `(paredit-mode . ,map) minor-mode-overriding-map-alist)))
+
 (use-package paredit
   :hook
   (racket-mode . paredit-mode)
   (emacs-lisp-mode . paredit-mode)
   (lisp-mode . paredit-mode)
   (clojure-mode . paredit-mode)
-  (eval-expression-minibuffer-setup . paredit-mode)
+  (eval-expression-minibuffer-setup . my/eval-expression-paredit-setup)
   (ielm-mode . paredit-mode))
 
 (use-package racket-mode
@@ -511,10 +326,47 @@
 (use-package cmake-mode
   :mode ("\\(?:CMakeLists\\.txt\\|\\.cmake\\)\\'" . cmake-mode))
 
+(use-package corfu
+  :custom
+  (corfu-auto t)
+  (corfu-cycle t)
+  (corfu-preview-current nil)
+  (corfu-preselect 'prompt))
+
+(use-package corfu-terminal
+  :if (< emacs-major-version 31)
+  :after corfu
+  :config
+  (unless (display-graphic-p)
+    (corfu-terminal-mode 1)))
+
+(defun my-common-lisp-completion-setup ()
+  "Use Corfu for Common Lisp completion without lsp-bridge conflict."
+  (when (and (fboundp 'lsp-bridge-mode)
+             (bound-and-true-p lsp-bridge-mode))
+    (lsp-bridge-mode -1))
+  (when (fboundp 'slime--completion-at-point)
+    (remove-hook 'completion-at-point-functions #'slime--completion-at-point t)
+    (add-hook 'completion-at-point-functions
+              #'my-slime-completion-at-point-if-connected nil t))
+  (corfu-mode 1))
+
+(defun my-slime-completion-at-point-if-connected ()
+  "Complete with SLIME when connected or auto-start is enabled."
+  (when (and (fboundp 'slime-connected-p)
+             (or (slime-connected-p)
+                 (not (eq slime-auto-start 'never))))
+    (slime--completion-at-point)))
+
+(add-hook 'lisp-mode-hook #'my-common-lisp-completion-setup)
+(add-hook 'slime-mode-hook #'my-common-lisp-completion-setup)
+(add-hook 'slime-repl-mode-hook #'my-common-lisp-completion-setup)
+
 (use-package slime
   :commands (slime)
   :init
   (setq inferior-lisp-program "ros run")
+  (setq slime-auto-start 'always)
   :mode
   ("\\.ros\\'" . lisp-mode)
   :config
@@ -575,6 +427,8 @@
 (add-to-list 'load-path (expand-file-name "lisp/org-opencode" user-emacs-directory))
 (autoload 'org-opencode-mode "org-opencode" "Minor mode for opencode in Org buffers." t)
 
+;; (require 'my-agent-shell)
+
 ;; ============================================================
 ;; 日志与监控
 ;; ============================================================
@@ -614,6 +468,8 @@
 
 (global-set-key (kbd "C-c b r") #'revert-buffer)
 (global-set-key (kbd "C-c b p") #'projectile-ibuffer)
+
+(global-set-key (kbd "M-o") #'my/hyperbole-action-key)
 
 ;; ============================================================
 ;; 终端剪贴板（终端统一由 my-clipboard 处理）

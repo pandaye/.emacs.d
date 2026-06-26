@@ -16,6 +16,54 @@
     (package-vc-install '(lsp-bridge :url "https://github.com/manateelazycat/lsp-bridge")))
   (add-to-list 'load-path lsp-bridge-dir))
 
+(defun my-lsp-bridge-not-common-lisp-buffer ()
+  "Return nil in Common Lisp buffers handled by Corfu."
+  (not (memq major-mode '(lisp-mode slime-repl-mode))))
+
+(defvar-local my-acm-candidate-selected nil)
+
+(defun my-acm-mark-candidate-selected (&rest _)
+  "Remember that the user explicitly selected an ACM candidate."
+  (setq-local my-acm-candidate-selected t))
+
+(defun my-acm-reset-candidate-selection (&rest _)
+  "Reset explicit ACM selection state."
+  (setq-local my-acm-candidate-selected nil))
+
+(defun my-acm-unselect-candidate-after-update (&rest _)
+  "Keep ACM prompt unselected until the user explicitly selects a candidate."
+  (when (and (not my-acm-candidate-selected)
+             (boundp 'acm-menu-index)
+             (>= acm-menu-index 0))
+    (setq-local acm-menu-index -1)
+    (when (overlayp acm-preview-overlay)
+      (delete-overlay acm-preview-overlay)
+      (setq acm-preview-overlay nil))
+    (when (and (boundp 'acm-menu-candidates)
+               acm-menu-candidates
+               (fboundp 'acm-menu-render))
+      (acm-menu-render (cons acm-menu-max-length-cache acm-menu-number-cache)))))
+
+(defun my-acm-return-or-newline ()
+  "Complete selected ACM candidate, or insert newline if none is selected."
+  (interactive)
+  (if (and (boundp 'acm-menu-index)
+           (>= acm-menu-index 0))
+      (acm-complete)
+    (acm-hide)
+    (if (minibufferp)
+        (exit-minibuffer)
+      (newline))))
+
+(defun my-acm-tab-complete-first ()
+  "Complete selected ACM candidate, selecting the first candidate if needed."
+  (interactive)
+  (my-acm-mark-candidate-selected)
+  (when (and (boundp 'acm-menu-index)
+             (< acm-menu-index 0))
+    (setq-local acm-menu-index 0))
+  (acm-complete))
+
 (use-package lsp-bridge
   :ensure nil
   :demand t
@@ -44,6 +92,24 @@
           (let ((custom-config (expand-file-name ".lsp-bridge.json" project-path)))
             (when (file-exists-p custom-config)
               custom-config))))
+
+  (add-to-list 'lsp-bridge-enable-predicates
+               #'my-lsp-bridge-not-common-lisp-buffer)
+
+  (with-eval-after-load 'acm
+    (add-to-list 'acm-continue-commands #'my-acm-return-or-newline)
+    (add-to-list 'acm-continue-commands #'my-acm-tab-complete-first)
+    (define-key acm-mode-map (kbd "RET") #'my-acm-return-or-newline)
+    (define-key acm-mode-map (kbd "<return>") #'my-acm-return-or-newline)
+    (define-key acm-mode-map "\C-m" #'my-acm-return-or-newline)
+    (define-key acm-mode-map "\n" #'my-acm-return-or-newline)
+    (define-key acm-mode-map (kbd "TAB") #'my-acm-tab-complete-first)
+    (define-key acm-mode-map "\t" #'my-acm-tab-complete-first)
+    (advice-add 'acm-update :after #'my-acm-unselect-candidate-after-update)
+    (advice-add 'acm-hide :after #'my-acm-reset-candidate-selection)
+    (dolist (command '(acm-select-first acm-select-last acm-select-next acm-select-prev
+                       acm-select-next-page acm-select-prev-page))
+      (advice-add command :before #'my-acm-mark-candidate-selected)))
 
   ;; 修复补全弹窗错位：上游 acm-frame-get-popup-position 混用
   ;; window-pixel-edges（含行号列）与 posn-at-point（文本区域相对），
