@@ -2,5 +2,35 @@
 
 * Pandaye 的 .emacs.d
 
-虽然没有人看，但还是更新一下说明，太久没更新了，别用
+个人 Emacs 配置，偏 TUI 使用，重点是模态编辑、Org 写作、阅读翻译和轻量开发。
 
+** 安装
+
+插件通过 =package.el= 和 =use-package= 自动安装，ELPA 源使用清华镜像。首次启动会刷新 archive 并安装缺失插件。
+
+#+begin_src sh
+git clone <repo> ~/.emacs.d
+emacs
+#+end_src
+
+本地私有配置放在 =local-vars.local.el= ，例如订阅源、API key 和个人目录。
+
+** 配置风格
+
+- 模态编辑以 =meow= 为核心，配合自定义 modeline 展示状态；常用窗口、文件、项目操作集中在 =C-c= 前缀下。
+- 补全与导航使用 =vertico= 、 =consult= 、 =orderless= 、 =projectile= 、 =dirvish= 和 =rg= 。
+- 编程主力是 =lsp-bridge= ，进入编程模式后延迟加载；Common Lisp 单独使用 =SLIME= + =Corfu= 。
+- Org 侧重写作和知识库： =org-roam= 、 =org-roam-ui= 、 =org-super-agenda= 、日记、GTD 和静态博客发布。
+- 中文输入使用 =rimel= / Librime，仓库内维护 =rime/= 配置，并和 =meow= insert 状态联动。
+- 阅读流使用 =elfeed= 、 =gt= 、 =sdcv= ；查词会记录单词和上下文句子。
+- LLM 使用 =gptel= 和 =gptel-agent= ，当前后端配置为 DeepSeek。
+
+** 外部依赖
+
+- =python3= ：阅读翻译会用 PySBD 做句子切分；首次启动会按 =requirements-translate.txt= 后台准备虚拟环境。
+- =sdcv= ：本地 StarDict 查词，词典目录默认是 =~/.stardict/dic= 。
+- Librime：供 =rimel= 输入法使用。
+- =git= 、 =rg= ：项目管理和全文搜索依赖。
+- 各语言的 LSP server 需按语言自行安装； =lsp-bridge= 本体会由配置自动拉取。
+
+可选依赖：Common Lisp 使用 =ros run= 启动 =SLIME= ，没有 Lisp 开发需求可以不装。
