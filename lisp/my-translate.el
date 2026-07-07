@@ -8,6 +8,7 @@
 ;;; Code:
 
 (require 'subr-x)
+(require 'cl-lib)
 (require 'json)
 (require 'sqlite)
 (require 'my-org-listing)
@@ -30,11 +31,127 @@ Set this in local-vars.local.el before loading `my-translate', for example:
     "e.g" "i.e" "etc" "vs" "fig" "no" "ph.d" "u.s" "u.k")
   "Lowercase abbreviations whose period should not end a context sentence.")
 
+(defvar my/gt-pysbd-venv-dir
+  (expand-file-name ".venv-translate" user-emacs-directory)
+  "Virtualenv directory for the PySBD sentence splitter.")
+
+(defvar my/gt-pysbd-requirements-file
+  (expand-file-name "requirements-translate.txt" user-emacs-directory)
+  "Requirements file used to install the PySBD sentence splitter.")
+
+(defvar my/gt-pysbd-helper-file
+  (expand-file-name "scripts/pysbd-current-sentence.py" user-emacs-directory)
+  "Python helper that returns the PySBD sentence around point.")
+
+(defvar my/gt-pysbd-language "en"
+  "Language code passed to PySBD for sentence segmentation.")
+
+(defvar my/gt-pysbd-timeout-seconds 2
+  "Seconds to wait for the PySBD helper before falling back.")
+
+(defvar my/gt-pysbd-install-process nil
+  "Current background process used to install or check PySBD.")
+
 (use-package gt
   :defer t
   :init
   (setq gt-langs my/gt-reading-langs
         gt-buffer-render-follow-p t))
+
+(defun my/gt-pysbd-python ()
+  "Return the Python executable inside `my/gt-pysbd-venv-dir'."
+  (expand-file-name (if (eq system-type 'windows-nt)
+                        "Scripts/python.exe"
+                      "bin/python")
+                    my/gt-pysbd-venv-dir))
+
+(defun my/gt-pysbd-runtime-files-present-p ()
+  "Return non-nil when the PySBD runtime files are present."
+  (and (file-executable-p (my/gt-pysbd-python))
+       (file-readable-p my/gt-pysbd-helper-file)))
+
+(defun my/gt-pysbd--install-running-p ()
+  "Return non-nil when a PySBD install/check process is alive."
+  (process-live-p my/gt-pysbd-install-process))
+
+(defun my/gt-pysbd--install-buffer ()
+  "Return the install log buffer."
+  (get-buffer-create "*my-translate-pysbd-install*"))
+
+(defun my/gt-pysbd--start-pip-install ()
+  "Install PySBD requirements into the translation virtualenv."
+  (if (not (file-readable-p my/gt-pysbd-requirements-file))
+      (progn
+        (setq my/gt-pysbd-install-process nil)
+        (message "my-translate PySBD requirements file is missing: %s"
+                 my/gt-pysbd-requirements-file))
+    (setq my/gt-pysbd-install-process
+          (make-process
+           :name "my-translate-pysbd-pip-install"
+           :buffer (my/gt-pysbd--install-buffer)
+           :command (list (my/gt-pysbd-python) "-m" "pip" "install"
+                          "-r" my/gt-pysbd-requirements-file)
+           :noquery t
+           :sentinel
+           (lambda (proc _event)
+             (when (memq (process-status proc) '(exit signal))
+               (setq my/gt-pysbd-install-process nil)
+               (message "my-translate PySBD install %s"
+                        (if (and (eq (process-status proc) 'exit)
+                                 (zerop (process-exit-status proc)))
+                            "finished"
+                          "failed; see *my-translate-pysbd-install*"))))))))
+
+(defun my/gt-pysbd--start-import-check ()
+  "Check whether PySBD can be imported, installing it when missing."
+  (setq my/gt-pysbd-install-process
+        (make-process
+         :name "my-translate-pysbd-check"
+         :buffer (my/gt-pysbd--install-buffer)
+         :command (list (my/gt-pysbd-python) "-c" "import pysbd")
+         :noquery t
+         :sentinel
+         (lambda (proc _event)
+           (when (memq (process-status proc) '(exit signal))
+             (if (and (eq (process-status proc) 'exit)
+                      (zerop (process-exit-status proc)))
+                 (setq my/gt-pysbd-install-process nil)
+               (my/gt-pysbd--start-pip-install)))))))
+
+(defun my/gt-pysbd--start-venv-create ()
+  "Create the translation virtualenv, then install PySBD."
+  (let ((python (or (executable-find "python3")
+                    (executable-find "python"))))
+    (if (not python)
+        (message "my-translate PySBD install skipped: python3 not found")
+      (setq my/gt-pysbd-install-process
+            (make-process
+             :name "my-translate-pysbd-venv"
+             :buffer (my/gt-pysbd--install-buffer)
+             :command (list python "-m" "venv" my/gt-pysbd-venv-dir)
+             :noquery t
+             :sentinel
+             (lambda (proc _event)
+               (when (memq (process-status proc) '(exit signal))
+                 (if (and (eq (process-status proc) 'exit)
+                          (zerop (process-exit-status proc)))
+                     (my/gt-pysbd--start-pip-install)
+                   (setq my/gt-pysbd-install-process nil)
+                   (message "my-translate PySBD venv creation failed; see %s"
+                            (buffer-name (my/gt-pysbd--install-buffer)))))))))))
+
+(defun my/gt-pysbd-ensure-installed ()
+  "Ensure the PySBD runtime exists during Emacs configuration startup.
+
+This function starts background processes only; word lookup never
+installs Python dependencies."
+  (interactive)
+  (unless (my/gt-pysbd--install-running-p)
+    (if (file-executable-p (my/gt-pysbd-python))
+        (my/gt-pysbd--start-import-check)
+      (my/gt-pysbd--start-venv-create))))
+
+(add-hook 'after-init-hook #'my/gt-pysbd-ensure-installed)
 
 (defun my/gt--selection-or-word ()
   "Return active region text or word at point, trimmed."
@@ -94,15 +211,97 @@ Set this in local-vars.local.el before loading `my-translate', for example:
           (forward-char)))
       (or found limit))))
 
-(defun my/gt--context-sentence ()
-  "Return a single sentence around point as context for wordbook records."
-  (let* ((start (my/gt--sentence-boundary-backward))
-         (end (my/gt--sentence-boundary-forward))
-         (sentence (buffer-substring-no-properties start end))
-         (trimmed (string-trim
-                   (replace-regexp-in-string "[[:space:]\n]+" " " sentence))))
+(defun my/gt--normalize-context-sentence (sentence)
+  "Normalize whitespace in SENTENCE and return nil when it is empty."
+  (let ((trimmed (string-trim
+                  (replace-regexp-in-string "[[:space:]\n]+" " " sentence))))
     (unless (string-empty-p trimmed)
       trimmed)))
+
+(defun my/gt--context-sentence ()
+  "Return a fallback sentence around point without external processes."
+  (let* ((start (my/gt--sentence-boundary-backward))
+         (end (my/gt--sentence-boundary-forward))
+         (sentence (buffer-substring-no-properties start end)))
+    (my/gt--normalize-context-sentence sentence)))
+
+(defun my/gt--paragraph-context-source ()
+  "Return paragraph text and point offset for external sentence splitting."
+  (let* ((bounds (or (bounds-of-thing-at-point 'paragraph)
+                     (cons (line-beginning-position) (line-end-position))))
+         (start (max (point-min) (car bounds)))
+         (end (min (point-max) (cdr bounds))))
+    (when (< start end)
+      (list :text (buffer-substring-no-properties start end)
+            :offset (- (point) start)))))
+
+(defun my/gt--json-read-sentence-from-buffer ()
+  "Read a sentence value from the current buffer as JSON."
+  (goto-char (point-min))
+  (let* ((json-object-type 'alist)
+         (json-array-type 'list)
+         (json-key-type 'symbol)
+         (data (json-read))
+         (sentence (cdr (assq 'sentence data))))
+    (when (stringp sentence)
+      (my/gt--normalize-context-sentence sentence))))
+
+(defun my/gt--context-sentence-async (source fallback callback)
+  "Resolve a context sentence from SOURCE, then call CALLBACK.
+
+FALLBACK is used when PySBD is not ready, exits with an error, or
+times out.  CALLBACK is called exactly once."
+  (if (not (and source (my/gt-pysbd-runtime-files-present-p)))
+      (funcall callback fallback)
+    (let* ((buffer (generate-new-buffer " *my-translate-pysbd*"))
+           (payload (json-encode
+                     `((text . ,(plist-get source :text))
+                       (offset . ,(plist-get source :offset))
+                       (language . ,my/gt-pysbd-language))))
+           (done nil)
+           timer
+           proc)
+      (cl-labels
+          ((finish
+            (sentence)
+            (unless done
+              (setq done t)
+              (when (timerp timer)
+                (cancel-timer timer))
+              (when (process-live-p proc)
+                (delete-process proc))
+              (when (buffer-live-p buffer)
+                (kill-buffer buffer))
+              (funcall callback (or sentence fallback)))))
+        (setq proc
+              (make-process
+               :name "my-translate-pysbd"
+               :buffer buffer
+               :command (list (my/gt-pysbd-python) my/gt-pysbd-helper-file)
+               :connection-type 'pipe
+               :noquery t
+               :filter
+               (lambda (process chunk)
+                 (when (buffer-live-p (process-buffer process))
+                   (with-current-buffer (process-buffer process)
+                     (goto-char (point-max))
+                     (insert chunk))))
+               :sentinel
+               (lambda (process _event)
+                 (when (memq (process-status process) '(exit signal))
+                   (finish
+                    (when (and (eq (process-status process) 'exit)
+                               (zerop (process-exit-status process))
+                               (buffer-live-p (process-buffer process)))
+                      (with-current-buffer (process-buffer process)
+                        (condition-case nil
+                            (my/gt--json-read-sentence-from-buffer)
+                          (error nil)))))))))
+        (set-process-coding-system proc 'utf-8-unix 'utf-8-unix)
+        (setq timer
+              (run-at-time my/gt-pysbd-timeout-seconds nil #'finish nil))
+        (process-send-string proc payload)
+        (process-send-eof proc)))))
 
 (defun my/gt--ensure-wordbook-directory ()
   "Create the parent directory of `my/gt-wordbook-db-file' when needed."
@@ -174,6 +373,13 @@ NORMALIZED is the lowercase lookup key and NOW is an ISO timestamp."
     values (?, ?, ?)"
    (list word-id sentence now)))
 
+(defun my/gt--insert-word-occurrence-by-id (word-id sentence now)
+  "Insert an occurrence for WORD-ID after async sentence resolution."
+  (my/gt--with-wordbook-db
+   (lambda (db)
+     (my/gt--init-wordbook-db db)
+     (my/gt--insert-word-occurrence db word-id sentence now))))
+
 (defun my/gt-record-word-to-wordbook (text)
   "Record TEXT and its current sentence to the reading wordbook database.
 
@@ -181,15 +387,24 @@ Only single-word lookup text is recorded."
   (when (my/gt--wordbook-eligible-p text)
     (let* ((word (string-trim text))
            (normalized (downcase word))
-           (sentence (my/gt--context-sentence))
-           (now (format-time-string "%FT%T%z")))
+           (fallback-sentence (my/gt--context-sentence))
+           (source (my/gt--paragraph-context-source))
+           (now (format-time-string "%FT%T%z"))
+           word-id
+           new-p)
       (my/gt--with-wordbook-db
        (lambda (db)
          (my/gt--init-wordbook-db db)
-         (pcase-let ((`(,word-id . ,new-p)
+         (pcase-let ((`(,row-word-id . ,row-new-p)
                       (my/gt--record-word-row db word normalized now)))
-           (when new-p
-             (my/gt--insert-word-occurrence db word-id sentence now))))))))
+           (setq word-id row-word-id
+                 new-p row-new-p))))
+      (when new-p
+        (my/gt--context-sentence-async
+         source
+         fallback-sentence
+         (lambda (sentence)
+           (my/gt--insert-word-occurrence-by-id word-id sentence now)))))))
 
 (defun my/gt--sdcv-lookup (text)
   "Run sdcv for TEXT and return parsed JSON entries, or nil on failure."

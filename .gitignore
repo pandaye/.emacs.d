@@ -1,7 +1,9 @@
 *~
 *.elc
+__pycache__/
 .notes
 .python-environments/
+.venv-translate/
 elpa/
 eshell/
 *.dat

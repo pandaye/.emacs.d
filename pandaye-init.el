@@ -427,6 +427,7 @@
 (add-to-list 'load-path (expand-file-name "lisp/org-opencode" user-emacs-directory))
 (autoload 'org-opencode-mode "org-opencode" "Minor mode for opencode in Org buffers." t)
 
+(require 'my-gptel)
 ;; (require 'my-agent-shell)
 
 ;; ============================================================
