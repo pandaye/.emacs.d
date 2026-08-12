@@ -8,7 +8,8 @@
 (ert-deftest hyperbole-config-lazy-action-key-on-meta-o ()
   "M-o should lazy-load Hyperbole without taking over Org M-RET."
   (should-not (featurep 'hyperbole))
-  (should (eq (key-binding (kbd "M-o") t) #'my/hyperbole-action-key))
+  (should (eq (key-binding (kbd "M-o") t)
+              #'pandaye/editor-hyperbole-action-key))
   (with-temp-buffer
     (org-mode)
     (should (eq (key-binding (kbd "M-RET")) #'org-meta-return)))
@@ -18,7 +19,7 @@
           (with-temp-buffer
             (org-mode)
             (condition-case err
-                (call-interactively #'my/hyperbole-action-key)
+                (call-interactively #'pandaye/editor-hyperbole-action-key)
               (error
                (should (string-match-p "No action defined"
                                        (error-message-string err))))))

@@ -6,7 +6,7 @@
 (require 'common-dirs)
 (require 'start-page)
 
-(setq initial-buffer-choice #'my/start-page)
+(setq initial-buffer-choice #'start-page)
 ;; ============================================================
 ;; 环境与基础设置
 ;; ============================================================
@@ -113,22 +113,22 @@
 (use-package ace-window
   :commands (ace-window))
 
-(defun my/hyperbole-action-key ()
+(defun pandaye/editor-hyperbole-action-key ()
   "Run Hyperbole Action Key, loading Hyperbole on first use."
   (interactive)
   (require 'hyperbole)
   (hyperbole-mode 1)
   (call-interactively #'hkey-either))
 
+(defalias 'my/hyperbole-action-key #'pandaye/editor-hyperbole-action-key)
+
 (use-package hyperbole
   :commands (hyperbole hyperbole-mode hkey-either hkey-help)
   :config
   (hkey-set-key (kbd "M-o") #'hkey-either))
 
-(require 'subtle-delimiter)
-
 ;; ============================================================
-;; 终端剪贴板（终端统一由 my-clipboard 处理）
+;; 终端剪贴板（终端统一由 terminal-clipboard 处理）
 ;; ============================================================
 
 (unless (display-graphic-p)
@@ -136,11 +136,30 @@
       (progn
         (require 'terminal-clipboard)
         (if (eq system-type 'darwin)
-            (setq interprogram-cut-function #'my/pbcopy
-                  interprogram-paste-function #'my/pbpaste)
-          (setq interprogram-cut-function #'my/osc-52-cut-function))
+            (setq interprogram-cut-function #'terminal-clipboard-pbcopy
+                  interprogram-paste-function #'terminal-clipboard-pbpaste)
+          (setq interprogram-cut-function #'terminal-clipboard-osc-52-cut-function))
         (setq browse-url-browser-function nil))
     (error (message "剪贴板模块加载失败: %s" (error-message-string err)))))
+
+;; Keep cursor wiring independent from `init-ui' error handling, matching the
+;; legacy startup sequence where terminal cursor support loaded from editor.
+(unless (display-graphic-p)
+  (require 'cursor-display)
+  (with-eval-after-load 'meow
+    (add-hook 'meow-switch-state-hook #'cursor-display-update-cursor-color-for-state))
+  (add-hook 'input-method-activate-hook #'cursor-display-update-cursor-color-for-buffer)
+  (add-hook 'input-method-deactivate-hook #'cursor-display-update-cursor-color-for-buffer)
+  (dolist (command '(activate-input-method deactivate-input-method
+                     toggle-input-method))
+    (unless (advice-member-p #'cursor-display-refresh-cursor-color-after-input-method
+                             command)
+      (advice-add command
+                  :after #'cursor-display-refresh-cursor-color-after-input-method)))
+  (add-hook 'window-buffer-change-functions
+            #'cursor-display-update-cursor-color-for-buffer)
+  (add-hook 'window-selection-change-functions
+            #'cursor-display-update-cursor-color-for-buffer))
 
 (provide 'init-editor)
 ;;; init-editor.el ends here

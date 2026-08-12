@@ -4,8 +4,6 @@
 ;; 导航框架 - Vertico/Consult/Embark/Orderless
 ;; ============================================================
 
-(require 'init-completion)
-
 ;; ============================================================
 ;; 项目与文件管理
 ;; ============================================================
@@ -18,7 +16,7 @@
   :config
   (projectile-mode 1))
 
-(defun my/dirvish-subtree-hide-total-line (readin dir)
+(defun pandaye/navigation-dirvish-subtree-hide-total-line (readin dir)
   "Hide localized ls total line from Dirvish subtree READIN for DIR."
   ;; Dirvish currently strips the English "total used in directory" line in
   ;; `dirvish-subtree--readin', but GNU ls under a Chinese locale emits
@@ -57,10 +55,10 @@
   (dirvish-subtree-state ((t (:inherit shadow :underline nil :background unspecified))))
   (dirvish-subtree-guide ((t (:inherit shadow :underline nil :background unspecified))))
   :config
-  (unless (advice-member-p #'my/dirvish-subtree-hide-total-line
+  (unless (advice-member-p #'pandaye/navigation-dirvish-subtree-hide-total-line
                            'dirvish-subtree--readin)
     (advice-add 'dirvish-subtree--readin
-                :around #'my/dirvish-subtree-hide-total-line))
+                :around #'pandaye/navigation-dirvish-subtree-hide-total-line))
   :bind
   (:map dirvish-mode-map
         ("TAB" . dirvish-subtree-toggle)
@@ -69,13 +67,15 @@
         ("s" . dirvish-quicksort)
         ("v" . dirvish-vc-menu)))
 
-(defun my/dired-project-root ()
+(defun pandaye/navigation-dired-project-root ()
   "Open Dired at the current project root."
   (interactive)
   (let ((dir (or (when (require 'projectile nil t)
                    (projectile-project-root))
                  default-directory)))
     (dired dir)))
+
+(defalias 'my/dired-project-root #'pandaye/navigation-dired-project-root)
 
 (use-package rg
   :defer t)

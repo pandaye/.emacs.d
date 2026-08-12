@@ -2,7 +2,7 @@
 (require 'org)
 (require 'subr-x)
 
-(defun my/get-file-properties ()
+(defun org-ssh-get-file-properties ()
   "获取当前文件的全局属性。"
   (save-excursion
     (save-restriction
@@ -15,9 +15,9 @@
             (push (cons key value) props)))
         props))))
 
-(defun my/get-ssh-config (host)
+(defun org-ssh-get-ssh-config (host)
   "获取当前文件的 SSH 配置，合并文件级和条目级属性。"
-  (let* ((file-props (my/get-file-properties))
+  (let* ((file-props (org-ssh-get-file-properties))
          ;; 优先级：条目属性 > 文件属性 > 默认值
          (user (or (org-entry-get nil "SSH_USER")
                    (cdr (assoc "SSH_USER" file-props))
@@ -45,7 +45,7 @@
           :proxy-jump (and proxy-jump (not (string-empty-p proxy-jump)) proxy-jump)
           :proxy-command (and proxy-command (not (string-empty-p proxy-command)) proxy-command))))
 
-(defun my/build-ssh-command-from-config (config)
+(defun org-ssh-build-ssh-command-from-config (config)
   "根据配置构建 SSH 命令。"
   (let* ((host (plist-get config :host))
          (user (plist-get config :user))
@@ -78,20 +78,20 @@
     (message "[org-ssh DEBUG] Final command: %s" final-cmd)
     final-cmd))
 
-(defun my/tmux-ssh-connect-simple (host)
+(defun org-ssh-connect-via-tmux (host)
   "使用文件级配置连接到指定主机。"
-  (let* ((config (my/get-ssh-config host))
-         (ssh-cmd (my/build-ssh-command-from-config config))
+  (let* ((config (org-ssh-get-ssh-config host))
+         (ssh-cmd (org-ssh-build-ssh-command-from-config config))
          (window-name (format "%s" host))
          (tmux-cmd (format "tmux new-window -n '%s' '%s'" window-name ssh-cmd)))
     (message "[org-ssh] Access SSH: %s" host)
     (start-process-shell-command "tmux-ssh" nil tmux-cmd)))
 
-(defun my/debug-ssh-command (host)
+(defun org-ssh-debug-command (host)
   "调试：显示将要执行的 SSH 命令，但不实际连接。"
   (interactive "sHost: ")
-  (let* ((config (my/get-ssh-config host))
-         (ssh-cmd (my/build-ssh-command-from-config config))
+  (let* ((config (org-ssh-get-ssh-config host))
+         (ssh-cmd (org-ssh-build-ssh-command-from-config config))
          (window-name (format "%s" host))
          (tmux-cmd (format "tmux new-window -n '%s' '%s'" window-name ssh-cmd)))
     (with-output-to-temp-buffer "*SSH Debug*"
@@ -115,23 +115,25 @@
 (org-link-set-parameters
  "ssh"
  :follow (lambda (host)
-           (my/tmux-ssh-connect-simple host))
+           (org-ssh-connect-via-tmux host))
  :export (lambda (host desc backend)
            (format "SSH: %s" (or desc host))))
 
 ;; 快速创建新的服务器组文件
 
 ;; 配置 SSH 服务器组文件目录变量
-(defcustom my/ssh-configs-dir (expand-file-name "~/work/hosts/")
+(defvaralias 'my/ssh-configs-dir 'org-ssh-configs-dir)
+
+(defcustom org-ssh-configs-dir (expand-file-name "~/work/hosts/")
   "存放 SSH 服务器组 org 文件的目录。"
   :type 'string
   :group 'convenience)
 
 ;; 优化后的模板创建函数
-(defun my/create-ssh-template (filename group-name default-user default-port)
+(defun org-ssh-create-template (filename group-name default-user default-port)
   "创建新的 SSH 服务器组文件模板。"
   (interactive 
-   (list (read-file-name "文件名: " my/ssh-configs-dir nil nil ".org")
+   (list (read-file-name "文件名: " org-ssh-configs-dir nil nil ".org")
          (read-string "服务器组名称: ")
          (read-string "默认用户名: " user-login-name)
          (read-string "默认端口: " "22")))
@@ -154,17 +156,17 @@
     (write-file filename))
   (find-file filename))
 
-;; 新增：在 my/ssh-configs-dir 目录下选择并打开服务器组文件
-(defun my/open-ssh-group-file ()
-  "在 my/ssh-configs-dir 目录下选择并打开一个 SSH 服务器组 org 文件。"
+;; 新增：在 org-ssh-configs-dir 目录下选择并打开服务器组文件
+(defun org-ssh-open-group-file ()
+  "在 org-ssh-configs-dir 目录下选择并打开一个 SSH 服务器组 org 文件。"
   (interactive)
-  (let* ((file (read-file-name "选择服务器组文件: " my/ssh-configs-dir nil t nil
+  (let* ((file (read-file-name "选择服务器组文件: " org-ssh-configs-dir nil t nil
                                (lambda (f) (string-match-p "\\.org$" f)))))
     (when (and file (file-exists-p file))
       (find-file file))))
 
 ;; 批量连接当前文件的所有服务器
-(defun my/connect-all-servers-in-file ()
+(defun org-ssh-connect-all-servers-in-file ()
   "连接当前文件中的所有 SSH 服务器。"
   (interactive)
   (save-excursion
@@ -177,11 +179,11 @@
       (when (and servers 
                  (y-or-n-p (format "连接 %d 个服务器？" (length servers))))
         (dolist (server (reverse servers))
-          (my/tmux-ssh-connect-simple server)
+          (org-ssh-connect-via-tmux server)
           (sit-for 0.3)))))) ; 间隔避免过快
 
 ;; 快速添加新服务器到当前组
-(defun my/add-server-to-current-group ()
+(defun org-ssh-add-server-to-current-group ()
   "在当前位置添加新的服务器链接。"
   (interactive)
   (let* ((host (read-string "服务器地址: "))
@@ -189,7 +191,7 @@
          (display-name (if (string-empty-p name) host name)))
     (insert (format "[[ssh:%s][%s]]" host display-name))))
 
-(defun my/org-ssh-insert-link-and-open (host &optional name)
+(defun org-ssh-insert-link-and-open (host &optional name)
   "Insert an Org SSH link for HOST with NAME and open it in tmux."
   (unless (and host (not (string-empty-p host)))
     (user-error "Host is required"))
@@ -197,26 +199,21 @@
 	(insert "| ")
     (insert (org-link-make-string (concat "ssh:" host) display-name))
 	(insert "\n  ")
-    (my/tmux-ssh-connect-simple host)))
+    (org-ssh-connect-via-tmux host)))
 
-(defun my/org-ssh-create-link-and-open (host name)
+(defun org-ssh-create-link-and-open (host name)
   "Create a new Org SSH link at point and open HOST in tmux."
   (interactive
    (let* ((host (read-string "服务器地址: "))
           (name (read-string "显示名称: " host)))
      (list host name)))
-  (my/org-ssh-insert-link-and-open host name))
-
-(with-eval-after-load 'hact
-  (defact org-ssh-new ()
-    "Create a new Org SSH link at point and open it in tmux."
-    (call-interactively #'my/org-ssh-create-link-and-open)))
+  (org-ssh-insert-link-and-open host name))
 
 ;; 显示当前文件的 SSH 配置摘要
-(defun my/show-ssh-config-summary ()
+(defun org-ssh-show-ssh-config-summary ()
   "显示当前文件的 SSH 配置摘要。"
   (interactive)
-  (let* ((file-props (my/get-file-properties))
+  (let* ((file-props (org-ssh-get-file-properties))
          (user (cdr (assoc "SSH_USER" file-props)))
          (port (cdr (assoc "SSH_PORT" file-props)))
          (has-password (not (string-empty-p (or (cdr (assoc "SSH_PASSWORD" file-props)) ""))))
@@ -236,16 +233,15 @@
              (if (and proxy-command (not (string-empty-p proxy-command))) "已配置" "无"))))
 
 
-;; 在 org-mode 中添加便捷键绑定
-
-(eval-after-load 'org
-  '(progn
-     (define-key org-mode-map (kbd "C-c s c") 'my/connect-all-servers-in-file)
-     (define-key org-mode-map (kbd "C-c s a") 'my/add-server-to-current-group)
-     (define-key org-mode-map (kbd "C-c s s") 'my/show-ssh-config-summary)
-     (define-key org-mode-map (kbd "C-c s n") 'my/create-ssh-template)
-     (define-key org-mode-map (kbd "C-c s o") 'my/open-ssh-group-file)
-     (define-key org-mode-map (kbd "C-c s l") 'my/org-ssh-create-link-and-open)
-     (define-key org-mode-map (kbd "C-c s d") 'my/debug-ssh-command)))
+(dolist (names '((my/tmux-ssh-connect-simple . org-ssh-connect-via-tmux)
+                 (my/debug-ssh-command . org-ssh-debug-command)
+                 (my/create-ssh-template . org-ssh-create-template)
+                 (my/open-ssh-group-file . org-ssh-open-group-file)
+                 (my/connect-all-servers-in-file . org-ssh-connect-all-servers-in-file)
+                 (my/add-server-to-current-group . org-ssh-add-server-to-current-group)
+                 (my/org-ssh-insert-link-and-open . org-ssh-insert-link-and-open)
+                 (my/org-ssh-create-link-and-open . org-ssh-create-link-and-open)
+                 (my/show-ssh-config-summary . org-ssh-show-ssh-config-summary)))
+  (defalias (car names) (cdr names)))
 
 (provide 'org-ssh)

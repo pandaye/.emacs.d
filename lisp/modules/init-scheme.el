@@ -1,4 +1,9 @@
-;; Scheme config from wanying
+;;; init-scheme.el --- Scheme editing configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Scheme configuration adapted from wanying's setup.
+
+;;; Code:
 
 (require 'cmuscheme)
 (setq scheme-program-name "racket")         ;;; 如果用 Petite 就改成 "petite"
@@ -56,3 +61,4 @@
 (add-hook 'scheme-mode-hook 'show-paren-mode)
 
 (provide 'init-scheme)
+;;; init-scheme.el ends here

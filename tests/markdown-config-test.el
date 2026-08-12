@@ -14,7 +14,7 @@
 
 (ert-deftest markdown-config-installs-compatible-advice ()
   (should (advice-member-p
-           #'my-markdown-match-italic-skip-intraword-underscore
+           #'pandaye/markdown-match-italic-skip-intraword-underscore
            'markdown-match-italic)))
 
 (provide 'markdown-config-test)

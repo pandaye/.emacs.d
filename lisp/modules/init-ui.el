@@ -124,7 +124,7 @@ standard Emacs keybindings, respecting the current mode's keymap."
    '("<escape>" . ignore)))
 
 ;; 1. 定义 inner 函数：返回不含首尾空白的行
-(defun my/meow--inner-of-line-trimmed ()
+(defun pandaye/editor-meow--inner-of-line-trimmed ()
   "Return bounds of line without leading/trailing whitespace."
   (cons (save-excursion
           (beginning-of-line)
@@ -136,7 +136,7 @@ standard Emacs keybindings, respecting the current mode's keymap."
           (point))))
 
 ;; 2. 定义 bounds 函数：返回包含换行符的版本（可选）
-(defun my/meow--bounds-of-line-trimmed ()
+(defun pandaye/editor-meow--bounds-of-line-trimmed ()
   "Return bounds of line without leading/trailing whitespace, but include newline."
   (cons (save-excursion
           (beginning-of-line)
@@ -158,10 +158,10 @@ standard Emacs keybindings, respecting the current mode's keymap."
   :config
   ;; 注册自定义 thing
   (meow-thing-register 'line-trimmed
-                       'my/meow--inner-of-line-trimmed
-                       'my/meow--bounds-of-line-trimmed)
+                       'pandaye/editor-meow--inner-of-line-trimmed
+                       'pandaye/editor-meow--bounds-of-line-trimmed)
   (add-to-list 'meow-char-thing-table '(?t . line-trimmed))
-  (add-to-list 'meow-mode-state-list '(my/org-list-mode . motion))
+  (add-to-list 'meow-mode-state-list '(org-list-mode . motion))
   (meow-setup)
   (meow-global-mode 1))
 
@@ -331,29 +331,6 @@ them after every command (requires `line-number-mode' and
                     :height 100
                     :box '(:line-width 1 :color "#3c3836"))
 
-
-(unless (display-graphic-p)
-  (require 'cursor-display)
-  (with-eval-after-load 'meow
-    (add-hook 'meow-switch-state-hook #'my/update-cursor-color-for-state))
-  (add-hook 'input-method-activate-hook #'my/update-cursor-color-for-buffer)
-  (add-hook 'input-method-deactivate-hook #'my/update-cursor-color-for-buffer)
-  (unless (advice-member-p #'my/refresh-cursor-color-after-input-method
-                           'activate-input-method)
-    (advice-add 'activate-input-method
-                :after #'my/refresh-cursor-color-after-input-method))
-  (unless (advice-member-p #'my/refresh-cursor-color-after-input-method
-                           'deactivate-input-method)
-    (advice-add 'deactivate-input-method
-                :after #'my/refresh-cursor-color-after-input-method))
-  (unless (advice-member-p #'my/refresh-cursor-color-after-input-method
-                           'toggle-input-method)
-    (advice-add 'toggle-input-method
-                :after #'my/refresh-cursor-color-after-input-method))
-  (add-hook 'window-buffer-change-functions
-            #'my/update-cursor-color-for-buffer)
-  (add-hook 'window-selection-change-functions
-            #'my/update-cursor-color-for-buffer))
 
 (provide 'init-ui)
 ;;; init-ui.el ends here

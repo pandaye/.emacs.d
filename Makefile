@@ -6,7 +6,9 @@ test:
 	$(EMACS) -Q --batch -L lisp -l init.el -l tests/run-tests.el
 
 compile:
-	$(EMACS) -Q --batch -L lisp -l init.el \
+	$(EMACS) -Q --batch -L lisp -L lisp/core -L lisp/modules -L lisp/features \
+		--eval "(progn (require 'package) (package-initialize) \
+		(require 'use-package) (setq use-package-always-ensure nil))" \
 		--eval "(setq hbmap:dir-user temporary-file-directory)" \
 		--eval "(let ((byte-compile-dest-file-function \
 		(lambda (file) (expand-file-name (file-name-nondirectory \

@@ -26,17 +26,23 @@ emacs
 
 ** 配置结构
 
-=init.el= 负责包管理和加载顶层 =my-config= ，具体配置按领域放在 =lisp/=：
+=init.el= 只负责包管理并进入 =init-config= 。自有代码按生命周期分为三层：
 
-- =my-editor= ：基础编辑、UI、窗口与终端剪贴板。
-- =my-navigation= ：补全、项目、文件和搜索。
-- =my-writing= ：Org、Markdown、输入法与知识管理。
-- =my-development= ：语言模式、补全、LSP 与 snippets。
-- =my-vcs= ：Magit 和 diff-hl。
-- =my-reader= ：RSS、日志与翻译阅读。
-- =my-keybindings= ：跨领域的全局键位。
+- =lisp/core/= ：启动环境、本地私有值、全局默认值和全局键位。
+- =lisp/modules/= ：按领域管理第三方包、hook、advice 和 mode 局部键位。
+- =lisp/features/= ：可独立加载和测试的领域命令，不安装或配置第三方包。
 
-运行 =make test= 可批量加载配置并执行全部 ERT 回归测试。
+配置模块使用 =init-*= 命名，例如 =init-reader= 和 =init-development= ；功能库使用领域名，例如 =translate= 和 =tmux-manager= 。依赖方向固定为：
+
+#+begin_example
+init-config -> core / modules -> features -> Emacs 内置库
+#+end_example
+
+全局键位集中在 =core/init-keybindings.el= ，各 mode 的局部键位留在所属模块。顶层固定加载现有全部模块，不提供 profile 或模块开关。
+
+配置层自有符号使用 =pandaye/<domain>-*= 命名；独立功能库的符号以前缀化的库名命名，例如 =translate-*= 和 =org-ssh-*= 。迁移前已公开使用的符号保留兼容 alias，但新代码只引用规范名称。
+
+运行 =make test= 会加载完整配置并执行行为契约、架构约束和功能 ERT；运行 =make compile= 会递归字节编译 =lisp/= 下的全部自有 Elisp，产物写入临时目录。
 
 ** 外部依赖
 

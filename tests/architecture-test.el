@@ -30,7 +30,27 @@
                       (buffer-string))))
       (should-not (string-match-p "(use-package\\_>" contents))
       (should-not (string-match-p "(global-set-key\\_>" contents))
+      (should-not (string-match-p "(with-eval-after-load\\_>" contents))
       (should-not (string-match-p "(require '[[:space:]]*init-" contents)))))
+
+(ert-deftest architecture-canonical-symbols-have-owned-prefixes ()
+  (dolist (file (directory-files-recursively
+                 (expand-file-name "lisp" user-emacs-directory)
+                 "[.]el\\'"))
+    (with-temp-buffer
+      (insert-file-contents file)
+      (should-not
+       (re-search-forward
+        "^(\\(?:defun\\|defcustom\\|defvar\\|defface\\|defgroup\\|define-minor-mode\\)[[:space:]]+my[-/]"
+        nil t)))))
+
+(ert-deftest architecture-modules-do-not-load-each-other ()
+  (dolist (file (directory-files-recursively
+                 (expand-file-name "lisp/modules" user-emacs-directory)
+                 "[.]el\\'"))
+    (with-temp-buffer
+      (insert-file-contents file)
+      (should-not (re-search-forward "(require '[[:space:]]*init-" nil t)))))
 
 (ert-deftest architecture-centralizes-global-keybindings ()
   (let ((owner (expand-file-name "lisp/core/init-keybindings.el"
@@ -42,6 +62,19 @@
         (with-temp-buffer
           (insert-file-contents file)
           (should-not (search-forward "(global-set-key" nil t)))))))
+
+(ert-deftest architecture-feature-matches-file-name ()
+  (dolist (directory '("lisp/core" "lisp/modules" "lisp/features"))
+    (dolist (file (directory-files-recursively
+                   (expand-file-name directory user-emacs-directory)
+                   "[.]el\\'"))
+      (let ((feature (intern (file-name-base file))))
+        (with-temp-buffer
+          (insert-file-contents file)
+          (should (re-search-forward
+                   (format "^(provide '%s)"
+                           (regexp-quote (symbol-name feature)))
+                   nil t)))))))
 
 (provide 'architecture-test)
 ;;; architecture-test.el ends here

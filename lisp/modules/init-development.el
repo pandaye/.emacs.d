@@ -6,8 +6,16 @@
 
 (declare-function paredit-mode "paredit")
 (defvar paredit-mode-map)
+(require 'subtle-delimiter)
 
-(defun my/eval-expression-paredit-setup ()
+(dolist (hook '(scheme-mode-hook
+                emacs-lisp-mode-hook
+                lisp-mode-hook
+                racket-mode-hook
+                clojure-mode-hook))
+  (add-hook hook #'subtle-delimiter-mode))
+
+(defun pandaye/development-eval-expression-paredit-setup ()
   "Enable Paredit in `eval-expression' without stealing RET."
   (require 'paredit)
   (paredit-mode 1)
@@ -26,7 +34,7 @@
   (emacs-lisp-mode . paredit-mode)
   (lisp-mode . paredit-mode)
   (clojure-mode . paredit-mode)
-  (eval-expression-minibuffer-setup . my/eval-expression-paredit-setup)
+  (eval-expression-minibuffer-setup . pandaye/development-eval-expression-paredit-setup)
   (ielm-mode . paredit-mode))
 
 (use-package racket-mode
@@ -70,7 +78,7 @@
   (unless (display-graphic-p)
     (corfu-terminal-mode 1)))
 
-(defun my-common-lisp-completion-setup ()
+(defun pandaye/development-common-lisp-completion-setup ()
   "Use Corfu for Common Lisp completion without lsp-bridge conflict."
   (when (and (fboundp 'lsp-bridge-mode)
              (bound-and-true-p lsp-bridge-mode))
@@ -78,19 +86,22 @@
   (when (fboundp 'slime--completion-at-point)
     (remove-hook 'completion-at-point-functions #'slime--completion-at-point t)
     (add-hook 'completion-at-point-functions
-              #'my-slime-completion-at-point-if-connected nil t))
+              #'pandaye/development-slime-completion-at-point-if-connected nil t))
   (corfu-mode 1))
 
-(defun my-slime-completion-at-point-if-connected ()
+(defun pandaye/development-slime-completion-at-point-if-connected ()
   "Complete with SLIME when connected or auto-start is enabled."
   (when (and (fboundp 'slime-connected-p)
              (or (slime-connected-p)
                  (not (eq slime-auto-start 'never))))
     (slime--completion-at-point)))
 
-(add-hook 'lisp-mode-hook #'my-common-lisp-completion-setup)
-(add-hook 'slime-mode-hook #'my-common-lisp-completion-setup)
-(add-hook 'slime-repl-mode-hook #'my-common-lisp-completion-setup)
+(defalias 'my-slime-completion-at-point-if-connected
+  #'pandaye/development-slime-completion-at-point-if-connected)
+
+(add-hook 'lisp-mode-hook #'pandaye/development-common-lisp-completion-setup)
+(add-hook 'slime-mode-hook #'pandaye/development-common-lisp-completion-setup)
+(add-hook 'slime-repl-mode-hook #'pandaye/development-common-lisp-completion-setup)
 
 (use-package slime
   :commands (slime)
@@ -116,8 +127,6 @@
 
 (use-package yasnippet-snippets
   :after yasnippet)
-
-(require 'init-lsp)
 
 (provide 'init-development)
 ;;; init-development.el ends here

@@ -10,7 +10,8 @@
 
 (condition-case err
     (require 'init-ui)
-  (error (message "my-ui-keyboard 加载失败: %s" (error-message-string err))))
+  (error (message "界面与模态编辑配置加载失败: %s"
+                  (error-message-string err))))
 
 (require 'init-defaults)
 (require 'init-local)
@@ -19,9 +20,13 @@
 (require 'init-navigation)
 (require 'init-vcs)
 (require 'init-org)
+(require 'init-org-writing)
+(require 'init-org-gtd)
+(require 'init-org-roam)
 (require 'init-markdown)
 (require 'init-input-method)
 (require 'init-development)
+(require 'init-lsp)
 (require 'init-reader)
 (require 'init-keybindings)
 

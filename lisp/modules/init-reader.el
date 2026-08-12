@@ -5,10 +5,10 @@
 (use-package gt
   :defer t
   :init
-  (setq gt-langs my/gt-reading-langs
+  (setq gt-langs translate-reading-langs
         gt-buffer-render-follow-p t))
 
-(add-hook 'after-init-hook #'my/gt-pysbd-ensure-installed)
+(add-hook 'after-init-hook #'translate-pysbd-ensure-installed)
 
 ;; ============================================================
 ;; 日志与监控
@@ -20,20 +20,24 @@
 ;; ============================================================
 ;; RSS 订阅
 ;; ============================================================
-(defvar my/elfeed-feeds nil
+(defvaralias 'my/elfeed-feeds 'pandaye/reader-elfeed-feeds)
+
+(defvar pandaye/reader-elfeed-feeds nil
   "User-local Elfeed subscriptions loaded from local vars.")
 
-(defun my/elfeed-apply-feeds ()
+(defun pandaye/reader-elfeed-apply-feeds ()
   "Apply local or default Elfeed subscriptions to `elfeed-feeds'."
-  (setq elfeed-feeds my/elfeed-feeds))
+  (setq elfeed-feeds pandaye/reader-elfeed-feeds))
+
+(defalias 'my/elfeed-apply-feeds #'pandaye/reader-elfeed-apply-feeds)
 
 (use-package elfeed
   :config
-  (my/elfeed-apply-feeds)
+  (pandaye/reader-elfeed-apply-feeds)
   (define-key elfeed-show-mode-map (kbd "C-c k")
-              #'my/elfeed-translate-dwim)
+              #'translate-elfeed-dwim)
   (define-key elfeed-search-mode-map (kbd "C-c k")
-              #'my/elfeed-translate-dwim))
+              #'translate-elfeed-dwim))
 
 (provide 'init-reader)
-;;; my-reader.el ends here
+;;; init-reader.el ends here

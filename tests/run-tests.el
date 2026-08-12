@@ -5,7 +5,7 @@
 (load (expand-file-name "architecture-test.el" (file-name-directory load-file-name)))
 (load (expand-file-name "hyperbole-config-test.el" (file-name-directory load-file-name)))
 (load (expand-file-name "markdown-config-test.el" (file-name-directory load-file-name)))
-(load (expand-file-name "my-static-blog-test.el" (file-name-directory load-file-name)))
+(load (expand-file-name "static-blog-test.el" (file-name-directory load-file-name)))
 (load (expand-file-name "org-ssh-test.el" (file-name-directory load-file-name)))
 
 (ert-run-tests-batch-and-exit)

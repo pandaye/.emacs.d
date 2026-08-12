@@ -1,4 +1,4 @@
-;;; my-clipboard.el --- Unified clipboard for terminal Emacs  -*- lexical-binding: t; -*-
+;;; terminal-clipboard.el --- Unified clipboard for terminal Emacs  -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; 终端 Emacs 剪贴板集成（GUI 无需此模块）。
@@ -7,32 +7,32 @@
 ;;   macOS 终端  → pbcopy / pbpaste（双向）
 ;;   其他终端    → OSC 52 复制到本地剪贴板（粘贴走 kill-ring）
 ;;
-;; 加载方式：由 `my-editor' 在终端环境中加载。
+;; 加载方式：由 `init-editor' 在终端环境中加载。
 
 ;;; Code:
 
 ;; ── 工具函数 ──────────────────────────────────────────────
 
-(defun my/in-tmux-p ()
+(defun terminal-clipboard-in-tmux-p ()
   "Return non-nil when running inside tmux."
   (getenv "TMUX"))
 
 ;; ── macOS: pbcopy / pbpaste ──────────────────────────────
 
-(defun my/pbcopy (text &optional _push)
+(defun terminal-clipboard-pbcopy (text &optional _push)
   "Copy TEXT to macOS clipboard via pbcopy."
   (let ((process-connection-type nil))
     (let ((proc (start-process "pbcopy" nil "pbcopy")))
       (process-send-string proc text)
       (process-send-eof proc))))
 
-(defun my/pbpaste ()
+(defun terminal-clipboard-pbpaste ()
   "Return macOS clipboard content via pbpaste."
   (shell-command-to-string "pbpaste"))
 
 ;; ── 非 macOS: OSC 52 ────────────────────────────────────
 
-(defun my/osc-52-copy (text)
+(defun terminal-clipboard-osc-52-copy (text)
   "Copy TEXT to system clipboard using OSC 52 escape sequence.
 Works with modern terminals like WezTerm, iTerm2, and tmux."
   (let* ((utf8-text (encode-coding-string text 'utf-8 t))
@@ -40,26 +40,34 @@ Works with modern terminals like WezTerm, iTerm2, and tmux."
          (osc-seq (concat "\e]52;c;" encoded "\a")))
     (send-string-to-terminal osc-seq)))
 
-(defun my/osc-52-cut-function (text &optional _push)
+(defun terminal-clipboard-osc-52-cut-function (text &optional _push)
   "Copy TEXT to clipboard via OSC 52 in terminal.
 Suitable as `interprogram-cut-function'."
   (when (and text (not (display-graphic-p)))
     (condition-case err
-        (my/osc-52-copy text)
+        (terminal-clipboard-osc-52-copy text)
       (error
        (message "OSC 52 copy failed: %s" (error-message-string err))
        nil))))
 
 ;; ── 诊断 ─────────────────────────────────────────────────
 
-(defun my/clipboard-info ()
+(defun terminal-clipboard-clipboard-info ()
   "Display clipboard configuration info."
   (interactive)
   (message "Clipboard: cut=%s, paste=%s, tmux=%s, system=%s"
            interprogram-cut-function
            interprogram-paste-function
-           (if (my/in-tmux-p) "yes" "no")
+           (if (terminal-clipboard-in-tmux-p) "yes" "no")
            system-type))
 
+(dolist (names '((my/in-tmux-p . terminal-clipboard-in-tmux-p)
+                 (my/pbcopy . terminal-clipboard-pbcopy)
+                 (my/pbpaste . terminal-clipboard-pbpaste)
+                 (my/osc-52-copy . terminal-clipboard-osc-52-copy)
+                 (my/osc-52-cut-function . terminal-clipboard-osc-52-cut-function)
+                 (my/clipboard-info . terminal-clipboard-clipboard-info)))
+  (defalias (car names) (cdr names)))
+
 (provide 'terminal-clipboard)
-;;; my-clipboard.el ends here
+;;; terminal-clipboard.el ends here

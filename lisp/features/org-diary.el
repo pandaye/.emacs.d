@@ -1,9 +1,9 @@
 ;; -*- lexical-binding: t; -*-
-;;; my-diary.el --- 日记系统配置
+;;; org-diary.el --- 日记系统配置
 
 ;;; Commentary:
 ;; 每日日记文件管理，包括打开当日日记、按日期打开、列出日记文件。
-;; 依赖 my-gtd.el 中的 org-base-path 变量。
+;; 基础目录由所属配置模块注入。
 
 ;;; Code:
 
@@ -63,7 +63,7 @@ DATE-STRING 格式为 YYYY-MM-DD 或 MM-DD（默认当年）。"
       (insert "* Today's Notes\n\n")
       (save-buffer))))
 
-(defun my/diary--file-date (file)
+(defun org-diary--file-date (file)
   "Return encoded time for diary FILE.
 Expected layout is daily/YY/MM-DD.org."
   (let* ((year (concat "20" (file-name-nondirectory
@@ -77,35 +77,35 @@ Expected layout is daily/YY/MM-DD.org."
                  (string-to-number month)
                  (string-to-number year))))
 
-(defun my/diary--list-items ()
+(defun org-diary--list-items ()
   "Return diary listing items sorted by diary date descending."
   (let ((files (if (file-directory-p daily-diary-base-path)
                    (directory-files-recursively daily-diary-base-path "\\.org\\'")
                  nil)))
     (mapcar (lambda (file)
-              (let ((date (my/diary--file-date file)))
-                (list :group (my/org-list-group-label date)
+              (let ((date (org-diary--file-date file)))
+                (list :group (org-list-group-label date)
                       :file file
                       :date date
                       :label (format-time-string "%Y-%m-%d %a" date))))
             (seq-sort (lambda (a b)
-                        (time-less-p (my/diary--file-date b)
-                                     (my/diary--file-date a)))
+                        (time-less-p (org-diary--file-date b)
+                                     (org-diary--file-date a)))
                       files))))
 
-(defun my/diary--insert-list-item (item)
+(defun org-diary--insert-list-item (item)
   "Insert one diary ITEM into the current listing buffer."
   (insert (format "- %s\n"
-                  (my/org-list-make-link (plist-get item :file)
+                  (org-list-make-link (plist-get item :file)
                                          (plist-get item :label)))))
 
 (defun list-diary-files ()
   "列出所有日记文件，按年月分组并分页显示。"
   (interactive)
-  (my/org-list-open-buffer "*Diary Files*"
+  (org-list-open-buffer "*Diary Files*"
                            "Daily Diary Files"
-                           #'my/diary--list-items
-                           #'my/diary--insert-list-item))
+                           #'org-diary--list-items
+                           #'org-diary--insert-list-item))
 
 (provide 'org-diary)
-;;; my-diary.el ends here
+;;; org-diary.el ends here

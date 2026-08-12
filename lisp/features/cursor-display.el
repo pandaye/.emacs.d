@@ -1,4 +1,4 @@
-;;; my-cursor.el --- Dynamic cursor color management  -*- lexical-binding: t; -*-
+;;; cursor-display.el --- Dynamic cursor color management  -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; 终端下根据 Meow 模式状态和 Rime/Rimel 输入法动态改变光标颜色（OSC 12）。
@@ -25,63 +25,74 @@
 
 ;; ── 颜色配置 ─────────────────────────────────────────────
 
-(defvar my/cursor-color-rime   "#FF6B6B" "Insert + Rime 激活时的光标颜色。")
-(defvar my/cursor-color-motion "#FFA500" "Meow motion 模式的光标颜色。")
-(defvar my/cursor-color-normal "#00FF00" "Meow normal / insert 无 Rime 的光标颜色。")
+(defvaralias 'my/cursor-color-rime 'cursor-display-cursor-color-rime)
+(defvaralias 'my/cursor-color-motion 'cursor-display-cursor-color-motion)
+(defvaralias 'my/cursor-color-normal 'cursor-display-cursor-color-normal)
+
+(defvar cursor-display-cursor-color-rime   "#FF6B6B" "Insert + Rime 激活时的光标颜色。")
+(defvar cursor-display-cursor-color-motion "#FFA500" "Meow motion 模式的光标颜色。")
+(defvar cursor-display-cursor-color-normal "#00FF00" "Meow normal / insert 无 Rime 的光标颜色。")
 
 ;; ── Rime 状态检测 ─────────────────────────────────────────
 
-(defun my/rime-active-p ()
+(defun cursor-display-rime-active-p ()
   "Return non-nil if a Rime-family input method is active in the current buffer."
   (member current-input-method '("rime" "rimel")))
 
 ;; ── 核心函数 ─────────────────────────────────────────────
 
-(defun my/wezterm-set-cursor-color (color)
+(defun cursor-display-wezterm-set-cursor-color (color)
   "通过 OSC 12 设置终端光标颜色。COLOR 为十六进制字符串如 \"#FF0000\"。"
   (unless (display-graphic-p)
     (send-string-to-terminal (format "\e]12;%s\a" color))))
 
-(defvar my/cursor--last-color nil
+(defvar cursor-display-cursor--last-color nil
   "上次设置的光标颜色，避免重复发送 OSC 序列。")
 
-(defun my/cursor--set-color (color)
+(defun cursor-display-cursor--set-color (color)
   "仅在颜色变化时发送 OSC 12。COLOR 为 nil 时保持当前颜色不变。"
-  (when (and color (not (equal color my/cursor--last-color)))
-    (setq my/cursor--last-color color)
-    (my/wezterm-set-cursor-color color)))
+  (when (and color (not (equal color cursor-display-cursor--last-color)))
+    (setq cursor-display-cursor--last-color color)
+    (cursor-display-wezterm-set-cursor-color color)))
 
-(defun my/cursor--compute-color (state)
+(defun cursor-display-cursor--compute-color (state)
   "根据 STATE 和 Rime 状态计算颜色。
 未知 state（keypad/beacon/...）返回 nil，表示保持上次颜色不变，
 避免短暂态污染 insert+rime 红色。"
   (cond
-   ((and (eq state 'insert) (my/rime-active-p))
-    my/cursor-color-rime)
+   ((and (eq state 'insert) (cursor-display-rime-active-p))
+    cursor-display-cursor-color-rime)
    ((eq state 'insert)               ; insert 无 rime
-    my/cursor-color-normal)
+    cursor-display-cursor-color-normal)
    ((eq state 'motion)
-    my/cursor-color-motion)
+    cursor-display-cursor-color-motion)
    ((eq state 'normal)
-    my/cursor-color-normal)
+    cursor-display-cursor-color-normal)
    (t nil)))                          ; keypad/beacon/未知 → 保持
 
-(defun my/update-cursor-color-for-state (state)
+(defun cursor-display-update-cursor-color-for-state (state)
   "meow-switch-state-hook 回调。STATE 为新 state。
 仅当 current-buffer 为 selected-window 的可见 buffer 时才处理，
 避免后台 buffer（如 *diff-hl-diff*）的 state 切换污染光标颜色。"
   (when (eq (current-buffer) (window-buffer (selected-window)))
-    (my/cursor--set-color (my/cursor--compute-color state))))
+    (cursor-display-cursor--set-color (cursor-display-cursor--compute-color state))))
 
-(defun my/update-cursor-color-for-buffer (&optional _frame)
+(defun cursor-display-update-cursor-color-for-buffer (&optional _frame)
   "窗口 / buffer / 输入法切换时，根据 selected-window 的 buffer 重新判定。"
   (with-current-buffer (window-buffer (selected-window))
     (when (bound-and-true-p meow-mode)
-      (my/cursor--set-color (my/cursor--compute-color (meow--current-state))))))
+      (cursor-display-cursor--set-color (cursor-display-cursor--compute-color (meow--current-state))))))
 
-(defun my/refresh-cursor-color-after-input-method (&rest _args)
+(defun cursor-display-refresh-cursor-color-after-input-method (&rest _args)
   "Refresh cursor color after input-method related commands."
-  (my/update-cursor-color-for-buffer))
+  (cursor-display-update-cursor-color-for-buffer))
+
+(defalias 'my/update-cursor-color-for-state
+  #'cursor-display-update-cursor-color-for-state)
+(defalias 'my/update-cursor-color-for-buffer
+  #'cursor-display-update-cursor-color-for-buffer)
+(defalias 'my/refresh-cursor-color-after-input-method
+  #'cursor-display-refresh-cursor-color-after-input-method)
 
 (provide 'cursor-display)
-;;; my-cursor.el ends here
+;;; cursor-display.el ends here

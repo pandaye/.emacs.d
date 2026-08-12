@@ -1,13 +1,13 @@
 ;; -*- lexical-binding: t; -*-
-;;; my-org-writing.el --- Org 外观美化配置
+;;; init-org-writing.el --- Org 外观美化配置
 
 ;;; Commentary:
 ;; Org 模式的外观设置，包括引用块美化、代码块标题低可视度等。
 ;; 其他 Org 功能已拆分到独立模块：
-;; - my-rime.el: 中文输入法配置
-;; - my-gtd.el: GTD 任务管理
-;; - my-diary.el: 日记系统
-;; - my-org-roam.el: 双向链接笔记
+;; - init-input-method.el: 中文输入法配置
+;; - init-org-gtd.el: GTD 任务管理
+;; - org-diary.el: 日记系统
+;; - init-org-roam.el: 双向链接笔记
 
 ;;; Code:
 
@@ -31,4 +31,4 @@
     0 'font-lock-comment-face t)))
 
 (provide 'init-org-writing)
-;;; my-org-writing.el ends here
+;;; init-org-writing.el ends here

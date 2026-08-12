@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-;;; my-gtd.el --- GTD 和 Org Agenda 配置
+;;; init-org-gtd.el --- GTD 和 Org Agenda 配置
 
 ;;; Commentary:
 ;; GTD（Getting Things Done）任务管理系统，包括 org-todo 关键字、
@@ -21,7 +21,9 @@
   (concat org-base-path "/project.org")
   "GTD 主文件路径。")
 
-(defvar my/issue-file (expand-file-name "issue.org" org-base-path)
+(defvaralias 'my/issue-file 'pandaye/org-issue-file)
+
+(defvar pandaye/org-issue-file (expand-file-name "issue.org" org-base-path)
   "Issue inbox 文件路径。")
 
 ;; ============================================================
@@ -82,7 +84,7 @@
       `(
         ;; 日常任务：直接写入 issue.org 顶层（inbox 文件）
         ("i" "Issue (inbox todo)" entry
-         (file ,my/issue-file)
+         (file ,pandaye/org-issue-file)
          "* TODO %?\n  %U\n  %a\n"
          :empty-lines 1)
         ))
@@ -107,7 +109,7 @@
 (setq org-outline-path-complete-in-steps nil)
 
 ;; 自定义 Agenda 命令 - Weekly Review
-(defun my/org-last-week-range ()
+(defun pandaye/org-last-week-range ()
   "Return the start and end time of last week as a cons cell.
 Weeks start on Monday, matching the agenda configuration."
   (let* ((now (decode-time (current-time)))
@@ -122,7 +124,7 @@ Weeks start on Monday, matching the agenda configuration."
          (last-monday (time-subtract this-monday (days-to-time 7))))
     (cons last-monday this-monday)))
 
-(defun my/org-this-week-range ()
+(defun pandaye/org-this-week-range ()
   "Return the start and end time of this week as a cons cell.
 Weeks start on Monday, matching the agenda configuration."
   (let* ((now (decode-time (current-time)))
@@ -137,11 +139,11 @@ Weeks start on Monday, matching the agenda configuration."
          (next-monday (time-add this-monday (days-to-time 7))))
     (cons this-monday next-monday)))
 
-(defun my/org-agenda-skip-not-updated-last-week ()
+(defun pandaye/org-agenda-skip-not-updated-last-week ()
   "Skip entries whose latest state change did not happen during last week."
   (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
-         (state-change-time (my/org-entry-last-state-change-time subtree-end))
-         (range (my/org-last-week-range))
+         (state-change-time (pandaye/org-entry-last-state-change-time subtree-end))
+         (range (pandaye/org-last-week-range))
          (start (car range))
          (end (cdr range)))
     (if (and state-change-time
@@ -150,14 +152,14 @@ Weeks start on Monday, matching the agenda configuration."
         nil
       subtree-end)))
 
-(defun my/org-entry-last-state-change-time (subtree-end)
+(defun pandaye/org-entry-last-state-change-time (subtree-end)
   "Return latest state change time for current entry before SUBTREE-END.
 Prefer the latest TODO state transition in LOGBOOK, then CLOSED,
 then ARCHIVE_TIME for archived entries."
   (or (save-excursion
         (let ((case-fold-search nil)
               (latest nil)
-              (todo-regexp (regexp-opt (my/org-all-todo-keywords))))
+              (todo-regexp (regexp-opt (pandaye/org-all-todo-keywords))))
           (while (re-search-forward
                   (format "^[ \t]*- State \"%s\".*\\(\\[[^]]+\\]\\)" todo-regexp)
                   subtree-end t)
@@ -170,7 +172,7 @@ then ARCHIVE_TIME for archived entries."
              (org-time-string-to-time
               (concat "[" archive-time "]"))))))
 
-(defun my/org-entry-closed-time (subtree-end)
+(defun pandaye/org-entry-closed-time (subtree-end)
   "Return closing time for current entry before SUBTREE-END.
 Prefer CLOSED, then the latest done-state transition in LOGBOOK,
 then ARCHIVE_TIME for archived entries."
@@ -179,7 +181,7 @@ then ARCHIVE_TIME for archived entries."
       (save-excursion
         (let ((case-fold-search nil)
               (latest nil)
-              (done-regexp (regexp-opt (my/org-done-keywords))))
+              (done-regexp (regexp-opt (pandaye/org-done-keywords))))
           (while (re-search-forward
                   (format "^[ \t]*- State \"%s\".*\\(\\[[^]]+\\]\\)" done-regexp)
                   subtree-end t)
@@ -190,13 +192,13 @@ then ARCHIVE_TIME for archived entries."
              (org-time-string-to-time
               (concat "[" archive-time "]"))))))
 
-(defun my/org-agenda-files-with-archives ()
+(defun pandaye/org-agenda-files-with-archives ()
   "Return agenda files plus archived Org files under `org-base-path'."
   (delete-dups
    (append (org-agenda-files t)
            (directory-files-recursively org-base-path "\\.org_archive\\'"))))
 
-(defun my/org-done-keywords ()
+(defun pandaye/org-done-keywords ()
   "Return configured done keywords reliably."
   (or org-done-keywords
       (let (done-seen done-keywords)
@@ -210,13 +212,13 @@ then ARCHIVE_TIME for archived entries."
                  (push (car (split-string keyword "[({]" t)) done-keywords))))))
         (nreverse done-keywords))))
 
-(defun my/org-closed-keywords ()
+(defun pandaye/org-closed-keywords ()
   "Return keywords treated as truly closed items."
   (seq-filter (lambda (keyword)
                 (member keyword '("DONE" "CANCEL")))
-              (my/org-done-keywords)))
+              (pandaye/org-done-keywords)))
 
-(defun my/org-all-todo-keywords ()
+(defun pandaye/org-all-todo-keywords ()
   "Return configured TODO keywords reliably."
   (or org-todo-keywords-1
       (let (todo-keywords)
@@ -227,11 +229,11 @@ then ARCHIVE_TIME for archived entries."
                 (push (car (split-string keyword "[({]" t)) todo-keywords)))))
         (nreverse todo-keywords))))
 
-(defun my/org-agenda-skip-not-closed-this-week ()
+(defun pandaye/org-agenda-skip-not-closed-this-week ()
   "Skip entries not closed during this week."
   (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
-         (closed-time (my/org-entry-closed-time subtree-end))
-         (range (my/org-this-week-range))
+         (closed-time (pandaye/org-entry-closed-time subtree-end))
+         (range (pandaye/org-this-week-range))
          (start (car range))
          (end (cdr range)))
     (if (and closed-time
@@ -240,39 +242,39 @@ then ARCHIVE_TIME for archived entries."
         nil
       subtree-end)))
 
-(defun my/org-last-week-status-update-blocks ()
+(defun pandaye/org-last-week-status-update-blocks ()
   "Return agenda blocks for items updated last week, grouped by current state."
   (mapcar (lambda (keyword)
             `(todo ,keyword
                    ((org-agenda-overriding-header ,(format "%s Updated Last Week" keyword))
-                    (org-agenda-files (my/org-agenda-files-with-archives))
-                    (org-agenda-skip-function #'my/org-agenda-skip-not-updated-last-week)
-                    (org-agenda-prefix-format '((todo . " %(my/org-agenda-state-change-time-prefix) %-12:c")))
+                    (org-agenda-files (pandaye/org-agenda-files-with-archives))
+                    (org-agenda-skip-function #'pandaye/org-agenda-skip-not-updated-last-week)
+                    (org-agenda-prefix-format '((todo . " %(pandaye/org-agenda-state-change-time-prefix) %-12:c")))
                     (org-agenda-sorting-strategy '(time-down priority-down category-keep)))))
-          (my/org-all-todo-keywords)))
+          (pandaye/org-all-todo-keywords)))
 
-(defun my/org-this-week-closed-blocks ()
+(defun pandaye/org-this-week-closed-blocks ()
   "Return agenda blocks for items closed this week, grouped by state."
   (mapcar (lambda (keyword)
             `(todo ,keyword
                    ((org-agenda-overriding-header ,(format "%s Closed This Week" keyword))
-                    (org-agenda-files (my/org-agenda-files-with-archives))
-                    (org-agenda-skip-function #'my/org-agenda-skip-not-closed-this-week)
-                    (org-agenda-prefix-format '((todo . " %(my/org-agenda-closed-time-prefix) %-12:c")))
+                    (org-agenda-files (pandaye/org-agenda-files-with-archives))
+                    (org-agenda-skip-function #'pandaye/org-agenda-skip-not-closed-this-week)
+                    (org-agenda-prefix-format '((todo . " %(pandaye/org-agenda-closed-time-prefix) %-12:c")))
                     (org-agenda-sorting-strategy '(time-down priority-down category-keep)))))
-          (my/org-closed-keywords)))
+          (pandaye/org-closed-keywords)))
 
-(defun my/org-agenda-state-change-time-prefix ()
+(defun pandaye/org-agenda-state-change-time-prefix ()
   "Return a formatted last state change timestamp for agenda prefixes."
-  (let ((state-change-time (my/org-entry-last-state-change-time
+  (let ((state-change-time (pandaye/org-entry-last-state-change-time
                             (save-excursion (org-end-of-subtree t)))))
     (if state-change-time
         (format-time-string "%m-%d %a %H:%M " state-change-time)
       "")))
 
-(defun my/org-agenda-closed-time-prefix ()
+(defun pandaye/org-agenda-closed-time-prefix ()
   "Return a formatted closing timestamp for agenda prefixes."
-  (let ((closed-time (my/org-entry-closed-time
+  (let ((closed-time (pandaye/org-entry-closed-time
                       (save-excursion (org-end-of-subtree t)))))
     (if closed-time
         (format-time-string "%m-%d %a %H:%M " closed-time)
@@ -298,10 +300,10 @@ then ARCHIVE_TIME for archived entries."
                         ((org-agenda-overriding-header "Scheduled for Later"))))))
   (add-to-list 'org-agenda-custom-commands
                `("W" "Last Week Status Updates"
-                 ,(my/org-last-week-status-update-blocks)))
+                 ,(pandaye/org-last-week-status-update-blocks)))
   (add-to-list 'org-agenda-custom-commands
                `("C" "This Week Closed"
-                 ,(my/org-this-week-closed-blocks))))
+                 ,(pandaye/org-this-week-closed-blocks))))
 
 ;; ============================================================
 ;; 快捷键
@@ -311,14 +313,14 @@ then ARCHIVE_TIME for archived entries."
 ;; Agenda 着色
 ;; ============================================================
 
-(defun my/org-agenda-colorize-category ()
+(defun pandaye/org-agenda-colorize-category ()
   "Colorize only the category part of agenda items based on source file."
   (save-excursion
     (goto-char (point-min))
     (while (not (eobp))
       (let* ((cat (get-text-property (point) 'org-category))
              (color (when cat
-                      (cl-loop for (pattern . col) in my/org-agenda-file-colors
+                      (cl-loop for (pattern . col) in pandaye/org-agenda-file-colors
                                 when (string-match-p pattern cat)
                                 return col))))
         (when color
@@ -329,13 +331,15 @@ then ARCHIVE_TIME for archived entries."
                                       `(:foreground ,color))))))
       (forward-line 1))))
 
-(defvar my/org-agenda-file-colors
+(defvaralias 'my/org-agenda-file-colors 'pandaye/org-agenda-file-colors)
+
+(defvar pandaye/org-agenda-file-colors
   '(("project" . "#ff7b72")
     ("issue" . "#79c0ff")
     ("daily" . "#a5d6ff"))
   "文件名到颜色的映射，用于 agenda 条目分类着色。")
 
-(defun my/org-agenda-dim-block-separators ()
+(defun pandaye/org-agenda-dim-block-separators ()
   "Tone down block separators in agenda buffers."
   (let ((separator org-agenda-block-separator))
     (when separator
@@ -349,8 +353,11 @@ then ARCHIVE_TIME for archived entries."
              (match-beginning 0) (match-end 0)
              '(:foreground "#665c54"))))))))
 
-(add-hook 'org-agenda-finalize-hook #'my/org-agenda-colorize-category)
-(add-hook 'org-agenda-finalize-hook #'my/org-agenda-dim-block-separators)
+(add-hook 'org-agenda-finalize-hook #'pandaye/org-agenda-colorize-category)
+(add-hook 'org-agenda-finalize-hook #'pandaye/org-agenda-dim-block-separators)
+
+(require 'org-diary)
+(setq daily-diary-base-path (expand-file-name "daily" org-base-path))
 
 (provide 'init-org-gtd)
-;;; my-gtd.el ends here
+;;; init-org-gtd.el ends here

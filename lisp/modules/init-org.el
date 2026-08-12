@@ -10,18 +10,30 @@
 (use-package htmlize
   :defer t)
 
-(require 'init-org-writing)  ;; Org 外观美化
 (require 'static-blog)       ;; Org 静态博客发布
-(require 'init-org-gtd)      ;; GTD 任务管理
-(require 'org-diary)         ;; 日记系统
-(setq daily-diary-base-path (expand-file-name "daily" org-base-path))
-(require 'init-org-roam)     ;; Org-roam 双向链接
 
 (unless (featurep 'org-tempo)
   (require 'org-tempo))
 
 (use-package ox-gfm
   :after org)
+
+(with-eval-after-load 'org
+  (define-key org-mode-map (kbd "C-c s c")
+              #'org-ssh-connect-all-servers-in-file)
+  (define-key org-mode-map (kbd "C-c s a")
+              #'org-ssh-add-server-to-current-group)
+  (define-key org-mode-map (kbd "C-c s s")
+              #'org-ssh-show-ssh-config-summary)
+  (define-key org-mode-map (kbd "C-c s n") #'org-ssh-create-template)
+  (define-key org-mode-map (kbd "C-c s o") #'org-ssh-open-group-file)
+  (define-key org-mode-map (kbd "C-c s l") #'org-ssh-create-link-and-open)
+  (define-key org-mode-map (kbd "C-c s d") #'org-ssh-debug-command))
+
+(with-eval-after-load 'hact
+  (defact org-ssh-new ()
+    "Create a new Org SSH link at point and open it in tmux."
+    (call-interactively #'org-ssh-create-link-and-open)))
 
 (provide 'init-org)
 ;;; init-org.el ends here

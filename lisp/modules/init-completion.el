@@ -50,6 +50,31 @@
         completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion)))))
 
+(defun pandaye/completion-consult-git-files (&optional directory)
+  "Select a Git-managed file below DIRECTORY with Consult.
+Include tracked and untracked non-ignored files.  DIRECTORY defaults to the
+current repository root."
+  (interactive)
+  (require 'consult)
+  (require 'vc-git)
+  (let* ((root (or directory
+                   (vc-git-root default-directory)
+                   (user-error "Not inside a Git repository")))
+         (default-directory root)
+         (files (process-lines "git" "ls-files" "--cached" "--others"
+                               "--exclude-standard"))
+         (selected (consult--read files
+                                  :prompt "Git file: "
+                                  :category 'file
+                                  :require-match t
+                                  :sort nil
+                                  :state (consult--file-state))))
+    (find-file (expand-file-name selected root))))
+
+;; Preserve the long-standing key target even though recent Consult versions
+;; no longer provide this command themselves.
+(defalias 'consult-git-files #'pandaye/completion-consult-git-files)
+
 (use-package consult
   :after recentf
   :config
@@ -59,41 +84,41 @@
    consult-buffer-other-frame
    :preview-key nil)
 
-  (defface my/consult-buffer-annotation
+  (defface pandaye/completion-consult-buffer-annotation
     '((t :inherit font-lock-comment-face :weight normal))
     "Face for custom `consult-buffer' annotations.")
 
-  (defface my/consult-buffer-directory
+  (defface pandaye/completion-consult-buffer-directory
     '((t :inherit font-lock-comment-face :weight normal))
     "Face for right-aligned buffer directory annotations.")
 
-  (defface my/consult-buffer-virtual-file
+  (defface pandaye/completion-consult-buffer-virtual-file
     '((t :inherit shadow))
-    "Face for unopened file candidates in `my/consult-buffer'.")
+    "Face for unopened file candidates in `pandaye/completion-consult-buffer'.")
 
-  (define-minor-mode my/consult-buffer-annotations-mode
-    "Use custom annotations for `my/consult-buffer'."
+  (define-minor-mode pandaye/completion-consult-buffer-annotations-mode
+    "Use custom annotations for `pandaye/completion-consult-buffer'."
     :global t
     :init-value t)
 
-  (defvar my/consult-buffer--annotation-width 0
-    "Precomputed annotation start column for `my/consult-buffer'.")
+  (defvar pandaye/completion-consult-buffer--annotation-width 0
+    "Precomputed annotation start column for `pandaye/completion-consult-buffer'.")
 
-  (defvar my/consult-buffer-right-margin 1
-    "Columns reserved at the right edge for `my/consult-buffer' annotations.")
+  (defvar pandaye/completion-consult-buffer-right-margin 1
+    "Columns reserved at the right edge for `pandaye/completion-consult-buffer' annotations.")
 
-  (defun my/consult-buffer--candidate-buffer (candidate)
+  (defun pandaye/completion-consult-buffer--candidate-buffer (candidate)
     "Return buffer represented by Consult CANDIDATE metadata."
     (cond
      ((bufferp candidate) candidate)
      ((stringp candidate) (get-buffer candidate))))
 
-  (defun my/consult-buffer--status (buffer)
+  (defun pandaye/completion-consult-buffer--status (buffer)
     "Return short status string for BUFFER."
     (concat (if (buffer-modified-p buffer) "*" "-")
             (if (buffer-local-value 'buffer-read-only buffer) "%" "-")))
 
-  (defun my/consult-buffer--mode-name (buffer)
+  (defun pandaye/completion-consult-buffer--mode-name (buffer)
     "Return display mode name for BUFFER."
     (with-current-buffer buffer
       (truncate-string-to-width
@@ -102,7 +127,7 @@
          (format-mode-line mode-name))
        18 nil nil "...")))
 
-  (defun my/consult-buffer--truncate-left (text width)
+  (defun pandaye/completion-consult-buffer--truncate-left (text width)
     "Truncate TEXT to WIDTH columns from the left."
     (cond
      ((<= width 0) "")
@@ -115,21 +140,21 @@
           (nreverse
            (truncate-string-to-width (reverse text) width 0 nil ellipsis)))))))
 
-  (defun my/consult-buffer--annotation-start (buffer)
+  (defun pandaye/completion-consult-buffer--annotation-start (buffer)
     "Return Consult annotation start column for BUFFER."
-    (min (my/consult-buffer--annotation-width-limit)
-         (max my/consult-buffer--annotation-width
+    (min (pandaye/completion-consult-buffer--annotation-width-limit)
+         (max pandaye/completion-consult-buffer--annotation-width
               (* (ceiling (string-width (buffer-name buffer))
                           consult--annotate-align-step)
                  consult--annotate-align-step))))
 
-  (defun my/consult-buffer--annotation-width-limit ()
+  (defun pandaye/completion-consult-buffer--annotation-width-limit ()
     "Return the maximum useful annotation start column."
     (max 0 (- (window-width (minibuffer-window))
-              my/consult-buffer-right-margin
+              pandaye/completion-consult-buffer-right-margin
               (string-width " --  Lisp Interaction"))))
 
-  (defun my/consult-buffer--source-width (source)
+  (defun pandaye/completion-consult-buffer--source-width (source)
     "Return maximum visible candidate width in Consult SOURCE."
     (let ((width 0))
       (unless (or (plist-get source :hidden)
@@ -145,88 +170,88 @@
                             (substring-no-properties candidate)))))))))
       width))
 
-  (defun my/consult-buffer--compute-annotation-width (sources)
+  (defun pandaye/completion-consult-buffer--compute-annotation-width (sources)
     "Return the annotation start column for initial Consult SOURCES."
     (let ((width 0))
       (dolist (source sources)
         (setq width
               (max width
-                   (my/consult-buffer--source-width
+                   (pandaye/completion-consult-buffer--source-width
                     (if (symbolp source) (symbol-value source) source)))))
-      (min (my/consult-buffer--annotation-width-limit)
+      (min (pandaye/completion-consult-buffer--annotation-width-limit)
            (* (ceiling width consult--annotate-align-step)
               consult--annotate-align-step))))
 
-  (defun my/consult-buffer--align-annotation (orig candidate annotation)
-    "Use real spaces for stable `my/consult-buffer' annotations."
-    (if (zerop my/consult-buffer--annotation-width)
+  (defun pandaye/completion-consult-buffer--align-annotation (orig candidate annotation)
+    "Use real spaces for stable `pandaye/completion-consult-buffer' annotations."
+    (if (zerop pandaye/completion-consult-buffer--annotation-width)
         (funcall orig candidate annotation)
-      (setq consult--annotate-align-width my/consult-buffer--annotation-width)
+      (setq consult--annotate-align-width pandaye/completion-consult-buffer--annotation-width)
       (when annotation
         (let* ((candidate (if (fboundp 'consult--tofu-strip)
                               (consult--tofu-strip candidate)
                             (substring-no-properties candidate)))
-               (padding (max 1 (- my/consult-buffer--annotation-width
+               (padding (max 1 (- pandaye/completion-consult-buffer--annotation-width
                                    (string-width candidate)))))
           (concat (make-string padding ?\s) annotation)))))
 
-  (defun my/consult-buffer--right-directory (buffer left directory)
+  (defun pandaye/completion-consult-buffer--right-directory (buffer left directory)
     "Return DIRECTORY right-aligned after LEFT for BUFFER."
     (let* ((available (- (window-width (minibuffer-window))
-                         (my/consult-buffer--annotation-start buffer)
-                         my/consult-buffer-right-margin))
+                         (pandaye/completion-consult-buffer--annotation-start buffer)
+                         pandaye/completion-consult-buffer-right-margin))
            (directory-width (max 0 (- available (string-width left))))
-           (directory (my/consult-buffer--truncate-left directory directory-width))
+           (directory (pandaye/completion-consult-buffer--truncate-left directory directory-width))
            (padding (max 0 (- available
                                (string-width left)
                                (string-width directory)))))
       (concat
-       (propertize (make-string padding ?\s) 'face 'my/consult-buffer-annotation)
-       (propertize directory 'face 'my/consult-buffer-directory))))
+       (propertize (make-string padding ?\s) 'face 'pandaye/completion-consult-buffer-annotation)
+       (propertize directory 'face 'pandaye/completion-consult-buffer-directory))))
 
-  (defun my/consult-buffer-annotate (candidate)
+  (defun pandaye/completion-consult-buffer-annotate (candidate)
     "Annotate buffer CANDIDATE with status, mode and right-aligned dirname."
-    (when-let* ((buffer (my/consult-buffer--candidate-buffer candidate)))
+    (when-let* ((buffer (pandaye/completion-consult-buffer--candidate-buffer candidate)))
       (let* ((file (buffer-file-name buffer))
              (directory (and file
                              (abbreviate-file-name
                               (file-name-directory file))))
              (left (format " %s  %-18s"
-                           (my/consult-buffer--status buffer)
-                           (my/consult-buffer--mode-name buffer))))
+                           (pandaye/completion-consult-buffer--status buffer)
+                           (pandaye/completion-consult-buffer--mode-name buffer))))
         (concat
-         (propertize left 'face 'my/consult-buffer-annotation)
+         (propertize left 'face 'pandaye/completion-consult-buffer-annotation)
          (when directory
-           (my/consult-buffer--right-directory buffer left directory))))))
+           (pandaye/completion-consult-buffer--right-directory buffer left directory))))))
 
-  (defun my/consult-buffer--annotated-source (source)
+  (defun pandaye/completion-consult-buffer--annotated-source (source)
     "Return Consult SOURCE with custom display settings."
     (let ((source (copy-sequence (if (symbolp source) (symbol-value source) source))))
       (setq source (plist-put source :name nil))
       (pcase (plist-get source :category)
         ('buffer
-         (setq source (plist-put source :annotate #'my/consult-buffer-annotate)))
+         (setq source (plist-put source :annotate #'pandaye/completion-consult-buffer-annotate)))
         ('file
-         (setq source (plist-put source :face 'my/consult-buffer-virtual-file))))
+         (setq source (plist-put source :face 'pandaye/completion-consult-buffer-virtual-file))))
       source))
 
-  (defun my/consult-buffer--sources ()
+  (defun pandaye/completion-consult-buffer--sources ()
     "Return `consult-buffer-sources' with custom buffer annotations."
-    (if my/consult-buffer-annotations-mode
-        (mapcar #'my/consult-buffer--annotated-source consult-buffer-sources)
+    (if pandaye/completion-consult-buffer-annotations-mode
+        (mapcar #'pandaye/completion-consult-buffer--annotated-source consult-buffer-sources)
       consult-buffer-sources))
 
-  (defun my/consult-buffer ()
+  (defun pandaye/completion-consult-buffer ()
     "Run `consult-buffer' with custom buffer annotations."
     (interactive)
-    (let* ((sources (my/consult-buffer--sources))
-           (my/consult-buffer--annotation-width
-            (my/consult-buffer--compute-annotation-width sources))
+    (let* ((sources (pandaye/completion-consult-buffer--sources))
+           (pandaye/completion-consult-buffer--annotation-width
+            (pandaye/completion-consult-buffer--compute-annotation-width sources))
            (consult-preview-key nil))
       (consult-buffer sources)))
 
   (advice-add 'consult--annotate-align
-              :around #'my/consult-buffer--align-annotation))
+              :around #'pandaye/completion-consult-buffer--align-annotation))
 
 (provide 'init-completion)
 ;;; init-completion.el ends here

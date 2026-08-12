@@ -2,8 +2,7 @@
 ;;; init-lsp.el --- LSP Bridge configuration
 
 ;;; Commentary:
-;; LSP 配置延迟加载，仅在进入编程模式时激活。
-;; 通过 `my-development' 中的 hook 触发加载。
+;; LSP Bridge 在配置启动阶段加载，并为编程模式提供全局 LSP 支持。
 ;;
 ;; lsp-bridge 不支持标准 package-vc（无 autoload cookies），
 ;; 使用 package-vc-install 拉取源码 + 手动 load-path 方式管理。
@@ -16,23 +15,23 @@
     (package-vc-install '(lsp-bridge :url "https://github.com/manateelazycat/lsp-bridge")))
   (add-to-list 'load-path lsp-bridge-dir))
 
-(defun my-lsp-bridge-not-common-lisp-buffer ()
+(defun pandaye/development-lsp-bridge-not-common-lisp-buffer ()
   "Return nil in Common Lisp buffers handled by Corfu."
   (not (memq major-mode '(lisp-mode slime-repl-mode))))
 
-(defvar-local my-acm-candidate-selected nil)
+(defvar-local pandaye/development-acm-candidate-selected nil)
 
-(defun my-acm-mark-candidate-selected (&rest _)
+(defun pandaye/development-acm-mark-candidate-selected (&rest _)
   "Remember that the user explicitly selected an ACM candidate."
-  (setq-local my-acm-candidate-selected t))
+  (setq-local pandaye/development-acm-candidate-selected t))
 
-(defun my-acm-reset-candidate-selection (&rest _)
+(defun pandaye/development-acm-reset-candidate-selection (&rest _)
   "Reset explicit ACM selection state."
-  (setq-local my-acm-candidate-selected nil))
+  (setq-local pandaye/development-acm-candidate-selected nil))
 
-(defun my-acm-unselect-candidate-after-update (&rest _)
+(defun pandaye/development-acm-unselect-candidate-after-update (&rest _)
   "Keep ACM prompt unselected until the user explicitly selects a candidate."
-  (when (and (not my-acm-candidate-selected)
+  (when (and (not pandaye/development-acm-candidate-selected)
              (boundp 'acm-menu-index)
              (>= acm-menu-index 0))
     (setq-local acm-menu-index -1)
@@ -44,7 +43,7 @@
                (fboundp 'acm-menu-render))
       (acm-menu-render (cons acm-menu-max-length-cache acm-menu-number-cache)))))
 
-(defun my-acm-return-or-newline ()
+(defun pandaye/development-acm-return-or-newline ()
   "Complete selected ACM candidate, or insert newline if none is selected."
   (interactive)
   (if (and (boundp 'acm-menu-index)
@@ -55,10 +54,10 @@
         (exit-minibuffer)
       (newline))))
 
-(defun my-acm-tab-complete-first ()
+(defun pandaye/development-acm-tab-complete-first ()
   "Complete selected ACM candidate, selecting the first candidate if needed."
   (interactive)
-  (my-acm-mark-candidate-selected)
+  (pandaye/development-acm-mark-candidate-selected)
   (when (and (boundp 'acm-menu-index)
              (< acm-menu-index 0))
     (setq-local acm-menu-index 0))
@@ -94,22 +93,22 @@
               custom-config))))
 
   (add-to-list 'lsp-bridge-enable-predicates
-               #'my-lsp-bridge-not-common-lisp-buffer)
+               #'pandaye/development-lsp-bridge-not-common-lisp-buffer)
 
   (with-eval-after-load 'acm
-    (add-to-list 'acm-continue-commands #'my-acm-return-or-newline)
-    (add-to-list 'acm-continue-commands #'my-acm-tab-complete-first)
-    (define-key acm-mode-map (kbd "RET") #'my-acm-return-or-newline)
-    (define-key acm-mode-map (kbd "<return>") #'my-acm-return-or-newline)
-    (define-key acm-mode-map "\C-m" #'my-acm-return-or-newline)
-    (define-key acm-mode-map "\n" #'my-acm-return-or-newline)
-    (define-key acm-mode-map (kbd "TAB") #'my-acm-tab-complete-first)
-    (define-key acm-mode-map "\t" #'my-acm-tab-complete-first)
-    (advice-add 'acm-update :after #'my-acm-unselect-candidate-after-update)
-    (advice-add 'acm-hide :after #'my-acm-reset-candidate-selection)
+    (add-to-list 'acm-continue-commands #'pandaye/development-acm-return-or-newline)
+    (add-to-list 'acm-continue-commands #'pandaye/development-acm-tab-complete-first)
+    (define-key acm-mode-map (kbd "RET") #'pandaye/development-acm-return-or-newline)
+    (define-key acm-mode-map (kbd "<return>") #'pandaye/development-acm-return-or-newline)
+    (define-key acm-mode-map "\C-m" #'pandaye/development-acm-return-or-newline)
+    (define-key acm-mode-map "\n" #'pandaye/development-acm-return-or-newline)
+    (define-key acm-mode-map (kbd "TAB") #'pandaye/development-acm-tab-complete-first)
+    (define-key acm-mode-map "\t" #'pandaye/development-acm-tab-complete-first)
+    (advice-add 'acm-update :after #'pandaye/development-acm-unselect-candidate-after-update)
+    (advice-add 'acm-hide :after #'pandaye/development-acm-reset-candidate-selection)
     (dolist (command '(acm-select-first acm-select-last acm-select-next acm-select-prev
                        acm-select-next-page acm-select-prev-page))
-      (advice-add command :before #'my-acm-mark-candidate-selected)))
+      (advice-add command :before #'pandaye/development-acm-mark-candidate-selected)))
 
   ;; 修复补全弹窗错位：上游 acm-frame-get-popup-position 混用
   ;; window-pixel-edges（含行号列）与 posn-at-point（文本区域相对），

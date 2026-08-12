@@ -13,7 +13,7 @@
   (markdown-fontify-code-blocks-natively t)
   (markdown-fontify-code-block-default-mode 'fundamental-mode)
   :config
-  (defun my-markdown-match-italic-skip-intraword-underscore (orig-fun last)
+  (defun pandaye/markdown-match-italic-skip-intraword-underscore (orig-fun last)
     "Make `markdown-mode' ignore intraword underscore emphasis like GFM."
     (let (found done)
       (while (and (not done) (funcall orig-fun last))
@@ -32,10 +32,10 @@
 
   (when (and (fboundp 'markdown--gfm-markup-underscore-p)
              (not (advice-member-p
-                   #'my-markdown-match-italic-skip-intraword-underscore
+                   #'pandaye/markdown-match-italic-skip-intraword-underscore
                    'markdown-match-italic)))
     (advice-add 'markdown-match-italic
-                :around #'my-markdown-match-italic-skip-intraword-underscore))
+                :around #'pandaye/markdown-match-italic-skip-intraword-underscore))
 
   (set-face-attribute 'markdown-code-face nil
                       :background "#32302f"
@@ -52,6 +52,9 @@
   (set-face-attribute 'markdown-language-info-face nil
                       :background "#32302f"
                       :foreground "gray35"))
+
+(defalias 'my-markdown-match-italic-skip-intraword-underscore
+  #'pandaye/markdown-match-italic-skip-intraword-underscore)
 
 (provide 'init-markdown)
 ;;; init-markdown.el ends here
