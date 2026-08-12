@@ -412,5 +412,5 @@ With FORCE, keep compatibility with older key bindings; the argument is ignored.
   (interactive)
   (browse-url-of-file (expand-file-name "index.html" my-static-blog-public-directory)))
 
-(provide 'my-static-blog)
+(provide 'static-blog)
 ;;; my-static-blog.el ends here

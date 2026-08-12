@@ -42,9 +42,7 @@
   (vertico-current ((t (:inherit hl-line
                         :foreground "#fdf4c1"
                         :weight bold
-                        :extend t))))
-  :bind
-  ("C-c C-r" . vertico-repeat))
+                        :extend t)))))
 
 (use-package orderless
   :init
@@ -54,15 +52,6 @@
 
 (use-package consult
   :after recentf
-  :bind
-  (("C-c b b" . my/consult-buffer)
-   ("C-x B" . consult-buffer-other-window)
-   ("C-c f g" . consult-git-files)
-   ("C-c f G" . consult-git-grep)
-   ("C-c f f" . consult-find)
-   ("C-s" . consult-line)
-   ("C-r" . consult-line)
-   ("M-y" . consult-yank-pop))
   :config
   (consult-customize
    consult-buffer

@@ -11,7 +11,7 @@
 (require 'cl-lib)
 (require 'json)
 (require 'sqlite)
-(require 'my-org-listing)
+(require 'org-listing)
 
 (defconst my/gt-reading-langs '(en zh)
   "Default languages used by reading translation commands.")
@@ -51,12 +51,6 @@ Set this in local-vars.local.el before loading `my-translate', for example:
 
 (defvar my/gt-pysbd-install-process nil
   "Current background process used to install or check PySBD.")
-
-(use-package gt
-  :defer t
-  :init
-  (setq gt-langs my/gt-reading-langs
-        gt-buffer-render-follow-p t))
 
 (defun my/gt-pysbd-python ()
   "Return the Python executable inside `my/gt-pysbd-venv-dir'."
@@ -150,8 +144,6 @@ installs Python dependencies."
     (if (file-executable-p (my/gt-pysbd-python))
         (my/gt-pysbd--start-import-check)
       (my/gt-pysbd--start-venv-create))))
-
-(add-hook 'after-init-hook #'my/gt-pysbd-ensure-installed)
 
 (defun my/gt--selection-or-word ()
   "Return active region text or word at point, trimmed."
@@ -691,9 +683,5 @@ DATE should be formatted as YYYY-MM-DD."
   (interactive)
   (my/gt-translate-dwim))
 
-(with-eval-after-load 'elfeed
-  (define-key elfeed-show-mode-map (kbd "C-c k") #'my/elfeed-translate-dwim)
-  (define-key elfeed-search-mode-map (kbd "C-c k") #'my/elfeed-translate-dwim))
-
-(provide 'my-translate)
+(provide 'translate)
 ;;; my-translate.el ends here

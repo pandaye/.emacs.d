@@ -7,10 +7,10 @@
 ;;; Code:
 
 (condition-case err
-    (require 'my-gtd)
+    (require 'init-org-gtd)
   (error (message "my-gtd 加载失败，Org-roam 将无法使用 GTD 基础路径: %s" (error-message-string err))))
 
-(require 'my-org-listing)
+(require 'org-listing)
 
 (defun my/org-roam--file-level-nodes ()
   "Return unique top-level Org-roam nodes, one per file."
@@ -62,6 +62,8 @@
 ;; ============================================================
 
 (use-package org-roam
+  :commands (org-roam-node-find org-roam-node-insert org-roam-capture
+             org-roam-buffer-toggle)
   :custom
   (org-roam-directory (file-truename (concat org-base-path "/roam")))
   (org-roam-node-display-template
@@ -71,12 +73,6 @@
       :if-new (file+head "%(format-time-string \"%Y%m%d%H%M%S\")-${slug}.org"
                          "#+title: ${title}\n#+date: %U\n\n")
       :unnarrowed t)))
-  :bind
-  (("C-c n l" . my/org-roam-list-notes-by-mtime)
-   ("C-c n f" . org-roam-node-find)
-   ("C-c n i" . org-roam-node-insert)
-   ("C-c n c" . org-roam-capture)
-   ("C-c n o" . org-roam-buffer-toggle))
   :config
   (org-roam-db-autosync-mode))
 
@@ -97,5 +93,5 @@
   :config
   (org-super-agenda-mode))
 
-(provide 'my-org-roam)
+(provide 'init-org-roam)
 ;;; my-org-roam.el ends here

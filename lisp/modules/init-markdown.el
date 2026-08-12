@@ -1,27 +1,9 @@
-;;; my-writing.el --- Org and Markdown writing configuration -*- lexical-binding: t; -*-
+;;; init-markdown.el --- Markdown and GFM configuration -*- lexical-binding: t; -*-
 
-;; ============================================================
-;; Org 与写作系统
-;; ============================================================
+;;; Commentary:
+;; Owns Markdown package lifecycle, display, and compatibility advice.
 
-(require 'org-ssh)
-(require 'tmux-manager)
-
-(use-package htmlize
-  :defer t)
-
-(require 'my-org-writing)    ;; Org 外观美化
-(require 'my-static-blog)     ;; Org 静态博客发布
-(require 'my-gtd)            ;; GTD 任务管理
-(require 'my-rime)           ;; Rime 中文输入法
-(require 'my-diary)          ;; 日记系统
-(require 'my-org-roam)       ;; Org-roam 双向链接
-
-(unless (featurep 'org-tempo)
-  (require 'org-tempo))
-
-(use-package ox-gfm
-  :after org)
+;;; Code:
 
 (use-package markdown-mode
   :commands (markdown-mode gfm-mode)
@@ -71,5 +53,5 @@
                       :background "#32302f"
                       :foreground "gray35"))
 
-(provide 'my-writing)
-;;; my-writing.el ends here
+(provide 'init-markdown)
+;;; init-markdown.el ends here

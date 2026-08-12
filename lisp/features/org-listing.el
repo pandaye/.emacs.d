@@ -197,5 +197,5 @@ Optional PAGE-SIZE overrides `my/org-list-page-size'."
       (my/org-list-refresh))
     (pop-to-buffer buffer)))
 
-(provide 'my-org-listing)
+(provide 'org-listing)
 ;;; my-org-listing.el ends here

@@ -1,7 +1,7 @@
 ;;; my-static-blog-test.el --- Tests for static blog -*- lexical-binding: t; -*-
 
 (require 'ert)
-(require 'my-static-blog)
+(require 'static-blog)
 
 (ert-deftest my-static-blog-publish-file-generates-static-html ()
   (let* ((source-dir (make-temp-file "my-static-blog-source" t))

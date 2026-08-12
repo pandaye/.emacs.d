@@ -1,6 +1,14 @@
-;;; my-reader.el --- Feed, log, and translation readers -*- lexical-binding: t; -*-
+;;; init-reader.el --- Feed, log, and translation readers -*- lexical-binding: t; -*-
 
-(require 'my-translate)
+(require 'translate)
+
+(use-package gt
+  :defer t
+  :init
+  (setq gt-langs my/gt-reading-langs
+        gt-buffer-render-follow-p t))
+
+(add-hook 'after-init-hook #'my/gt-pysbd-ensure-installed)
 
 ;; ============================================================
 ;; 日志与监控
@@ -21,7 +29,11 @@
 
 (use-package elfeed
   :config
-  (my/elfeed-apply-feeds))
+  (my/elfeed-apply-feeds)
+  (define-key elfeed-show-mode-map (kbd "C-c k")
+              #'my/elfeed-translate-dwim)
+  (define-key elfeed-search-mode-map (kbd "C-c k")
+              #'my/elfeed-translate-dwim))
 
-(provide 'my-reader)
+(provide 'init-reader)
 ;;; my-reader.el ends here

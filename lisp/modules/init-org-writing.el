@@ -30,5 +30,5 @@
  '(("^ *- State \\(\"[A-Z]+\"\\).*\\[.*\\]"
     0 'font-lock-comment-face t)))
 
-(provide 'my-org-writing)
+(provide 'init-org-writing)
 ;;; my-org-writing.el ends here

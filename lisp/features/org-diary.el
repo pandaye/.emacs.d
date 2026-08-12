@@ -7,13 +7,9 @@
 
 ;;; Code:
 
-(condition-case err
-    (require 'my-gtd)
-  (error (message "my-gtd 加载失败: %s" (error-message-string err))))
+(require 'org-listing)
 
-(require 'my-org-listing)
-
-(defvar daily-diary-base-path (concat org-base-path "/daily")
+(defvar daily-diary-base-path nil
   "日记文件的基础路径，格式为 daily/YY/MM-DD.org。")
 
 (defun open-today-diary ()
@@ -111,9 +107,5 @@ Expected layout is daily/YY/MM-DD.org."
                            #'my/diary--list-items
                            #'my/diary--insert-list-item))
 
-(global-set-key (kbd "C-c o t") 'open-today-diary)
-(global-set-key (kbd "C-c o d") 'open-diary-by-date)
-(global-set-key (kbd "C-c o l") 'list-diary-files)
-
-(provide 'my-diary)
+(provide 'org-diary)
 ;;; my-diary.el ends here

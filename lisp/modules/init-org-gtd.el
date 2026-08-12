@@ -307,12 +307,6 @@ then ARCHIVE_TIME for archived entries."
 ;; 快捷键
 ;; ============================================================
 
-(global-set-key (kbd "C-c o g") 'gtd)
-(global-set-key (kbd "C-c a") 'org-agenda)
-(global-set-key (kbd "C-c l c") 'org-capture)
-(global-set-key (kbd "C-c l l") 'org-store-link)
-(global-set-key (kbd "C-c l r") 'org-clock-report)
-
 ;; ============================================================
 ;; Agenda 着色
 ;; ============================================================
@@ -358,5 +352,5 @@ then ARCHIVE_TIME for archived entries."
 (add-hook 'org-agenda-finalize-hook #'my/org-agenda-colorize-category)
 (add-hook 'org-agenda-finalize-hook #'my/org-agenda-dim-block-separators)
 
-(provide 'my-gtd)
+(provide 'init-org-gtd)
 ;;; my-gtd.el ends here

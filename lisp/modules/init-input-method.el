@@ -87,11 +87,5 @@
                 (liberime-finalize)))))
 
 ;; 输入法切换快捷键
-(global-set-key (kbd "C-c i i") 'toggle-input-method)
-(global-set-key (kbd "C-c i j") #'my/set-rime-jp)
-(global-set-key (kbd "C-c i f") #'my/set-rime-zh)
-(global-set-key (kbd "C-c .") #'my/rimel-toggle-ascii-punct)
-(global-set-key (kbd "C-.") #'my/rimel-toggle-ascii-punct)
-
-(provide 'my-rime)
+(provide 'init-input-method)
 ;;; my-rime.el ends here

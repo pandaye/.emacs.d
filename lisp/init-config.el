@@ -18,9 +18,11 @@
 (require 'init-completion)
 (require 'init-navigation)
 (require 'init-vcs)
-(require 'my-writing)
+(require 'init-org)
+(require 'init-markdown)
+(require 'init-input-method)
 (require 'my-development)
-(require 'my-reader)
+(require 'init-reader)
 (require 'init-keybindings)
 
 (provide 'init-config)

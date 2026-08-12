@@ -244,8 +244,6 @@ Columns: session, index, name, flags, title, active."
         (switch-to-buffer buf)
       (tmux-manager))))
 
-(global-set-key (kbd "C-c d d") #'tmux-manager-switch-to-buffer)
-
 (provide 'tmux-manager)
 
 ;;; tmux-manager.el ends here
