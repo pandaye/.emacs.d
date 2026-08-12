@@ -23,7 +23,6 @@ emacs
 - Org 侧重写作和知识库： =org-roam= 、 =org-roam-ui= 、 =org-super-agenda= 、日记、GTD 和静态博客发布。
 - 中文输入使用 =rimel= / Librime，仓库内维护 =rime/= 配置，并和 =meow= insert 状态联动。
 - 阅读流使用 =elfeed= 、 =gt= 、 =sdcv= ；查词会记录单词和上下文句子。
-- LLM 使用 =gptel= 和 =gptel-agent= ，当前后端配置为 DeepSeek。
 
 ** 外部依赖
 
