@@ -13,4 +13,4 @@ compile:
 		(concat (file-name-sans-extension file) \".elc\")) \
 		temporary-file-directory)))) \
 		(mapc #'byte-compile-file \
-		(directory-files \"lisp\" t \"^my-.*[.]el$$\")))"
+		(directory-files-recursively \"lisp\" \"[.]el$$\")))"

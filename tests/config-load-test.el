@@ -4,7 +4,8 @@
 
 (ert-deftest config-loads-current-entrypoint ()
   (should (featurep 'init))
-  (should (featurep 'my-config))
+  (should (featurep 'init-config))
+  (should-not (featurep 'my-config))
   (dolist (feature '(my-editor my-navigation my-vcs my-writing
                      my-development my-reader my-keybindings))
     (should (featurep feature)))

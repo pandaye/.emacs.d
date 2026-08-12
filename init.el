@@ -30,15 +30,13 @@
 ;; add loadpath
 (add-to-list 'load-path
 			 (expand-file-name "lisp" user-emacs-directory))
+(add-to-list 'load-path
+			 (expand-file-name "lisp/core" user-emacs-directory))
 ;; add opensource el codes
 (add-to-list 'load-path
 			 (expand-file-name "opensource" user-emacs-directory))
 
-(condition-case err
-    (require 'my-ui-keyboard)
-  (error (message "my-ui-keyboard 加载失败: %s" (error-message-string err))))
-
-(require 'my-config)
+(require 'init-config)
 
 (provide 'init)
 ;;; init.el ends here
