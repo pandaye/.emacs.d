@@ -4,7 +4,11 @@
 
 (ert-deftest config-loads-current-entrypoint ()
   (should (featurep 'init))
-  (should (featurep 'pandaye-init)))
+  (should (featurep 'my-config))
+  (dolist (feature '(my-editor my-navigation my-vcs my-writing
+                     my-development my-reader my-keybindings))
+    (should (featurep feature)))
+  (should-not (featurep 'pandaye-init)))
 
 (ert-deftest config-keeps-core-keybindings ()
   (should (eq (key-binding (kbd "C-c f s")) #'save-buffer))

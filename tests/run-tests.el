@@ -2,6 +2,7 @@
 
 (load (expand-file-name "config-load-test.el" (file-name-directory load-file-name)))
 (load (expand-file-name "hyperbole-config-test.el" (file-name-directory load-file-name)))
+(load (expand-file-name "markdown-config-test.el" (file-name-directory load-file-name)))
 (load (expand-file-name "my-static-blog-test.el" (file-name-directory load-file-name)))
 (load (expand-file-name "org-ssh-test.el" (file-name-directory load-file-name)))
 

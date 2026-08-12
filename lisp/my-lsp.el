@@ -3,7 +3,7 @@
 
 ;;; Commentary:
 ;; LSP 配置延迟加载，仅在进入编程模式时激活。
-;; 通过 pandaye-init.el 中的 hook 触发加载。
+;; 通过 `my-development' 中的 hook 触发加载。
 ;;
 ;; lsp-bridge 不支持标准 package-vc（无 autoload cookies），
 ;; 使用 package-vc-install 拉取源码 + 手动 load-path 方式管理。

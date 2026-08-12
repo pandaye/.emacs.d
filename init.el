@@ -5,6 +5,7 @@
 (require 'package)
 
 ;;; Code:
+(setq load-prefer-newer t)
 (setq package-enable-at-startup nil)
 ;; 使用更稳定的镜像源
 (setq package-archives '(("gnu"    . "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
@@ -37,9 +38,7 @@
     (require 'my-ui-keyboard)
   (error (message "my-ui-keyboard 加载失败: %s" (error-message-string err))))
 
-(condition-case err
-    (load (expand-file-name "pandaye-init.el" user-emacs-directory) :no-error :no-message)
-  (error (message "pandaye-init 加载失败: %s" (error-message-string err))))
+(require 'my-config)
 
 (provide 'init)
 ;;; init.el ends here

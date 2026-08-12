@@ -7,7 +7,7 @@
 ;;   macOS 终端  → pbcopy / pbpaste（双向）
 ;;   其他终端    → OSC 52 复制到本地剪贴板（粘贴走 kill-ring）
 ;;
-;; 加载方式：在 pandaye-init.el 中 (when (not (display-graphic-p)) (require 'my-clipboard))
+;; 加载方式：由 `my-editor' 在终端环境中加载。
 
 ;;; Code:
 

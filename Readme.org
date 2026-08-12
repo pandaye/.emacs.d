@@ -24,6 +24,20 @@ emacs
 - 中文输入使用 =rimel= / Librime，仓库内维护 =rime/= 配置，并和 =meow= insert 状态联动。
 - 阅读流使用 =elfeed= 、 =gt= 、 =sdcv= ；查词会记录单词和上下文句子。
 
+** 配置结构
+
+=init.el= 负责包管理和加载顶层 =my-config= ，具体配置按领域放在 =lisp/=：
+
+- =my-editor= ：基础编辑、UI、窗口与终端剪贴板。
+- =my-navigation= ：补全、项目、文件和搜索。
+- =my-writing= ：Org、Markdown、输入法与知识管理。
+- =my-development= ：语言模式、补全、LSP 与 snippets。
+- =my-vcs= ：Magit 和 diff-hl。
+- =my-reader= ：RSS、日志与翻译阅读。
+- =my-keybindings= ：跨领域的全局键位。
+
+运行 =make test= 可批量加载配置并执行全部 ERT 回归测试。
+
 ** 外部依赖
 
 - =python3= ：阅读翻译会用 PySBD 做句子切分；首次启动会按 =requirements-translate.txt= 后台准备虚拟环境。

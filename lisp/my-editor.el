@@ -1,0 +1,151 @@
+;;; my-editor.el --- Core editor and UI configuration -*- lexical-binding: t; -*-
+
+;; ============================================================
+;; 加载自定义常量
+;; ============================================================
+(require 'my-local-vars)
+(require 'my-common-dirs)
+(require 'my-start-page)
+
+(setq initial-buffer-choice #'my/start-page)
+;; ============================================================
+;; 环境与基础设置
+;; ============================================================
+
+(when (eq system-type 'darwin)
+  (add-to-list 'exec-path "/opt/homebrew/bin/"))
+
+;; 默认文字从左到右显示，禁用双向文本算法（BPA）以提升性能
+(setq-default bidi-display-reordering  'left-to-right
+              bidi-paragraph-direction 'left-to-right)
+(setq bidi-inhibit-bpa t)
+
+;; 输入时跳过字体化
+(setq redisplay-skip-fontification-on-input t)
+(setq read-process-output-max (* 4 1024 1024)) ; 4MB
+
+;; 这个是 Emacs 28 之后的内置语法检查工具，默认启用但不太好用，先禁用掉
+(remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
+
+(setq scroll-step 1
+      scroll-conservatively 10000
+      scroll-margin 0
+      scroll-preserve-screen-position t
+      mouse-wheel-scroll-amount '(1)
+      mouse-wheel-progressive-speed nil)
+
+;; CJK 和 emoji 宽字符设置（TUI 专属）
+(setopt cjk-ambiguous-chars-are-wide nil)
+(setq-default auto-composition-mode nil)
+
+;; 剪贴板基础设置（GUI / 终端通用）
+(setq select-enable-clipboard t
+      select-enable-primary t
+      save-interprogram-paste-before-kill t
+      kill-ring-max 200)
+
+;; 备份文件配置 - 禁用 ~ 后缀文件，保留自动保存
+(setq make-backup-files nil)
+
+;; ============================================================
+;; GUI 专用配置
+;; ============================================================
+
+(when (display-graphic-p)
+  (load "gui.el" :noerror))
+
+;; ============================================================
+;; UI 外观
+;; ============================================================
+
+;; 回退显示字符美化
+(defface fallback '((t :family "Fira Code Light"
+                       :foreground "gray"))
+  "Face for fallback display-table glyphs."
+  :group 'faces)
+(unless (char-table-p standard-display-table)
+  (setq standard-display-table (make-display-table)))
+(set-display-table-slot standard-display-table 'truncation
+                        (make-glyph-code ?… 'fallback))
+(set-display-table-slot standard-display-table 'wrap
+                        (make-glyph-code ?↩ 'fallback))
+
+;; Fringe 背景透明化
+(set-face-attribute 'fringe nil :background nil)
+(define-fringe-bitmap 'left-arrow [])
+(define-fringe-bitmap 'left-curly-arrow [])
+(define-fringe-bitmap 'left-triangle [])
+
+;; 行号/列号显示（modeline 中 %l/%c 依赖这两个 mode 开启才会随光标实时刷新）
+(line-number-mode 1)
+(column-number-mode 1)
+;; 当前行高亮
+(global-hl-line-mode t)
+
+;; 括号匹配高亮（所有编程模式）
+(add-hook 'prog-mode-hook #'show-paren-mode)
+
+;; 终端光标颜色（根据 Meow/Rime 状态动态变化）
+;; TODO: GUI 也需要，但是目前没有使用到
+(unless (display-graphic-p)
+  (require 'my-cursor))
+
+;; ============================================================
+;; 基础工具 - 需要尽早加载
+;; ============================================================
+
+(require 'utils)
+
+(use-package try
+  :commands (try))
+
+(use-package which-key
+  :defer 2
+  :config (which-key-mode))
+
+;; 安装 diminish 以支持 :diminish 关键字
+(use-package diminish)
+
+;; ============================================================
+;; 窗口与编辑增强
+;; ============================================================
+
+(winner-mode 1)
+
+(use-package all-the-icons
+  :if (display-graphic-p)
+  :commands (all-the-icons-install-fonts))
+
+(use-package ace-window
+  :commands (ace-window)
+  :init
+  (global-set-key [remap other-window] 'ace-window))
+
+(defun my/hyperbole-action-key ()
+  "Run Hyperbole Action Key, loading Hyperbole on first use."
+  (interactive)
+  (require 'hyperbole)
+  (hyperbole-mode 1)
+  (call-interactively #'hkey-either))
+
+(use-package hyperbole
+  :commands (hyperbole hyperbole-mode hkey-either hkey-help)
+  :bind (("C-c e h" . hyperbole)
+         ("C-c e a" . hkey-either)
+         ("C-c e ?" . hkey-help))
+  :config
+  (hkey-set-key (kbd "M-o") #'hkey-either))
+
+(require 'my-subtle-delimiter)
+
+;; ============================================================
+;; 终端剪贴板（终端统一由 my-clipboard 处理）
+;; ============================================================
+
+(unless (display-graphic-p)
+  (condition-case err
+      (require 'my-clipboard)
+    (error (message "剪贴板模块加载失败: %s" (error-message-string err)))))
+
+(provide 'my-editor)
+;;; my-editor.el ends here
