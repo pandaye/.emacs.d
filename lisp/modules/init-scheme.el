@@ -55,4 +55,4 @@
 
 (add-hook 'scheme-mode-hook 'show-paren-mode)
 
-(provide 'myscheme)
+(provide 'init-scheme)

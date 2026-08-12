@@ -57,7 +57,7 @@
     (should (and (boundp mode) (symbol-value mode)))))
 
 (ert-deftest config-contract-preserves-load-timing ()
-  (dolist (feature '(my-lsp markdown-mode elfeed corfu meow))
+  (dolist (feature '(init-lsp markdown-mode elfeed corfu meow))
     (should (featurep feature)))
   (dolist (feature '(gt logview org-roam slime projectile dirvish magit
                      diff-hl rimel))

@@ -21,7 +21,7 @@
 (require 'init-org)
 (require 'init-markdown)
 (require 'init-input-method)
-(require 'my-development)
+(require 'init-development)
 (require 'init-reader)
 (require 'init-keybindings)
 

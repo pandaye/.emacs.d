@@ -1,4 +1,4 @@
-;;; my-development.el --- Programming environment configuration -*- lexical-binding: t; -*-
+;;; init-development.el --- Programming environment configuration -*- lexical-binding: t; -*-
 
 ;; ============================================================
 ;; 编程语言支持
@@ -117,14 +117,7 @@
 (use-package yasnippet-snippets
   :after yasnippet)
 
-;; ============================================================
-;; LSP
-;; ============================================================
+(require 'init-lsp)
 
-(add-hook 'prog-mode-hook
-          (lambda ()
-            (unless (featurep 'my-lsp)
-              (require 'my-lsp nil t))))
-
-(provide 'my-development)
-;;; my-development.el ends here
+(provide 'init-development)
+;;; init-development.el ends here

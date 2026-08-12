@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-;;; my-lsp.el --- LSP Bridge 配置（延迟加载）
+;;; init-lsp.el --- LSP Bridge configuration
 
 ;;; Commentary:
 ;; LSP 配置延迟加载，仅在进入编程模式时激活。
@@ -141,17 +141,7 @@
       (cons (+ x window-left)
             (+ y window-top offset-y))))
 
-  (global-lsp-bridge-mode)
+  (global-lsp-bridge-mode))
 
-  :bind
-  (("C-c r d" . lsp-bridge-find-def)
-   ("C-c r t" . lsp-bridge-find-type-def)
-   ("C-c r r" . lsp-bridge-find-def-return)
-   ("C-c r i" . lsp-bridge-find-impl-other-window)
-   ("C-c r R" . lsp-bridge-find-references)
-   ("C-c r s" . lsp-bridge-show-documentation)
-   ("C-c r f" . lsp-bridge-code-format)
-   ("C-c r h" . lsp-bridge-diagnostic-list)))
-
-(provide 'my-lsp)
-;;; my-lsp.el ends here
+(provide 'init-lsp)
+;;; init-lsp.el ends here

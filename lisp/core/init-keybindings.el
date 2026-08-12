@@ -63,5 +63,14 @@
 (global-set-key (kbd "C-.") #'my/rimel-toggle-ascii-punct)
 (global-set-key (kbd "C-c d d") #'tmux-manager-switch-to-buffer)
 
+(global-set-key (kbd "C-c r d") #'lsp-bridge-find-def)
+(global-set-key (kbd "C-c r t") #'lsp-bridge-find-type-def)
+(global-set-key (kbd "C-c r r") #'lsp-bridge-find-def-return)
+(global-set-key (kbd "C-c r i") #'lsp-bridge-find-impl-other-window)
+(global-set-key (kbd "C-c r R") #'lsp-bridge-find-references)
+(global-set-key (kbd "C-c r s") #'lsp-bridge-show-documentation)
+(global-set-key (kbd "C-c r f") #'lsp-bridge-code-format)
+(global-set-key (kbd "C-c r h") #'lsp-bridge-diagnostic-list)
+
 (provide 'init-keybindings)
 ;;; init-keybindings.el ends here

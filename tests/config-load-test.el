@@ -8,7 +8,7 @@
   (should-not (featurep 'my-config))
   (dolist (feature '(init-ui init-editor init-completion init-navigation
                      init-vcs init-org init-markdown init-input-method
-                     my-development init-reader
+                     init-development init-lsp init-reader
                      init-keybindings))
     (should (featurep feature)))
   (should-not (featurep 'pandaye-init)))

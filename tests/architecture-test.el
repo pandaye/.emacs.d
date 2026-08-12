@@ -32,5 +32,16 @@
       (should-not (string-match-p "(global-set-key\\_>" contents))
       (should-not (string-match-p "(require '[[:space:]]*init-" contents)))))
 
+(ert-deftest architecture-centralizes-global-keybindings ()
+  (let ((owner (expand-file-name "lisp/core/init-keybindings.el"
+                                  user-emacs-directory)))
+    (dolist (file (directory-files-recursively
+                   (expand-file-name "lisp" user-emacs-directory)
+                   "[.]el\\'"))
+      (unless (equal file owner)
+        (with-temp-buffer
+          (insert-file-contents file)
+          (should-not (search-forward "(global-set-key" nil t)))))))
+
 (provide 'architecture-test)
 ;;; architecture-test.el ends here
