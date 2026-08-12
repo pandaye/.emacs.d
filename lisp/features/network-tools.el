@@ -40,5 +40,5 @@
      (message "Emacs 代理出口 IP: %s"
               (buffer-substring (point) (point-max))))))
 
-(provide 'utils)
+(provide 'network-tools)
 ;;; utils.el ends here

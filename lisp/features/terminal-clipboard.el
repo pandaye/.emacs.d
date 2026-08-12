@@ -50,20 +50,6 @@ Suitable as `interprogram-cut-function'."
        (message "OSC 52 copy failed: %s" (error-message-string err))
        nil))))
 
-;; ── 分派 ─────────────────────────────────────────────────
-
-(cond
- ;; macOS 终端
- ((eq system-type 'darwin)
-  (setq interprogram-cut-function   #'my/pbcopy
-        interprogram-paste-function #'my/pbpaste))
- ;; 其他终端（Linux / remote SSH 等）
- (t
-  (setq interprogram-cut-function #'my/osc-52-cut-function)))
-
-;; 终端下通常没有合适的浏览器
-(setq browse-url-browser-function nil)
-
 ;; ── 诊断 ─────────────────────────────────────────────────
 
 (defun my/clipboard-info ()
@@ -75,5 +61,5 @@ Suitable as `interprogram-cut-function'."
            (if (my/in-tmux-p) "yes" "no")
            system-type))
 
-(provide 'my-clipboard)
+(provide 'terminal-clipboard)
 ;;; my-clipboard.el ends here

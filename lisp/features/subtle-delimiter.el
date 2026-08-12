@@ -29,5 +29,5 @@
                 clojure-mode-hook))
   (add-hook hook #'my-subtle-delimiter-mode))
 
-(provide 'my-subtle-delimiter)
+(provide 'subtle-delimiter)
 ;;; my-subtle-delimiter.el ends here

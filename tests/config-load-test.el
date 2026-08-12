@@ -6,8 +6,9 @@
   (should (featurep 'init))
   (should (featurep 'init-config))
   (should-not (featurep 'my-config))
-  (dolist (feature '(my-editor my-navigation my-vcs my-writing
-                     my-development my-reader my-keybindings))
+  (dolist (feature '(init-ui init-editor init-completion init-navigation
+                     init-vcs my-writing my-development my-reader
+                     init-keybindings))
     (should (featurep feature)))
   (should-not (featurep 'pandaye-init)))
 

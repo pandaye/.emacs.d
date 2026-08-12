@@ -50,8 +50,5 @@ Each entry is (NAME . PATH). NAME is shown in completion, PATH is used as picker
      (t
       (call-interactively #'find-file)))))
 
-(global-set-key (kbd "C-c f d") #'my/common-dirs-find-file)
-
-
-(provide 'my-common-dirs)
+(provide 'common-dirs)
 ;;; my-common-dirs.el ends here

@@ -1,4 +1,4 @@
-;; -*- lexical-binding: t; -*-
+;;; init-ui.el --- User interface and modal editing -*- lexical-binding: t; -*-
 
 (defvar *IS-MAC* (eq system-type 'darwin)
   "Check if the current system is macOS.")
@@ -332,4 +332,28 @@ them after every command (requires `line-number-mode' and
                     :box '(:line-width 1 :color "#3c3836"))
 
 
-(provide 'my-ui-keyboard)
+(unless (display-graphic-p)
+  (require 'cursor-display)
+  (with-eval-after-load 'meow
+    (add-hook 'meow-switch-state-hook #'my/update-cursor-color-for-state))
+  (add-hook 'input-method-activate-hook #'my/update-cursor-color-for-buffer)
+  (add-hook 'input-method-deactivate-hook #'my/update-cursor-color-for-buffer)
+  (unless (advice-member-p #'my/refresh-cursor-color-after-input-method
+                           'activate-input-method)
+    (advice-add 'activate-input-method
+                :after #'my/refresh-cursor-color-after-input-method))
+  (unless (advice-member-p #'my/refresh-cursor-color-after-input-method
+                           'deactivate-input-method)
+    (advice-add 'deactivate-input-method
+                :after #'my/refresh-cursor-color-after-input-method))
+  (unless (advice-member-p #'my/refresh-cursor-color-after-input-method
+                           'toggle-input-method)
+    (advice-add 'toggle-input-method
+                :after #'my/refresh-cursor-color-after-input-method))
+  (add-hook 'window-buffer-change-functions
+            #'my/update-cursor-color-for-buffer)
+  (add-hook 'window-selection-change-functions
+            #'my/update-cursor-color-for-buffer))
+
+(provide 'init-ui)
+;;; init-ui.el ends here

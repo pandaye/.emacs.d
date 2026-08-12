@@ -1,10 +1,10 @@
-;;; my-navigation.el --- Navigation and project configuration -*- lexical-binding: t; -*-
+;;; init-navigation.el --- Navigation and project configuration -*- lexical-binding: t; -*-
 
 ;; ============================================================
 ;; 导航框架 - Vertico/Consult/Embark/Orderless
 ;; ============================================================
 
-(require 'my-completion)
+(require 'init-completion)
 
 ;; ============================================================
 ;; 项目与文件管理
@@ -16,9 +16,7 @@
   (setq projectile-project-search-path '("~/Project/")
         projectile-completion-system 'auto)
   :config
-  (projectile-mode 1)
-  :bind
-  (("C-c f p" . projectile-find-file)))
+  (projectile-mode 1))
 
 (defun my/dirvish-subtree-hide-total-line (readin dir)
   "Hide localized ls total line from Dirvish subtree READIN for DIR."
@@ -79,13 +77,10 @@
                  default-directory)))
     (dired dir)))
 
-(global-set-key (kbd "C-c t p") #'my/dired-project-root)
-(global-set-key (kbd "C-c t t") #'my/dired-project-root)
-
 (use-package rg
   :defer t)
 
 (defalias 'list-buffers 'ibuffer)
 
-(provide 'my-navigation)
-;;; my-navigation.el ends here
+(provide 'init-navigation)
+;;; init-navigation.el ends here

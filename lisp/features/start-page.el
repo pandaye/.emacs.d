@@ -240,5 +240,5 @@ Characters A-Z and space are supported."
         (switch-to-buffer buf)
       buf)))
 
-(provide 'my-start-page)
+(provide 'start-page)
 ;;; my-start-page.el ends here

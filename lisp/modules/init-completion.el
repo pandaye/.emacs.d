@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-;;; my-completion.el --- Minibuffer completion and navigation configuration
+;;; init-completion.el --- Minibuffer completion configuration
 
 ;;; Commentary:
 ;; Vertico/Consult/Orderless and related minibuffer helpers.
@@ -239,5 +239,5 @@
   (advice-add 'consult--annotate-align
               :around #'my/consult-buffer--align-annotation))
 
-(provide 'my-completion)
-;;; my-completion.el ends here
+(provide 'init-completion)
+;;; init-completion.el ends here

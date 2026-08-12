@@ -1,11 +1,11 @@
-;;; my-editor.el --- Core editor and UI configuration -*- lexical-binding: t; -*-
+;;; init-editor.el --- Core editor configuration -*- lexical-binding: t; -*-
 
 ;; ============================================================
 ;; 加载自定义常量
 ;; ============================================================
 (require 'my-local-vars)
-(require 'my-common-dirs)
-(require 'my-start-page)
+(require 'common-dirs)
+(require 'start-page)
 
 (setq initial-buffer-choice #'my/start-page)
 ;; ============================================================
@@ -85,16 +85,11 @@
 ;; 括号匹配高亮（所有编程模式）
 (add-hook 'prog-mode-hook #'show-paren-mode)
 
-;; 终端光标颜色（根据 Meow/Rime 状态动态变化）
-;; TODO: GUI 也需要，但是目前没有使用到
-(unless (display-graphic-p)
-  (require 'my-cursor))
-
 ;; ============================================================
 ;; 基础工具 - 需要尽早加载
 ;; ============================================================
 
-(require 'utils)
+(require 'network-tools)
 
 (use-package try
   :commands (try))
@@ -117,9 +112,7 @@
   :commands (all-the-icons-install-fonts))
 
 (use-package ace-window
-  :commands (ace-window)
-  :init
-  (global-set-key [remap other-window] 'ace-window))
+  :commands (ace-window))
 
 (defun my/hyperbole-action-key ()
   "Run Hyperbole Action Key, loading Hyperbole on first use."
@@ -130,13 +123,10 @@
 
 (use-package hyperbole
   :commands (hyperbole hyperbole-mode hkey-either hkey-help)
-  :bind (("C-c e h" . hyperbole)
-         ("C-c e a" . hkey-either)
-         ("C-c e ?" . hkey-help))
   :config
   (hkey-set-key (kbd "M-o") #'hkey-either))
 
-(require 'my-subtle-delimiter)
+(require 'subtle-delimiter)
 
 ;; ============================================================
 ;; 终端剪贴板（终端统一由 my-clipboard 处理）
@@ -144,8 +134,14 @@
 
 (unless (display-graphic-p)
   (condition-case err
-      (require 'my-clipboard)
+      (progn
+        (require 'terminal-clipboard)
+        (if (eq system-type 'darwin)
+            (setq interprogram-cut-function #'my/pbcopy
+                  interprogram-paste-function #'my/pbpaste)
+          (setq interprogram-cut-function #'my/osc-52-cut-function))
+        (setq browse-url-browser-function nil))
     (error (message "剪贴板模块加载失败: %s" (error-message-string err)))))
 
-(provide 'my-editor)
-;;; my-editor.el ends here
+(provide 'init-editor)
+;;; init-editor.el ends here

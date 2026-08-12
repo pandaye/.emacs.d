@@ -83,22 +83,5 @@
   "Refresh cursor color after input-method related commands."
   (my/update-cursor-color-for-buffer))
 
-;; ── Hook 注册 ────────────────────────────────────────────
-
-;; meow-switch-state-hook: run-hook-with-args 传入新 state
-(with-eval-after-load 'meow
-  (add-hook 'meow-switch-state-hook #'my/update-cursor-color-for-state))
-
-;; 输入法激活/停用时重新判断颜色
-(add-hook 'input-method-activate-hook #'my/update-cursor-color-for-buffer)
-(add-hook 'input-method-deactivate-hook #'my/update-cursor-color-for-buffer)
-(advice-add 'activate-input-method :after #'my/refresh-cursor-color-after-input-method)
-(advice-add 'deactivate-input-method :after #'my/refresh-cursor-color-after-input-method)
-(advice-add 'toggle-input-method :after #'my/refresh-cursor-color-after-input-method)
-
-;; 窗口 / buffer 切换
-(add-hook 'window-buffer-change-functions    #'my/update-cursor-color-for-buffer)
-(add-hook 'window-selection-change-functions #'my/update-cursor-color-for-buffer)
-
-(provide 'my-cursor)
+(provide 'cursor-display)
 ;;; my-cursor.el ends here

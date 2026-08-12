@@ -1,14 +1,11 @@
-;;; my-vcs.el --- Version control configuration -*- lexical-binding: t; -*-
+;;; init-vcs.el --- Version control configuration -*- lexical-binding: t; -*-
 
 ;; ============================================================
 ;; Git 与版本控制
 ;; ============================================================
 
 (use-package magit
-  :commands (magit-status magit-dispatch)
-  :bind
-  (("C-c j s" . magit-status)
-   ("C-c j p" . magit-dispatch)))
+  :commands (magit-status magit-dispatch))
 
 (use-package diff-hl
   :hook ((after-init . global-diff-hl-mode)
@@ -25,5 +22,5 @@
   (diff-hl-insert ((t (:background "#03e94f"))))
   (diff-hl-delete ((t (:background "#f5597e")))))
 
-(provide 'my-vcs)
-;;; my-vcs.el ends here
+(provide 'init-vcs)
+;;; init-vcs.el ends here
