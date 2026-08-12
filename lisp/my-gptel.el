@@ -8,7 +8,6 @@
 (defvar my-deepseek-api-key "")
 (use-package gptel
   :config
-  ;; 注册 GitHub Copilot 后端并设为默认
   (setq gptel-backend (gptel-make-deepseek "Deepseek"
 										   :stream t
 										   :key my-deepseek-api-key)
