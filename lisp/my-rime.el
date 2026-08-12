@@ -18,6 +18,7 @@
       default-input-method "rimel"
       rimel-schema "tigress"
       rimel-posframe-style 'horizontal
+      rimel-inline-preedit t
       rimel-disable-predicates '(meow-not-insert-p
                                  my/rimel-predicate-after-ascii-nonspace-p
                                  my/rimel-predicate-space-after-cjk-p
