@@ -218,27 +218,6 @@ def todo_source_name(path: Path, cfg: Config) -> str:
     return str(relative.with_suffix(""))
 
 
-def todo_ref(heading: Heading, cfg: Config) -> str:
-    return f"{todo_source_name(heading.file, cfg)}:{heading.start}"
-
-
-def parse_todo_ref(cfg: Config, ref: str) -> tuple[Path, int]:
-    source, sep, offset_text = ref.rpartition(":")
-    if not sep or not source:
-        raise ToolError(f"invalid todo ref: {ref}")
-    try:
-        offset = int(offset_text)
-    except ValueError as exc:
-        raise ToolError(f"invalid todo ref offset: {ref}") from exc
-    if offset < 0:
-        raise ToolError(f"invalid todo ref offset: {ref}")
-    path = cfg.org_base / f"{source}.org"
-    ensure_inside(path, cfg.org_base)
-    if path.parent != cfg.org_base:
-        raise ToolError(f"todo ref must point to a top-level org file: {ref}")
-    return path, offset
-
-
 def parse_properties(block: str) -> dict[str, str]:
     props: dict[str, str] = {}
     match = re.search(r"(?ms)^[ \t]*:PROPERTIES:[ \t]*\n(.*?)^[ \t]*:END:[ \t]*$", block)
@@ -376,7 +355,6 @@ def heading_to_dict(
     verbose: bool = True,
 ) -> dict[str, Any]:
     data: dict[str, Any] = {
-        "ref": todo_ref(heading, cfg),
         "id": heading.id,
         "editable": True,
         "title": heading.title,
@@ -398,19 +376,20 @@ def all_todos(cfg: Config) -> list[Heading]:
     return headings
 
 
-def find_todo(cfg: Config, todo_id: str) -> Heading:
-    for heading in all_todos(cfg):
-        if heading.id == todo_id:
-            return heading
-    raise ToolError(f"todo not found: {todo_id}")
-
-
-def find_todo_by_ref(cfg: Config, ref: str) -> Heading:
-    path, offset = parse_todo_ref(cfg, ref)
-    for heading in parse_todo_headings(path):
-        if heading.start == offset:
-            return heading
-    raise ToolError(f"todo not found for ref: {ref}")
+def find_todo_by_title(cfg: Config, title: str) -> Heading:
+    wanted = title.strip()
+    matches = [heading for heading in all_todos(cfg) if heading.title == wanted]
+    if not matches:
+        raise ToolError(f"todo not found: {title}")
+    if len(matches) > 1:
+        locations = "; ".join(
+            f"{todo_source_name(heading.file, cfg)} (state={heading.state})"
+            for heading in matches
+        )
+        raise ToolError(
+            f"todo title is not unique: {title} matches {len(matches)} items: {locations}"
+        )
+    return matches[0]
 
 
 def normalize_todo_states(state: str | None = None, states: list[str] | None = None) -> set[str] | None:
@@ -502,8 +481,8 @@ def tool_todo_due_today(cfg: Config, include_overdue: bool = True, limit: int = 
     }
 
 
-def tool_todo_get(cfg: Config, ref: str) -> dict[str, Any]:
-    heading = find_todo_by_ref(cfg, ref)
+def tool_todo_get(cfg: Config, title: str) -> dict[str, Any]:
+    heading = find_todo_by_title(cfg, title)
     data = heading_to_dict(heading, cfg, include_body=False, verbose=True)
     data["node"] = read_text(heading.file)[heading.start : heading.end].rstrip("\n")
     return {"todo": data}
@@ -569,6 +548,8 @@ def tool_todo_create(cfg: Config, title: str, body: str = "", state: str = "TODO
     title = title.strip()
     if not title:
         raise ToolError("title is required")
+    if any(heading.title == title for heading in all_todos(cfg)):
+        raise ToolError(f"todo already exists: {title}")
     body = body.strip("\n")
     entry = f"* {state} {title}\n  {utc_now_org()}\n"
     if body:
@@ -587,15 +568,15 @@ def replace_heading(heading: Heading, new_block: str) -> None:
 
 def tool_todo_update(
     cfg: Config,
-    ref: str,
+    title: str,
     node: str,
 ) -> dict[str, Any]:
-    heading = find_todo_by_ref(cfg, ref)
+    heading = find_todo_by_title(cfg, title)
     node = node.strip("\n")
     if not node:
         raise ToolError("node cannot be empty")
     first_line = node.splitlines()[0]
-    match = re.match(r"^(\*+)\s+([A-Z]+)\s+.+$", first_line)
+    match = re.match(r"^(\*+)\s+([A-Z]+)\s+(.+)$", first_line)
     if not match:
         raise ToolError("node must start with an Org TODO heading")
     if match.group(2) not in TODO_STATES:
@@ -609,11 +590,8 @@ def tool_todo_update(
         if len(later.group(1)) <= level:
             raise ToolError("node must contain exactly one subtree; sibling headings are not allowed")
     replace_heading(heading, node)
-    updated = parse_todo_headings(heading.file)
-    for candidate in updated:
-        if candidate.start == heading.start:
-            return {"todo": heading_to_dict(candidate, cfg)}
-    raise ToolError("updated todo moved; list todos again to get a fresh ref")
+    new_title = match.group(3).strip()
+    return {"todo": heading_to_dict(find_todo_by_title(cfg, new_title), cfg)}
 
 
 def trash_path(cfg: Config, path: Path) -> Path:
@@ -622,15 +600,15 @@ def trash_path(cfg: Config, path: Path) -> Path:
     return cfg.trash_dir / f"{stamp}-{path.name}"
 
 
-def tool_todo_delete(cfg: Config, ref: str) -> dict[str, Any]:
-    heading = find_todo_by_ref(cfg, ref)
+def tool_todo_delete(cfg: Config, title: str) -> dict[str, Any]:
+    heading = find_todo_by_title(cfg, title)
     text = read_text(heading.file)
     removed = text[heading.start : heading.end].strip("\n")
     write_text(heading.file, text[: heading.start] + text[heading.end :].lstrip("\n"))
     deleted_file = cfg.trash_dir / "deleted-todos.org"
     existing = read_text(deleted_file)
-    write_text(deleted_file, existing + f"\n* Deleted todo {ref}\n#+deleted_at: {utc_now_org()}\n{removed}\n")
-    return {"deleted": True, "ref": ref, "trash_file": str(deleted_file)}
+    write_text(deleted_file, existing + f"\n* Deleted todo {title}\n#+deleted_at: {utc_now_org()}\n{removed}\n")
+    return {"deleted": True, "title": title, "trash_file": str(deleted_file)}
 
 
 def parse_keywords(text: str) -> dict[str, str]:
@@ -773,13 +751,13 @@ def tool_specs() -> list[dict[str, Any]]:
     string_array = {"type": "array", "items": string}
     return [
         {"name": "todo_list", "description": "List active/open Org TODO headings by default. Default excludes REVIEWING, DONE, and CANCEL. Set include_done=true only when closed/reviewing items are explicitly requested. Use state or states for exact status filtering, for example state='PROCESSING' or states=['TODO','PROCESSING']. Set with_time=true to return only items with SCHEDULED or DEADLINE planning timestamps; use time_types=['scheduled'] or ['deadline'] to narrow it. query searches titles only unless search_body=true. Compact by default; set verbose=true for absolute paths and level.", "inputSchema": {"type": "object", "properties": {"state": string, "states": string_array, "include_done": boolean, "active_only": boolean, "query": string, "search_body": boolean, "with_time": boolean, "time_types": string_array, "limit": integer, "verbose": boolean}}},
-        {"name": "todo_get", "description": "Get a complete Org TODO subtree by ref. Use the ref returned by todo_list.", "inputSchema": {"type": "object", "properties": {"ref": string}, "required": ["ref"]}},
+        {"name": "todo_get", "description": "Get a complete Org TODO subtree by its unique title. Use the exact title returned by todo_list.", "inputSchema": {"type": "object", "properties": {"title": string}, "required": ["title"]}},
         {"name": "todo_due_today", "description": "List active TODO items scheduled or due today. Includes overdue scheduled/deadline items by default; set include_overdue=false for today only. Intended for daily reminder jobs.", "inputSchema": {"type": "object", "properties": {"include_overdue": boolean, "limit": integer, "verbose": boolean}}},
         {"name": "todo_updated_last_week", "description": "List TODO items whose latest state change happened during last week. Includes all current states. Weeks start on Monday.", "inputSchema": {"type": "object", "properties": {"limit": integer, "verbose": boolean}}},
         {"name": "todo_closed_this_week", "description": "List DONE/CANCEL TODO items closed during this week. Weeks start on Monday.", "inputSchema": {"type": "object", "properties": {"limit": integer, "verbose": boolean}}},
-        {"name": "todo_create", "description": "Create a TODO in the issue inbox. Does not add an ID property.", "inputSchema": {"type": "object", "properties": {"title": string, "body": string, "state": string}, "required": ["title"]}},
-        {"name": "todo_update", "description": "Replace a complete Org TODO subtree by ref. Call todo_get first, edit the returned node text, then submit the whole node.", "inputSchema": {"type": "object", "properties": {"ref": string, "node": string}, "required": ["ref", "node"]}},
-        {"name": "todo_delete", "description": "Delete a TODO subtree by ref, preserving it in trash. Use the ref returned by todo_list.", "inputSchema": {"type": "object", "properties": {"ref": string}, "required": ["ref"]}},
+        {"name": "todo_create", "description": "Create a TODO in the issue inbox. Titles must be unique; creating a duplicate title is rejected.", "inputSchema": {"type": "object", "properties": {"title": string, "body": string, "state": string}, "required": ["title"]}},
+        {"name": "todo_update", "description": "Replace a complete Org TODO subtree, located by its unique title. Call todo_get first, edit the returned node text, then submit the whole node. The heading title may be changed to rename the todo.", "inputSchema": {"type": "object", "properties": {"title": string, "node": string}, "required": ["title", "node"]}},
+        {"name": "todo_delete", "description": "Delete a TODO subtree by its unique title, preserving it in trash. Use the exact title returned by todo_list.", "inputSchema": {"type": "object", "properties": {"title": string}, "required": ["title"]}},
         {"name": "roam_list", "description": "List Org-roam notes. Compact by default; set verbose=true for absolute paths and mtime.", "inputSchema": {"type": "object", "properties": {"query": string, "limit": integer, "verbose": boolean}}},
         {"name": "roam_get", "description": "Get one Org-roam note by ID.", "inputSchema": {"type": "object", "properties": {"id": string}, "required": ["id"]}},
         {"name": "roam_create", "description": "Create an Org-roam file-level note.", "inputSchema": {"type": "object", "properties": {"title": string, "content": string, "tags": {"type": "array", "items": string}}, "required": ["title"]}},
@@ -822,7 +800,7 @@ def result_summary(result: dict[str, Any]) -> str:
         return f"notes={len(result['notes'])} total={result.get('total')}"
     if "todo" in result:
         todo = result["todo"]
-        return f"todo id={todo.get('id')} state={todo.get('state')}"
+        return f"todo title={todo.get('title')!r} state={todo.get('state')}"
     if "note" in result:
         note = result["note"]
         return f"note id={note.get('id')} title={note.get('title')!r}"

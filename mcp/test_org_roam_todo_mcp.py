@@ -77,26 +77,26 @@ class OrgRoamTodoMcpTest(unittest.TestCase):
         created = server.tool_todo_create(self.cfg, title="Write MCP design", body="Initial body")
         todo = created["todo"]
         self.assertEqual(todo["state"], "TODO")
-        self.assertIn("Write MCP design", todo["title"])
+        self.assertEqual(todo["title"], "Write MCP design")
         self.assertIsNone(todo["id"])
-        self.assertIn("ref", todo)
+        self.assertNotIn("ref", todo)
 
         listed = server.tool_todo_list(self.cfg, include_done=False)
         self.assertEqual(len(listed["todos"]), 1)
 
-        got = server.tool_todo_get(self.cfg, ref=todo["ref"])
+        got = server.tool_todo_get(self.cfg, title="Write MCP design")
         self.assertIn("* TODO Write MCP design", got["todo"]["node"])
         self.assertIn("Initial body", got["todo"]["node"])
 
         updated = server.tool_todo_update(
             self.cfg,
-            ref=todo["ref"],
+            title="Write MCP design",
             node="* PROCESSING Write MCP implementation\nUpdated body\n",
         )
         self.assertEqual(updated["todo"]["state"], "PROCESSING")
-        self.assertIn("Write MCP implementation", updated["todo"]["title"])
+        self.assertEqual(updated["todo"]["title"], "Write MCP implementation")
 
-        deleted = server.tool_todo_delete(self.cfg, ref=todo["ref"])
+        deleted = server.tool_todo_delete(self.cfg, title="Write MCP implementation")
         self.assertTrue(deleted["deleted"])
         self.assertEqual(server.tool_todo_list(self.cfg)["todos"], [])
         self.assertTrue(Path(deleted["trash_file"]).exists())
@@ -304,9 +304,62 @@ class OrgRoamTodoMcpTest(unittest.TestCase):
         with self.assertRaises(server.ToolError):
             server.tool_todo_update(
                 self.cfg,
-                ref=created["todo"]["ref"],
+                title=created["todo"]["title"],
                 node="* TODO One subtree\n* TODO Accidental sibling\n",
             )
+
+    def test_todo_update_can_rename_title(self) -> None:
+        server.tool_todo_create(self.cfg, title="Old title", body="body")
+        updated = server.tool_todo_update(
+            self.cfg,
+            title="Old title",
+            node="* TODO New title\nbody\n",
+        )
+        self.assertEqual(updated["todo"]["title"], "New title")
+        got = server.tool_todo_get(self.cfg, title="New title")
+        self.assertIn("* TODO New title", got["todo"]["node"])
+        with self.assertRaises(server.ToolError):
+            server.tool_todo_get(self.cfg, title="Old title")
+
+    def test_todo_update_multiple_items_keep_titles_stable(self) -> None:
+        server.tool_todo_create(self.cfg, title="First")
+        server.tool_todo_create(self.cfg, title="Second")
+        server.tool_todo_create(self.cfg, title="Third")
+
+        server.tool_todo_update(self.cfg, title="First", node="* DONE First\n")
+        server.tool_todo_update(self.cfg, title="Second", node="* PROCESSING Second\n")
+        server.tool_todo_update(self.cfg, title="Third", node="* DONE Third\n")
+
+        listed = server.tool_todo_list(self.cfg, include_done=True, limit=10)
+        by_title = {todo["title"]: todo["state"] for todo in listed["todos"]}
+        self.assertEqual(
+            by_title,
+            {"First": "DONE", "Second": "PROCESSING", "Third": "DONE"},
+        )
+
+    def test_todo_create_rejects_duplicate_title(self) -> None:
+        server.tool_todo_create(self.cfg, title="Unique")
+        with self.assertRaises(server.ToolError):
+            server.tool_todo_create(self.cfg, title="Unique")
+
+    def test_todo_duplicate_title_errors_on_get_and_delete(self) -> None:
+        project = self.cfg.org_base / "project.org"
+        project.write_text(
+            "* TODO Same title\n* TODO Same title\n",
+            encoding="utf-8",
+        )
+        with self.assertRaises(server.ToolError):
+            server.tool_todo_get(self.cfg, title="Same title")
+        with self.assertRaises(server.ToolError):
+            server.tool_todo_delete(self.cfg, title="Same title")
+
+    def test_todo_unknown_title_errors(self) -> None:
+        with self.assertRaises(server.ToolError):
+            server.tool_todo_get(self.cfg, title="No such todo")
+        with self.assertRaises(server.ToolError):
+            server.tool_todo_delete(self.cfg, title="No such todo")
+        with self.assertRaises(server.ToolError):
+            server.tool_todo_update(self.cfg, title="No such todo", node="* TODO x\n")
 
     def test_todo_updated_last_week(self) -> None:
         last_start, _ = server.week_range(offset=-1)

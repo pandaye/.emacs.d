@@ -229,6 +229,22 @@ then ARCHIVE_TIME for archived entries."
                 (push (car (split-string keyword "[({]" t)) todo-keywords)))))
         (nreverse todo-keywords))))
 
+(defun pandaye/org-agenda-skip-planned-outside-week ()
+  "Skip entries with SCHEDULED or DEADLINE outside the current week.
+Entries without any planning timestamp are kept."
+  (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+         (range (pandaye/org-this-week-range))
+         (start (car range))
+         (end (cdr range))
+         (planning (or (org-entry-get (point) "SCHEDULED")
+                       (org-entry-get (point) "DEADLINE"))))
+    (if (and planning
+             (let ((time (org-time-string-to-time planning)))
+               (or (time-less-p time start)
+                   (not (time-less-p time end)))))
+        subtree-end
+      nil)))
+
 (defun pandaye/org-agenda-skip-not-closed-this-week ()
   "Skip entries not closed during this week."
   (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
@@ -284,20 +300,28 @@ then ARCHIVE_TIME for archived entries."
   ;; Use a quieter separator in multi-block agenda views.
   (setq org-agenda-block-separator ?─)
   (set-face-attribute 'org-time-grid nil :foreground "#665c54")
+  ;; 本周未来几天的 SCHEDULED 任务用低调的灰青色（与 org-date 同色），
+  ;; 避免比今天的任务（org-scheduled-today 亮蓝）更显眼。
+  (set-face-attribute 'org-scheduled nil :foreground "#6f8f8f")
   (add-to-list 'org-agenda-custom-commands
                '("w" "Weekly Review"
                  ((agenda "" ((org-agenda-span 'week)
                               (org-agenda-start-on-weekday 1)))
                   (todo "REVIEWING"
-                        ((org-agenda-overriding-header "Tasks in Review")))
+                        ((org-agenda-overriding-header "Tasks in Review")
+                         (org-agenda-skip-function #'pandaye/org-agenda-skip-planned-outside-week)))
                   (todo "PROCESSING"
-                        ((org-agenda-overriding-header "In Progress")))
+                        ((org-agenda-overriding-header "In Progress")
+                         (org-agenda-skip-function #'pandaye/org-agenda-skip-planned-outside-week)))
                   (todo "TODO"
-                        ((org-agenda-overriding-header "Todo Items")))
+                        ((org-agenda-overriding-header "Todo Items")
+                         (org-agenda-skip-function #'pandaye/org-agenda-skip-planned-outside-week)))
                   (todo "BLOCK"
-                        ((org-agenda-overriding-header "Blocked Tasks")))
+                        ((org-agenda-overriding-header "Blocked Tasks")
+                         (org-agenda-skip-function #'pandaye/org-agenda-skip-planned-outside-week)))
                   (todo "LATER"
-                        ((org-agenda-overriding-header "Scheduled for Later"))))))
+                        ((org-agenda-overriding-header "Scheduled for Later")
+                         (org-agenda-skip-function #'pandaye/org-agenda-skip-planned-outside-week))))))
   (add-to-list 'org-agenda-custom-commands
                `("W" "Last Week Status Updates"
                  ,(pandaye/org-last-week-status-update-blocks)))

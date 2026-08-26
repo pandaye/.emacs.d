@@ -18,6 +18,9 @@
 (use-package ox-gfm
   :after org)
 
+(setq org-startup-indented t)             ; 打开 Org 文件时自动启用 indent
+(setq org-indent-indentation-per-level 2) ; 每级缩进字符数（默认就是 2）
+
 (with-eval-after-load 'org
   (define-key org-mode-map (kbd "C-c s c")
               #'org-ssh-connect-all-servers-in-file)

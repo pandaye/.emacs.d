@@ -78,9 +78,10 @@ variables:
   Compact by default, with `limit=20`; supports `state`, `states`,
   `include_done`, `query`, `with_time`, `time_types`, `limit`, and `verbose`.
   Set `with_time=true` to return only items with `SCHEDULED` or `DEADLINE`;
-  narrow with `time_types=["scheduled"]` or `["deadline"]`.  Returns a `ref`
-  for each TODO; no TODO `ID` is required.
-- `todo_get`: read one complete Org TODO subtree by `ref`.
+  narrow with `time_types=["scheduled"]` or `["deadline"]`.  Returns the
+  `title` of each TODO, which is the unique key used by `todo_get`,
+  `todo_update`, and `todo_delete`.
+- `todo_get`: read one complete Org TODO subtree by its unique `title`.
 - `todo_due_today`: list active TODO items scheduled or due today for reminder
   jobs.  Includes overdue `SCHEDULED`/`DEADLINE` items by default; set
   `include_overdue=false` for today only.
@@ -88,10 +89,12 @@ variables:
   happened during last week.  Weeks start on Monday.
 - `todo_closed_this_week`: list top-level `DONE`/`CANCEL` TODO items closed
   during this week.  Weeks start on Monday.
-- `todo_create`: append a TODO to the issue inbox without adding an `ID`.
-- `todo_update`: replace one complete Org TODO subtree by `ref`.  Call
-  `todo_get`, edit the returned `node`, then submit the whole `node`.
-- `todo_delete`: remove a TODO subtree by `ref` and save a copy under trash.
+- `todo_create`: append a TODO to the issue inbox.  Titles must be unique;
+  creating a duplicate title is rejected.
+- `todo_update`: replace one complete Org TODO subtree, located by its unique
+  `title`.  Call `todo_get`, edit the returned `node`, then submit the whole
+  `node`.  The heading title may be changed to rename the todo.
+- `todo_delete`: remove a TODO subtree by `title` and save a copy under trash.
 - `roam_list`: list Org-roam file-level notes.  Compact by default, with
   `limit=20`; supports `query`, `limit`, and `verbose`.
 - `roam_get`: read a note by `#+ID`.
@@ -106,10 +109,11 @@ usage small.  Use `verbose=true` only when the client needs absolute file paths,
 heading levels, or mtimes.  Use `query`, `state`, and smaller `limit` values
 before calling detail tools such as `todo_get` or `roam_get`.
 
-TODO operations use a positional `ref` such as `project:97` rather than Org
-`ID` properties.  If a file is edited heavily between `todo_list`/`todo_get` and
-`todo_update`, list again to get a fresh `ref`.  Org-roam operations still use
-file-level `#+ID`.
+TODO operations locate a heading by its unique `title` rather than Org `ID`
+properties or byte offsets, so consecutive updates of multiple items do not
+invalidate each other.  Titles must be unique across the Org base; a duplicate
+title makes `todo_get`/`todo_update`/`todo_delete` fail with an error until the
+duplicate is resolved.  Org-roam operations still use file-level `#+ID`.
 
 The server edits plain Org files directly.  It does not require Emacs to be
 running and does not update `org-roam.db`; Emacs' existing
