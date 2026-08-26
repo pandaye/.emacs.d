@@ -89,6 +89,7 @@
 ;; ============================================================
 
 (require 'network-tools)
+(require 'hydration)
 
 (use-package try
   :commands (try))
