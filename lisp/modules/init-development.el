@@ -128,5 +128,11 @@
 (use-package yasnippet-snippets
   :after yasnippet)
 
+;; ============================================================
+;; AI 额度数据看板
+;; ============================================================
+
+(require 'ai-quota)
+
 (provide 'init-development)
 ;;; init-development.el ends here

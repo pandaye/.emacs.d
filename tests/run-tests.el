@@ -8,6 +8,7 @@
 (load (expand-file-name "static-blog-test.el" (file-name-directory load-file-name)))
 (load (expand-file-name "org-ssh-test.el" (file-name-directory load-file-name)))
 (load (expand-file-name "org-gtd-test.el" (file-name-directory load-file-name)))
+(load (expand-file-name "ai-quota-test.el" (file-name-directory load-file-name)))
 
 (ert-run-tests-batch-and-exit)
 
