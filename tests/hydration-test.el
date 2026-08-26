@@ -13,6 +13,7 @@
                  (if (member "display-message" args) "work" nil))))
       (hydration-start)
       (should (timerp hydration--timer))
+      (should (eq (timer--function hydration--timer) #'hydration--fire))
       (should (equal hydration--original-name "work"))
       (should-not hydration--active)
       (when (timerp hydration--timer) (cancel-timer hydration--timer)))))

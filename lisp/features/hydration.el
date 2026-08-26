@@ -12,8 +12,6 @@
 
 ;;; Code:
 
-(require 'cl-lib)
-(require 'subr-x)
 (require 'tmux-manager)
 
 (defgroup hydration nil
@@ -79,6 +77,7 @@
 
 (defun hydration--fire ()
   "Fire the hydration reminder: rename window, message, and mark active."
+  (setq hydration--timer nil)
   (setq hydration--active t)
   (let ((session (hydration--session)))
     (when (and session hydration--original-name)
