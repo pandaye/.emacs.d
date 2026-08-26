@@ -63,7 +63,9 @@
   (if hydration--active " 💧 " ""))
 
 (defun hydration-start ()
-  "Start the periodic water drinking reminder cycle."
+  "Start the periodic water drinking reminder cycle.
+The first reminder fires immediately, then every `hydration-interval'
+minutes until confirmed or cancelled."
   (interactive)
   (when (timerp hydration--timer)
     (cancel-timer hydration--timer))
@@ -71,9 +73,9 @@
     (setq hydration--original-name
           (and session (hydration--window-0-name session))))
   (setq hydration--active nil)
+  (hydration--fire)
   (hydration--arm-timer)
-  (force-mode-line-update)
-  (message "💧 喝水提醒已启动，每 %d 分钟提醒一次" hydration-interval))
+  (message "💧 喝水提醒已启动，之后每 %d 分钟提醒一次" hydration-interval))
 
 (defun hydration--fire ()
   "Fire the hydration reminder: rename window, message, and mark active."
