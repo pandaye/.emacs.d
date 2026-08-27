@@ -29,6 +29,13 @@
   :type 'string
   :group 'hydration)
 
+(defcustom hydration-log-file
+  (expand-file-name "hydration.log" user-emacs-directory)
+  "File where confirmed drinking timestamps are appended, one ISO
+timestamp per line.  Overridable via `local-vars.local.el'."
+  :type 'file
+  :group 'hydration)
+
 (defvar hydration--timer nil
   "Active `run-at-time' timer object, or nil when not running.")
 
@@ -57,6 +64,14 @@
   "Schedule the next one-shot reminder timer after `hydration-interval'."
   (setq hydration--timer
         (run-at-time (* hydration-interval 60) nil #'hydration--fire)))
+
+(defun hydration--append-log-timestamp ()
+  "Append the current ISO timestamp as a line to `hydration-log-file'."
+  (let ((file (expand-file-name hydration-log-file)))
+    (make-directory (file-name-directory file) t)
+    (with-temp-file file
+      (goto-char (point-max))
+      (insert (format-time-string "%Y-%m-%d %H:%M:%S\n")))))
 
 (defun hydration--mode-line-indicator ()
   "Return mode-line text reflecting the current hydration state."
@@ -99,6 +114,7 @@ minutes until confirmed or cancelled."
         (when (timerp hydration--timer)
           (cancel-timer hydration--timer))
         (hydration--arm-timer)
+        (hydration--append-log-timestamp)
         (force-mode-line-update)
         (message "已确认喝水，下一轮提醒将在 %d 分钟后" hydration-interval))
     (message "当前没有待确认的喝水提醒")))

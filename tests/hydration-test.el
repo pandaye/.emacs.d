@@ -79,5 +79,34 @@
   (let ((hydration--active nil))
     (should (equal (hydration--mode-line-indicator) ""))))
 
+(ert-deftest hydration-confirm-appends-iso-timestamp-to-log ()
+  (let* ((log-file (make-temp-file "hydration-log" t))
+         (hydration--original-name "work") (hydration--active t)
+         (hydration-log-file (expand-file-name "hydration.log" log-file))
+         (renames nil))
+    (cl-letf (((symbol-function 'tmux-manager--tmux-available-p) (lambda () t))
+              ((symbol-function 'tmux-manager--get-current-session) (lambda () "main"))
+              ((symbol-function 'tmux-manager--run-tmux-command)
+               (lambda (&rest args) (push args renames) nil)))
+      (hydration-confirm)
+      (should (file-exists-p hydration-log-file))
+      (with-temp-buffer
+        (insert-file-contents hydration-log-file)
+        (should (string-match-p
+                 (format-time-string "%Y-%m-%d %H:%M" (current-time))
+                 (buffer-string)))
+        (should (string-match-p
+                 "^[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}$"
+                 (string-trim (buffer-string))))))))
+
+(ert-deftest hydration-confirm-inactive-does-not-log ()
+  (let* ((log-file (make-temp-file "hydration-log" t))
+         (hydration--active nil)
+         (hydration-log-file (expand-file-name "hydration.log" log-file)))
+    (cl-letf (((symbol-function 'tmux-manager--run-tmux-command)
+               (lambda (&rest _args) nil)))
+      (hydration-confirm)
+      (should-not (file-exists-p hydration-log-file)))))
+
 (provide 'hydration-test)
 ;;; hydration-test.el ends here
