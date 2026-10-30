@@ -4,16 +4,10 @@
 ;;; Commentary:
 ;; LSP Bridge 在配置启动阶段加载，并为编程模式提供全局 LSP 支持。
 ;;
-;; lsp-bridge 不支持标准 package-vc（无 autoload cookies），
-;; 使用 package-vc-install 拉取源码 + 手动 load-path 方式管理。
+;; lsp-bridge 没有 autoload cookies，但 `:vc' 仍可负责安装与升级
+;; （package-vc 生成的 autoloads 为空，`:demand t' 会在安装后直接 require）。
 
 ;;; Code:
-
-;; 确保 lsp-bridge 仓库已克隆到 elpa 目录
-(let ((lsp-bridge-dir (expand-file-name "elpa/lsp-bridge" user-emacs-directory)))
-  (unless (file-exists-p (expand-file-name "lsp-bridge.el" lsp-bridge-dir))
-    (package-vc-install '(lsp-bridge :url "https://github.com/manateelazycat/lsp-bridge")))
-  (add-to-list 'load-path lsp-bridge-dir))
 
 (defun pandaye/development-lsp-bridge-not-common-lisp-buffer ()
   "Return nil in Common Lisp buffers handled by Corfu."
@@ -64,6 +58,10 @@
   (acm-complete))
 
 (use-package lsp-bridge
+  ;; 同 meow：`:rev' 不写时 use-package 会优先装最后一个 release，
+  ;; 这里明确跟 master，和 `package-vc-upgrade-all' 的 vc-pull 对齐。
+  :vc (:url "https://github.com/manateelazycat/lsp-bridge"
+            :branch "master" :rev "master")
   :ensure nil
   :demand t
   :custom

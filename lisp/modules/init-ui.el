@@ -153,7 +153,9 @@ standard Emacs keybindings, respecting the current mode's keymap."
             (eq (meow--current-state) 'insert))))
 
 (use-package meow
-  :vc (:url "https://github.com/meow-edit/meow")
+  ;; 跟 master 滚动：`:rev' 不写时 use-package 会装最后一个 release（v1.5.0 的
+  ;; detached tag），那样 `package-vc-upgrade-all' 的 vc-pull 会失败。
+  :vc (:url "https://github.com/meow-edit/meow" :branch "master" :rev "master")
   :demand t
   :config
   ;; 注册自定义 thing
