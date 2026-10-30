@@ -40,3 +40,8 @@ tree-sitter
 .superpowers/
 public/
 mcp/config.json
+AGENTS.md
+.serena/
+hydration.log
+logview-cache.extmap
+tmp/
