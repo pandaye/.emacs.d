@@ -69,9 +69,9 @@ timestamp per line.  Overridable via `local-vars.local.el'."
   "Append the current ISO timestamp as a line to `hydration-log-file'."
   (let ((file (expand-file-name hydration-log-file)))
     (make-directory (file-name-directory file) t)
-    (with-temp-file file
-      (goto-char (point-max))
-      (insert (format-time-string "%Y-%m-%d %H:%M:%S\n")))))
+    (with-temp-buffer
+      (insert (format-time-string "%Y-%m-%d %H:%M:%S\n"))
+      (append-to-file (point-min) (point-max) file))))
 
 (defun hydration--mode-line-indicator ()
   "Return mode-line text reflecting the current hydration state."

@@ -32,7 +32,8 @@
       (should (member '("rename-window" "-t" "main:0" "💧 要喝水") renames)))))
 
 (ert-deftest hydration-confirm-restores-name-and-rearms ()
-  (let ((hydration--original-name "work") (hydration--active t) (renames nil))
+  (let ((hydration--original-name "work") (hydration--active t) (renames nil)
+        (hydration-log-file (make-temp-file "hydration-test-log")))
     (cl-letf (((symbol-function 'tmux-manager--tmux-available-p) (lambda () t))
               ((symbol-function 'tmux-manager--get-current-session) (lambda () "main"))
               ((symbol-function 'tmux-manager--run-tmux-command)
@@ -84,6 +85,8 @@
          (hydration--original-name "work") (hydration--active t)
          (hydration-log-file (expand-file-name "hydration.log" log-file))
          (renames nil))
+    (with-temp-file hydration-log-file
+      (insert "2026-08-30 08:00:00\n2026-08-31 09:00:00\n"))
     (cl-letf (((symbol-function 'tmux-manager--tmux-available-p) (lambda () t))
               ((symbol-function 'tmux-manager--get-current-session) (lambda () "main"))
               ((symbol-function 'tmux-manager--run-tmux-command)
@@ -92,12 +95,18 @@
       (should (file-exists-p hydration-log-file))
       (with-temp-buffer
         (insert-file-contents hydration-log-file)
-        (should (string-match-p
-                 (format-time-string "%Y-%m-%d %H:%M" (current-time))
-                 (buffer-string)))
-        (should (string-match-p
-                 "^[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}$"
-                 (string-trim (buffer-string))))))))
+        (let ((entries (split-string (buffer-string) "\n" t)))
+          (should (= 3 (length entries)))
+          (should (equal "2026-08-30 08:00:00" (nth 0 entries)))
+          (should (equal "2026-08-31 09:00:00" (nth 1 entries)))
+          (should (string-match-p
+                   (format-time-string "%Y-%m-%d %H:%M" (current-time))
+                   (nth 2 entries)))
+          (should (string-match-p
+                   "^[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\}$"
+                   (nth 2 entries)))))
+      (when (timerp hydration--timer)
+        (cancel-timer hydration--timer)))))
 
 (ert-deftest hydration-confirm-inactive-does-not-log ()
   (let* ((log-file (make-temp-file "hydration-log" t))
