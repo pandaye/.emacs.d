@@ -28,6 +28,7 @@
 (require 'init-development)
 (require 'init-lsp)
 (require 'init-reader)
+(require 'init-dsh)
 (require 'init-keybindings)
 
 (provide 'init-config)
