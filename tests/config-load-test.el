@@ -6,10 +6,10 @@
   (should (featurep 'init))
   (should (featurep 'init-config))
   (should-not (featurep 'my-config))
-  (dolist (feature '(init-ui init-editor init-completion init-navigation
-                     init-vcs init-org init-markdown init-input-method
-                     init-development init-lsp init-reader init-dsh
-                     init-keybindings))
+  (dolist (feature '(init-ui init-tui init-gui init-editor init-completion
+                     init-navigation init-vcs init-org init-markdown
+                     init-input-method init-development init-lsp init-reader
+                     init-dsh init-keybindings))
     (should (featurep feature)))
   (should-not (featurep 'pandaye-init)))
 

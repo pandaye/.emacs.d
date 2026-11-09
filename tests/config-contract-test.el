@@ -110,6 +110,10 @@
               'pandaye/org-agenda-file-colors)))
 
 (ert-deftest config-contract-git-file-command-remains-callable ()
+  ;; 命令内部会 `(require 'vc-git)'。先显式加载，否则那次 require 会把下面
+  ;; `cl-letf' 设的桩顶掉——此前能否通过取决于启动时是否顺手加载过 vc-git
+  ;; （例如主目录存在 bookmarks.eld 时会被 vc-registered 触发）。
+  (require 'vc-git)
   (let (opened-file)
     (cl-letf (((symbol-function 'vc-git-root)
                (lambda (_directory) "/tmp/example-repository/"))
