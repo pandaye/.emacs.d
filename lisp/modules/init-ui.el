@@ -162,6 +162,10 @@ standard Emacs keybindings, respecting the current mode's keymap."
                        'pandaye/editor-meow--bounds-of-line-trimmed)
   (add-to-list 'meow-char-thing-table '(?t . line-trimmed))
   (add-to-list 'meow-mode-state-list '(org-list-mode . motion))
+  ;; meow 默认 (`meow-use-clipboard' nil) 复制时不更新系统剪贴板，而
+  ;; `C-y' 会优先读系统剪贴板：于是刚用 y 复制的内容贴不出来，贴到的是
+  ;; 上一次剪贴板里的旧内容。
+  (setq meow-use-clipboard t)
   (meow-setup)
   (meow-global-mode 1))
 
