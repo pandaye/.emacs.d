@@ -15,9 +15,7 @@
   (should (featurep 'init-gui))
   (should (featurep 'init-tui))
   (should (memq #'pandaye/gui--apply-frame after-make-frame-functions))
-  (should (memq #'pandaye/tui--apply-frame after-make-frame-functions))
-  (should (memq #'pandaye/input-apply-rimel-candidate-display
-                after-make-frame-functions)))
+  (should (memq #'pandaye/tui--apply-frame after-make-frame-functions)))
 
 (ert-deftest display-config-applies-terminal-settings-in-batch ()
   (should (display-table-slot standard-display-table 'truncation))
@@ -83,13 +81,9 @@
       (cursor-display-set-cursor-color "#abcdef"))
     (should (equal sent "\e]12;#abcdef\a"))))
 
-(ert-deftest display-config-rimel-layout-follows-frame ()
-  (cl-letf (((symbol-function 'display-graphic-p) (lambda (&optional _frame) t)))
-    (pandaye/input-apply-rimel-candidate-display nil)
-    (should (eq rimel-posframe-style 'vertical)))
-  (cl-letf (((symbol-function 'display-graphic-p) (lambda (&optional _frame) nil)))
-    (pandaye/input-apply-rimel-candidate-display nil)
-    (should (eq rimel-posframe-style 'horizontal))))
+(ert-deftest display-config-rimel-candidates-are-horizontal ()
+  "候选横排单行：图形界面和终端使用同一套布局。"
+  (should (eq rimel-posframe-style 'horizontal)))
 
 (ert-deftest display-config-focus-refresh-stays-callable ()
   "`after-focus-change-function' 是函数变量而不是 hook。
