@@ -91,5 +91,17 @@
     (pandaye/input-apply-rimel-candidate-display nil)
     (should (eq rimel-posframe-style 'horizontal))))
 
+(ert-deftest display-config-focus-refresh-stays-callable ()
+  "`after-focus-change-function' 是函数变量而不是 hook。
+用 `add-hook' 挂载会把它的值变成列表，Emacs 一处理焦点变化就报
+\"Invalid function\"；这里直接调用一次，确保接线方式没有回退。"
+  (should (functionp after-focus-change-function))
+  (should cursor-display--focus-refresh-installed)
+  (let (failure)
+    (condition-case err
+        (funcall after-focus-change-function)
+      (error (setq failure (error-message-string err))))
+    (should-not failure)))
+
 (provide 'display-config-test)
 ;;; display-config-test.el ends here

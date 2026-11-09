@@ -116,8 +116,15 @@
 (add-hook 'window-selection-change-functions
           #'cursor-display-update-cursor-color-for-buffer)
 ;; 图形界面下切换窗口焦点不触发 window-*-change-functions，需要单独补一次。
-(add-hook 'after-focus-change-function
-          #'cursor-display-update-cursor-color-for-buffer)
+;; `after-focus-change-function' 是普通函数变量（初值 `ignore'），不是 hook：
+;; 用 `add-hook' 会把它的值变成函数列表，Emacs 每次调用都会报
+;; "Invalid function"，启动时就会在 *Messages* 里刷一条错误。
+(defvar cursor-display--focus-refresh-installed nil
+  "非 nil 表示焦点刷新已经挂到 `after-focus-change-function' 上。")
+(unless cursor-display--focus-refresh-installed
+  (setq cursor-display--focus-refresh-installed t)
+  (add-function :after after-focus-change-function
+                #'cursor-display-update-cursor-color-for-buffer))
 
 (provide 'init-editor)
 ;;; init-editor.el ends here
