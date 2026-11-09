@@ -44,6 +44,15 @@ init-config -> core / modules -> features -> Emacs 内置库
 
 运行 =make test= 会加载完整配置并执行行为契约、架构约束和功能 ERT；运行 =make compile= 会递归字节编译 =lisp/= 下的全部自有 Elisp，产物写入临时目录。
 
+** 显示环境
+
+同一份配置同时适配终端和图形界面，按帧类型分流：
+
+- =modules/init-tui.el= ：终端专属——display-table 的截断/续行字形、OSC 52 剪贴板、OSC 12 光标颜色、关闭自动字符组合和 CJK 宽字符推断。
+- =modules/init-gui.el= ：图形专属——默认字体与字号、CJK 和 emoji 字体、关闭原生对话框、像素滚动。字体可用 =pandaye/gui-font-family= 、 =pandaye/gui-font-height= 、 =pandaye/gui-cjk-font-family= 、 =pandaye/gui-emoji-font-family= 调整。
+
+两者都在加载时判断一次，并对之后出现的帧挂 =after-make-frame-functions= ，所以 =emacs --daemon= 加 =emacsclient= （ =-c= 或 =-nw= ）也能拿到对应那套配置。光标颜色提示（meow 状态、输入法是否激活）在两种环境下都生效：终端发 OSC 12，图形界面写帧的 =cursor-color= 。
+
 ** 外部依赖
 
 - =python3= ：阅读翻译会用 PySBD 做句子切分；首次启动会按 =requirements-translate.txt= 后台准备虚拟环境。
