@@ -123,7 +123,12 @@
   :defer 2
   :config
   (yas-global-mode 1)
-  (define-key yas-minor-mode-map (kbd "<tab>") 'yas-expand))
+  ;; 不要绑 `[tab]'（GUI 里 Tab 键发的是这个事件）：它优先级高于
+  ;; `function-key-map' 把 `tab' 翻译成 TAB(C-i) 的路径，会把 org-cycle、
+  ;; org-table-next-field、markdown-cycle 这些主模式的 TAB 快捷键整个盖掉，
+  ;; 表现就是 GUI 下 TAB 没反应。yasnippet 默认已经把条件绑定
+  ;; `yas-maybe-expand' 挂在 TAB 上，没有 snippet 时会落回主模式的 TAB。
+  )
 
 (use-package yasnippet-snippets
   :after yasnippet)
