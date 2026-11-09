@@ -327,12 +327,13 @@ them after every command (requires `line-number-mode' and
     " "
     mode-line-mule-info))
 
-;; 设置 modeline 高度和外观
+;; 设置 modeline 外观。`:height' 整数是绝对字号（1/10 磅），100 即 10pt，
+;; 会比默认字体小；用浮点数则相对 `default' face 缩放，1.0 等于默认字号。
 (set-face-attribute 'mode-line nil
-                    :height 100
+                    :height 1.0
                     :box '(:line-width 1 :color "#504945"))
 (set-face-attribute 'mode-line-inactive nil
-                    :height 100
+                    :height 1.0
                     :box '(:line-width 1 :color "#3c3836"))
 
 
