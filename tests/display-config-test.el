@@ -27,6 +27,18 @@
                   '(terminal-clipboard-osc-52-cut-function
                     terminal-clipboard-pbcopy))))
 
+(ert-deftest display-config-tui-layer-applies-on-terminal-frames ()
+  ;; 模拟 daemon 场景：加载时没应用终端设定，靠帧 hook 补上。
+  (let ((cut interprogram-cut-function)
+        (paste interprogram-paste-function))
+    (unwind-protect
+        (progn
+          (should (pandaye/tui--apply-frame (selected-frame)))
+          (should (eq interprogram-cut-function
+                      #'terminal-clipboard-osc-52-cut-function)))
+      (setq interprogram-cut-function cut
+            interprogram-paste-function paste))))
+
 (ert-deftest display-config-gui-layer-ignores-terminal-frames ()
   (let ((dialog use-dialog-box)
         (wheel mouse-wheel-scroll-amount))

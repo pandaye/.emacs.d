@@ -71,7 +71,8 @@ Returns non-nil when it applied, so it can be used directly in
   (let ((frame (or frame (selected-frame))))
     (when (and (eq (framep frame) t)
                (not (display-graphic-p frame)))
-      (pandaye/tui--apply-settings))))
+      (pandaye/tui--apply-settings)
+      t)))
 
 (add-hook 'after-make-frame-functions #'pandaye/tui--apply-frame)
 
