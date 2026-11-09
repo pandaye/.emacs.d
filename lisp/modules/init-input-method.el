@@ -17,13 +17,22 @@
       liberime-auto-build t
       default-input-method "rimel"
       rimel-schema "tigress"
-      rimel-posframe-style 'horizontal
       rimel-inline-preedit t
       rimel-disable-predicates '(meow-not-insert-p
                                  pandaye/input-rimel-predicate-after-ascii-nonspace-p
                                  pandaye/input-rimel-predicate-space-after-cjk-p
                                  rimel-predicate-after-alphabet-char-p
                                  rimel-predicate-prog-in-code-p))
+
+(defun pandaye/input-apply-rimel-candidate-display (&optional frame)
+  "Pick the Rimel candidate layout that suits FRAME's display.
+终端里横向排列更省屏幕高度；图形界面下竖向列表更接近常规补全。"
+  (setq rimel-posframe-style
+        (if (display-graphic-p frame) 'vertical 'horizontal)))
+
+(add-hook 'after-make-frame-functions
+          #'pandaye/input-apply-rimel-candidate-display)
+(pandaye/input-apply-rimel-candidate-display nil)
 
 (defun pandaye/input-ensure-rimel-loaded ()
   "Load Rimel and Liberime on demand."

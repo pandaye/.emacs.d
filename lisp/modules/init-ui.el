@@ -5,9 +5,7 @@
 
 (use-package gruvbox-theme
   :config
-  (load-theme 'gruvbox-dark-medium t)
-  ;; 终端下 fringe background 为 nil 会导致警告，设为 unspecified
-  (set-face-attribute 'fringe nil :background 'unspecified))
+  (load-theme 'gruvbox-dark-medium t))
 
 ;; 启用行号
 (add-hook 'prog-mode-hook #'display-line-numbers-mode)

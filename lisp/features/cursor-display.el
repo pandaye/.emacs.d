@@ -1,7 +1,9 @@
 ;;; cursor-display.el --- Dynamic cursor color management  -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; 终端下根据 Meow 模式状态和 Rime/Rimel 输入法动态改变光标颜色（OSC 12）。
+;; 根据 Meow 模式状态和 Rime/Rimel 输入法动态改变光标颜色。
+;; 终端用 OSC 12 转义序列，图形界面设置帧的 `cursor-color'，调用方
+;; 不需要关心当前是哪种环境。
 ;;
 ;; 逻辑：
 ;;   Insert + Rime → 红色（提醒输入法已激活）
@@ -41,19 +43,28 @@
 
 ;; ── 核心函数 ─────────────────────────────────────────────
 
-(defun cursor-display-wezterm-set-cursor-color (color)
-  "通过 OSC 12 设置终端光标颜色。COLOR 为十六进制字符串如 \"#FF0000\"。"
-  (unless (display-graphic-p)
+(defun cursor-display-set-cursor-color (color)
+  "Set the cursor COLOR for the selected frame.
+图形帧直接写 `cursor-color' 帧参数，终端帧走 OSC 12。COLOR 为十六进制
+字符串，例如 \"#FF0000\"。"
+  (if (display-graphic-p)
+      (set-frame-parameter (selected-frame) 'cursor-color color)
     (send-string-to-terminal (format "\e]12;%s\a" color))))
 
 (defvar cursor-display-cursor--last-color nil
-  "上次设置的光标颜色，避免重复发送 OSC 序列。")
+  "上次设置的终端光标颜色，避免重复发送 OSC 序列。")
 
 (defun cursor-display-cursor--set-color (color)
-  "仅在颜色变化时发送 OSC 12。COLOR 为 nil 时保持当前颜色不变。"
-  (when (and color (not (equal color cursor-display-cursor--last-color)))
-    (setq cursor-display-cursor--last-color color)
-    (cursor-display-wezterm-set-cursor-color color)))
+  "Apply COLOR, skipping redundant updates.  COLOR nil keeps the current one.
+图形帧按帧比较 `cursor-color'；终端帧沿用全局缓存避免重复发送 OSC 12。"
+  (when color
+    (let ((frame (selected-frame)))
+      (if (display-graphic-p frame)
+          (unless (equal (frame-parameter frame 'cursor-color) color)
+            (cursor-display-set-cursor-color color))
+        (unless (equal color cursor-display-cursor--last-color)
+          (setq cursor-display-cursor--last-color color)
+          (cursor-display-set-cursor-color color))))))
 
 (defun cursor-display-cursor--compute-color (state)
   "根据 STATE 和 Rime 状态计算颜色。

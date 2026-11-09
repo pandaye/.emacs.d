@@ -30,12 +30,7 @@
       scroll-conservatively 10000
       scroll-margin 0
       scroll-preserve-screen-position t
-      mouse-wheel-scroll-amount '(1)
       mouse-wheel-progressive-speed nil)
-
-;; CJK 和 emoji 宽字符设置（TUI 专属）
-(setopt cjk-ambiguous-chars-are-wide nil)
-(setq-default auto-composition-mode nil)
 
 ;; 剪贴板基础设置（GUI / 终端通用）
 (setq select-enable-clipboard t
@@ -47,33 +42,8 @@
 (setq make-backup-files nil)
 
 ;; ============================================================
-;; GUI 专用配置
-;; ============================================================
-
-(when (display-graphic-p)
-  (load "init-gui.el" :noerror))
-
-;; ============================================================
 ;; UI 外观
 ;; ============================================================
-
-;; 回退显示字符美化
-(defface fallback '((t :family "Fira Code Light"
-                       :foreground "gray"))
-  "Face for fallback display-table glyphs."
-  :group 'faces)
-(unless (char-table-p standard-display-table)
-  (setq standard-display-table (make-display-table)))
-(set-display-table-slot standard-display-table 'truncation
-                        (make-glyph-code ?… 'fallback))
-(set-display-table-slot standard-display-table 'wrap
-                        (make-glyph-code ?↩ 'fallback))
-
-;; Fringe 背景透明化
-(set-face-attribute 'fringe nil :background nil)
-(define-fringe-bitmap 'left-arrow [])
-(define-fringe-bitmap 'left-curly-arrow [])
-(define-fringe-bitmap 'left-triangle [])
 
 ;; 行号/列号显示（modeline 中 %l/%c 依赖这两个 mode 开启才会随光标实时刷新）
 (line-number-mode 1)
@@ -107,10 +77,6 @@
 
 (winner-mode 1)
 
-(use-package all-the-icons
-  :if (display-graphic-p)
-  :commands (all-the-icons-install-fonts))
-
 (use-package ace-window
   :commands (ace-window))
 
@@ -129,38 +95,29 @@
   (hkey-set-key (kbd "M-o") #'hkey-either))
 
 ;; ============================================================
-;; 终端剪贴板（终端统一由 terminal-clipboard 处理）
+;; 光标颜色（终端 OSC 12 / 图形帧 cursor-color）
 ;; ============================================================
 
-(unless (display-graphic-p)
-  (condition-case err
-      (progn
-        (require 'terminal-clipboard)
-        (if (eq system-type 'darwin)
-            (setq interprogram-cut-function #'terminal-clipboard-pbcopy
-                  interprogram-paste-function #'terminal-clipboard-pbpaste)
-          (setq interprogram-cut-function #'terminal-clipboard-osc-52-cut-function))
-        (setq browse-url-browser-function nil))
-    (error (message "剪贴板模块加载失败: %s" (error-message-string err)))))
-
-;; Keep cursor wiring independent from `init-ui' error handling, matching the
-;; legacy startup sequence where terminal cursor support loaded from editor.
-(unless (display-graphic-p)
-  (require 'cursor-display)
-  (with-eval-after-load 'meow
-    (add-hook 'meow-switch-state-hook #'cursor-display-update-cursor-color-for-state))
-  (add-hook 'input-method-activate-hook #'cursor-display-update-cursor-color-for-buffer)
-  (add-hook 'input-method-deactivate-hook #'cursor-display-update-cursor-color-for-buffer)
-  (dolist (command '(activate-input-method deactivate-input-method
-                     toggle-input-method))
-    (unless (advice-member-p #'cursor-display-refresh-cursor-color-after-input-method
-                             command)
-      (advice-add command
-                  :after #'cursor-display-refresh-cursor-color-after-input-method)))
-  (add-hook 'window-buffer-change-functions
-            #'cursor-display-update-cursor-color-for-buffer)
-  (add-hook 'window-selection-change-functions
-            #'cursor-display-update-cursor-color-for-buffer))
+;; 光标颜色用来提示 meow 状态和输入法是否激活，两种显示环境都要接线：
+;; `cursor-display' 内部按帧类型选择 OSC 12 还是 frame parameter，
+;; 所以这里不再按 `display-graphic-p' 分叉。
+(require 'cursor-display)
+(add-hook 'meow-switch-state-hook #'cursor-display-update-cursor-color-for-state)
+(add-hook 'input-method-activate-hook #'cursor-display-update-cursor-color-for-buffer)
+(add-hook 'input-method-deactivate-hook #'cursor-display-update-cursor-color-for-buffer)
+(dolist (command '(activate-input-method deactivate-input-method
+                   toggle-input-method))
+  (unless (advice-member-p #'cursor-display-refresh-cursor-color-after-input-method
+                           command)
+    (advice-add command
+                :after #'cursor-display-refresh-cursor-color-after-input-method)))
+(add-hook 'window-buffer-change-functions
+          #'cursor-display-update-cursor-color-for-buffer)
+(add-hook 'window-selection-change-functions
+          #'cursor-display-update-cursor-color-for-buffer)
+;; 图形界面下切换窗口焦点不触发 window-*-change-functions，需要单独补一次。
+(add-hook 'after-focus-change-function
+          #'cursor-display-update-cursor-color-for-buffer)
 
 (provide 'init-editor)
 ;;; init-editor.el ends here
