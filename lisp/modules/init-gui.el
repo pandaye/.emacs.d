@@ -18,23 +18,28 @@
   "图形界面显示设置。"
   :group 'faces)
 
-(defcustom pandaye/gui-font-family "Sarasa Mono SC"
+(defcustom pandaye/gui-font-family "JetBrains Maple Mono"
   "图形界面默认面（`default' face）使用的等宽字体族。"
   :type 'string
   :group 'pandaye/gui)
 
-(defcustom pandaye/gui-font-height 120
-  "图形界面默认字号，单位是磅的百分之一（120 即 12pt）。"
+(defcustom pandaye/gui-font-height 128
+  "图形界面默认字号，单位是磅的百分之一（128 即 12.8pt）。
+不用 12pt 是因为 96 DPI 下 12pt 对应 16px：ASCII 宽 9.6px 会四舍五入成
+10px，而 CJK 宽 19.2px 会舍成 19px，中文每字差 1px，org 表格会歪。
+12.8pt 对应 17px：ASCII 10px、CJK 20px，正好 2:1；13.5pt(18px)、
+15pt(20px) 也保持 2:1，14pt(19px) 会差 1px。"
   :type 'integer
   :group 'pandaye/gui)
 
-(defcustom pandaye/gui-cjk-font-family "Sarasa Mono SC"
+(defcustom pandaye/gui-cjk-font-family "JetBrains Maple Mono"
   "CJK 字符使用的字体族。"
   :type 'string
   :group 'pandaye/gui)
 
-(defcustom pandaye/gui-cjk-font-rescale 1.2
-  "CJK 字体相对默认字体的缩放比例。"
+(defcustom pandaye/gui-cjk-font-rescale 1.0
+  "CJK 字体相对默认字体的缩放比例。
+中英文用同一族（JetBrains Maple Mono 本身覆盖 CJK）时保持 1.0，避免中文被放大。"
   :type 'number
   :group 'pandaye/gui)
 
