@@ -4,7 +4,6 @@
 
 (ert-deftest config-loads-current-entrypoint ()
   (should (featurep 'init))
-  (should (featurep 'init-config))
   (should-not (featurep 'my-config))
   (dolist (feature '(init-ui init-tui init-gui init-editor init-completion
                      init-navigation init-vcs init-org init-markdown

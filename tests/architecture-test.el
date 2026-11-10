@@ -13,10 +13,8 @@
   '("lisp/core" "lisp/modules" "lisp/features")
   "Configuration directories which must be present on `load-path'.")
 
-(ert-deftest architecture-loads-through-init-config ()
-  (should (featurep 'init-config))
-  ;; 层目录登记由入口 `init.el' -> `init-config' 引导完成。
-  (should (featurep 'init-environment))
+(ert-deftest architecture-loads-through-entry-point ()
+  (should (featurep 'init))
   (should-not (featurep 'my-config)))
 
 (ert-deftest architecture-adds-each-layer-to-load-path ()
@@ -25,7 +23,7 @@
                     load-path))))
 
 (ert-deftest architecture-registers-each-layer-once ()
-  ;; 每个层目录只应由 `init-environment' 登记一次，入口不再重复声明。
+  ;; 每个层目录只应被登记一次。
   (dolist (directory pandaye/test-config-directories)
     (let ((expanded (expand-file-name directory user-emacs-directory)))
       (should (= 1 (seq-count (lambda (entry) (equal entry expanded))
@@ -39,15 +37,18 @@
                  (string-prefix-p root (expand-file-name entry)))
         (should (file-directory-p entry))))))
 
-(ert-deftest architecture-entry-only-registers-config-root ()
+(ert-deftest architecture-entry-loads-every-layer-module ()
+  ;; 入口是唯一组合根：模块清单必须显式写在 init.el 里，便于一眼看到顺序。
   (let ((contents (with-temp-buffer
                     (insert-file-contents
                      (expand-file-name "init.el" user-emacs-directory))
                     (buffer-string))))
-    (should (= 1 (seq-count (lambda (line)
-                              (string-match-p "add-to-list 'load-path" line))
-                            (split-string contents "\n"))))
-    (should (string-match-p "\"lisp\"" contents))))
+    (dolist (module '(init-ui init-tui init-gui init-defaults init-local
+                      init-editor init-completion init-navigation init-vcs
+                      init-org init-org-writing init-org-gtd init-org-roam
+                      init-markdown init-input-method init-development
+                      init-lsp init-reader init-dsh init-keybindings))
+      (should (string-match-p (format "(require '%s)" module) contents)))))
 
 (ert-deftest architecture-features-have-no-configuration-dependencies ()
   (dolist (file (directory-files-recursively
