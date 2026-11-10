@@ -3,6 +3,9 @@
 ;;; Commentary:
 ;; This is the sole composition root.  Keep ordering explicit because startup
 ;; behavior is part of the configuration contract.
+;;
+;; `init-environment' 登记三个层目录（core/modules/features），必须先于
+;; 任何层内模块加载。
 
 ;;; Code:
 
