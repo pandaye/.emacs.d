@@ -26,7 +26,7 @@ emacs
 
 ** 配置结构
 
-=init.el= 只负责包管理、加载 =custom-file= ，把 =lisp/= 挂到 =load-path= 后进入 =init-config= 。=lisp/= 根目录只放两个入口文件： =init-config.el= 是唯一的组合根， =init-environment.el= 统一登记下面三个层目录（它描述「层」本身，所以不放在任何一层里）。自有代码按生命周期分为三层：
+=init.el= 是唯一入口，按顺序做三件事：初始化包管理和 =use-package= 、加载 =custom-file= 、登记 =lisp/core= 、 =lisp/modules= 、 =lisp/features= 三个层目录并按固定顺序加载模块。模块清单和顺序直接写在入口里，启动行为一眼可读。自有代码按生命周期分为三层：
 
 - =lisp/core/= ：启动默认值、本地私有值和全局键位。
 - =lisp/modules/= ：按领域管理第三方包、hook、advice 和 mode 局部键位。
@@ -35,7 +35,7 @@ emacs
 配置模块使用 =init-*= 命名，例如 =init-reader= 和 =init-development= ；功能库使用领域名，例如 =translate= 和 =tmux-manager= 。依赖方向固定为：
 
 #+begin_example
-init-config -> core / modules -> features -> Emacs 内置库
+init.el -> core / modules -> features -> Emacs 内置库
 #+end_example
 
 全局键位集中在 =core/init-keybindings.el= ，各 mode 的局部键位留在所属模块。顶层固定加载现有全部模块，不提供 profile 或模块开关。
