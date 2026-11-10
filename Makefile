@@ -7,12 +7,12 @@ ROOT := $(CURDIR)
 .PHONY: test compile
 
 test:
-	$(EMACS) -Q --batch -L lisp \
+	$(EMACS) -Q --batch \
 		--eval "(setq user-emacs-directory (file-name-as-directory \"$(ROOT)\"))" \
 		-l init.el -l tests/run-tests.el
 
 compile:
-	$(EMACS) -Q --batch -L lisp -L lisp/core -L lisp/modules -L lisp/features \
+	$(EMACS) -Q --batch -L lisp/core -L lisp/modules -L lisp/features \
 		--eval "(setq user-emacs-directory (file-name-as-directory \"$(ROOT)\"))" \
 		--eval "(progn (require 'package) (package-initialize) \
 		(require 'use-package) (setq use-package-always-ensure nil))" \
