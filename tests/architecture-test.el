@@ -6,6 +6,7 @@
 ;;; Code:
 
 (require 'ert)
+(require 'seq)
 (require 'subr-x)
 
 (defconst pandaye/test-config-directories
@@ -14,12 +15,39 @@
 
 (ert-deftest architecture-loads-through-init-config ()
   (should (featurep 'init-config))
+  ;; 层目录登记由入口 `init.el' -> `init-config' 引导完成。
+  (should (featurep 'init-environment))
   (should-not (featurep 'my-config)))
 
 (ert-deftest architecture-adds-each-layer-to-load-path ()
   (dolist (directory pandaye/test-config-directories)
     (should (member (expand-file-name directory user-emacs-directory)
                     load-path))))
+
+(ert-deftest architecture-registers-each-layer-once ()
+  ;; 每个层目录只应由 `init-environment' 登记一次，入口不再重复声明。
+  (dolist (directory pandaye/test-config-directories)
+    (let ((expanded (expand-file-name directory user-emacs-directory)))
+      (should (= 1 (seq-count (lambda (entry) (equal entry expanded))
+                              load-path))))))
+
+(ert-deftest architecture-load-path-entries-exist ()
+  ;; 入口曾挂过一个并不存在的 `opensource/'；这里防止再次出现死路径。
+  (let ((root (file-name-as-directory (expand-file-name user-emacs-directory))))
+    (dolist (entry load-path)
+      (when (and (stringp entry)
+                 (string-prefix-p root (expand-file-name entry)))
+        (should (file-directory-p entry))))))
+
+(ert-deftest architecture-entry-only-registers-config-root ()
+  (let ((contents (with-temp-buffer
+                    (insert-file-contents
+                     (expand-file-name "init.el" user-emacs-directory))
+                    (buffer-string))))
+    (should (= 1 (seq-count (lambda (line)
+                              (string-match-p "add-to-list 'load-path" line))
+                            (split-string contents "\n"))))
+    (should (string-match-p "\"lisp\"" contents))))
 
 (ert-deftest architecture-features-have-no-configuration-dependencies ()
   (dolist (file (directory-files-recursively
