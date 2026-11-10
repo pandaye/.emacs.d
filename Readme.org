@@ -26,9 +26,9 @@ emacs
 
 ** 配置结构
 
-=init.el= 只负责包管理并进入 =init-config= 。自有代码按生命周期分为三层：
+=init.el= 只负责包管理、加载 =custom-file= ，把 =lisp/= 挂到 =load-path= 后进入 =init-config= 。=lisp/= 根目录只放两个入口文件： =init-config.el= 是唯一的组合根， =init-environment.el= 统一登记下面三个层目录（它描述「层」本身，所以不放在任何一层里）。自有代码按生命周期分为三层：
 
-- =lisp/core/= ：启动环境、本地私有值、全局默认值和全局键位。
+- =lisp/core/= ：启动默认值、本地私有值和全局键位。
 - =lisp/modules/= ：按领域管理第三方包、hook、advice 和 mode 局部键位。
 - =lisp/features/= ：可独立加载和测试的领域命令，不安装或配置第三方包。
 
