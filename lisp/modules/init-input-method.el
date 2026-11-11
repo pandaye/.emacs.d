@@ -83,10 +83,7 @@
   (interactive)
   (pandaye/input-set-rimel-schema "tigress"))
 
-(defalias 'my/set-rime-jp #'pandaye/input-set-rime-jp)
 (defalias 'my/set-rime-zh #'pandaye/input-set-rime-zh)
-(defalias 'my/rimel-toggle-ascii-punct
-  #'pandaye/input-rimel-toggle-ascii-punct)
 
 (with-eval-after-load 'liberime
   (add-hook 'kill-emacs-hook

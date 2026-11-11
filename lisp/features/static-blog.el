@@ -20,9 +20,6 @@
 (defvaralias 'my-static-blog-subtitle 'static-blog-subtitle)
 (defvaralias 'my-static-blog-public-directory
   'static-blog-public-directory)
-(defvaralias 'my-static-blog-assets-directory
-  'static-blog-assets-directory)
-
 (defcustom static-blog-title "Lantern Index"
   "Site title used by the blog template."
   :type 'string)
@@ -422,8 +419,6 @@ With FORCE, keep compatibility with older key bindings; the argument is ignored.
   (browse-url-of-file (expand-file-name "index.html" static-blog-public-directory)))
 
 (defalias 'my-static-blog-publish-file #'static-blog-publish-file)
-(defalias 'my-static-blog-publish #'static-blog-publish)
-(defalias 'my-static-blog-open-public #'static-blog-open-public)
 
 (provide 'static-blog)
 ;;; static-blog.el ends here

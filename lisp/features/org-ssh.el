@@ -122,8 +122,6 @@
 ;; 快速创建新的服务器组文件
 
 ;; 配置 SSH 服务器组文件目录变量
-(defvaralias 'my/ssh-configs-dir 'org-ssh-configs-dir)
-
 (defcustom org-ssh-configs-dir (expand-file-name "~/work/hosts/")
   "存放 SSH 服务器组 org 文件的目录。"
   :type 'string

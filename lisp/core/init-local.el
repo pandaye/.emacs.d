@@ -11,10 +11,6 @@
   "Startup loader for untracked local variables."
   :group 'convenience)
 
-(defvaralias 'my/local-vars-file 'pandaye/local-vars-file)
-(defvaralias 'my/local-vars-fallback-files
-  'pandaye/local-vars-fallback-files)
-
 (defcustom pandaye/local-vars-file
   (expand-file-name "local-vars.local.el" user-emacs-directory)
   "Untracked local variables file loaded at startup."
@@ -41,8 +37,6 @@
       (message "Loaded fallback local vars from %s" fallback)))
    (t
     (message "Local vars file not found: %s" pandaye/local-vars-file))))
-
-(defalias 'my/load-local-vars #'pandaye/load-local-vars)
 
 (pandaye/load-local-vars)
 

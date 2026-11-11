@@ -9,9 +9,6 @@
   '((t :inherit shadow :weight normal))
   "Face for visually de-emphasized delimiters.")
 
-(defvaralias 'my-subtle-delimiter-font-lock-keywords
-  'subtle-delimiter-font-lock-keywords)
-
 (defvar subtle-delimiter-font-lock-keywords
   `((,(regexp-opt '("(" ")" "[" "]" "{" "}")) . 'subtle-delimiter-face))
   "Font lock keywords for `subtle-delimiter-mode'.")

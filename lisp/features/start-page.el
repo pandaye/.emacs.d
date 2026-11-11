@@ -14,9 +14,6 @@
 
 ;;; Code:
 
-(defvaralias 'my/start-page-slogon-text 'start-page-slogon-text)
-(defvaralias 'my/start-page-top-padding 'start-page-top-padding)
-
 (defgroup start-page nil
   "Custom start page."
   :group 'convenience)
@@ -125,14 +122,6 @@ Characters A-Z and space are supported."
              start-page--last-width
              (/= start-page--last-width (window-width)))
     (start-page-refresh)))
-
-;; ── Layout helpers ────────────────────────────────────────────
-
-(defun start-page--center-string (s)
-  "Return S centered to current window width."
-  (let* ((w (window-width))
-         (pad (max 0 (/ (- w (string-width s)) 2))))
-    (concat (make-string pad ?\s) s)))
 
 ;; ── Directory actions ─────────────────────────────────────────
 

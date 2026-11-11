@@ -20,16 +20,12 @@
 ;; ============================================================
 ;; RSS 订阅
 ;; ============================================================
-(defvaralias 'my/elfeed-feeds 'pandaye/reader-elfeed-feeds)
-
 (defvar pandaye/reader-elfeed-feeds nil
   "User-local Elfeed subscriptions loaded from local vars.")
 
 (defun pandaye/reader-elfeed-apply-feeds ()
   "Apply local or default Elfeed subscriptions to `elfeed-feeds'."
   (setq elfeed-feeds pandaye/reader-elfeed-feeds))
-
-(defalias 'my/elfeed-apply-feeds #'pandaye/reader-elfeed-apply-feeds)
 
 (use-package elfeed
   :config

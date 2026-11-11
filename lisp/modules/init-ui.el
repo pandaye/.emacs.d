@@ -1,8 +1,5 @@
 ;;; init-ui.el --- User interface and modal editing -*- lexical-binding: t; -*-
 
-(defvar *IS-MAC* (eq system-type 'darwin)
-  "Check if the current system is macOS.")
-
 (use-package gruvbox-theme
   :config
   (load-theme 'gruvbox-dark-medium t))
@@ -236,14 +233,6 @@ standard Emacs keybindings, respecting the current mode's keymap."
         ('keypad (propertize "  K  " 'face 'custom-modeline-meow-keypad))
         ('beacon (propertize "  B  " 'face 'custom-modeline-meow-beacon))
         (_       (propertize "  ?  " 'face 'font-lock-warning-face))))))
-
-(defun custom-modeline-buffer-status ()
-  "Return buffer modification status."
-  (cond
-   (buffer-read-only (propertize "RO" 'face 'font-lock-warning-face))
-   ((buffer-modified-p)
-    (propertize "●" 'face 'custom-modeline-buffer-modified))
-   (t (propertize "-" 'face 'custom-modeline-separator))))
 
 (defun custom-modeline-git-branch ()
   "Return current git branch via `vc-mode' (Emacs 内置，无额外进程开销)."

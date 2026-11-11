@@ -14,8 +14,6 @@
   "Shared helpers for generated Org listing buffers."
   :group 'org)
 
-(defvaralias 'my/org-list-page-size 'org-list-page-size)
-
 (defcustom org-list-page-size 20
   "Default number of items shown per page in generated Org lists."
   :type 'integer

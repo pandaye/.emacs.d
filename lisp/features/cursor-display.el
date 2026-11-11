@@ -27,10 +27,6 @@
 
 ;; ── 颜色配置 ─────────────────────────────────────────────
 
-(defvaralias 'my/cursor-color-rime 'cursor-display-cursor-color-rime)
-(defvaralias 'my/cursor-color-motion 'cursor-display-cursor-color-motion)
-(defvaralias 'my/cursor-color-normal 'cursor-display-cursor-color-normal)
-
 (defvar cursor-display-cursor-color-rime   "#FF6B6B" "Insert + Rime 激活时的光标颜色。")
 (defvar cursor-display-cursor-color-motion "#FFA500" "Meow motion 模式的光标颜色。")
 (defvar cursor-display-cursor-color-normal "#00FF00" "Meow normal / insert 无 Rime 的光标颜色。")
@@ -97,13 +93,6 @@
 (defun cursor-display-refresh-cursor-color-after-input-method (&rest _args)
   "Refresh cursor color after input-method related commands."
   (cursor-display-update-cursor-color-for-buffer))
-
-(defalias 'my/update-cursor-color-for-state
-  #'cursor-display-update-cursor-color-for-state)
-(defalias 'my/update-cursor-color-for-buffer
-  #'cursor-display-update-cursor-color-for-buffer)
-(defalias 'my/refresh-cursor-color-after-input-method
-  #'cursor-display-refresh-cursor-color-after-input-method)
 
 (provide 'cursor-display)
 ;;; cursor-display.el ends here

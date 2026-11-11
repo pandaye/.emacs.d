@@ -68,9 +68,6 @@
   :defer 2
   :config (which-key-mode))
 
-;; 安装 diminish 以支持 :diminish 关键字
-(use-package diminish)
-
 ;; ============================================================
 ;; 窗口与编辑增强
 ;; ============================================================
@@ -86,8 +83,6 @@
   (require 'hyperbole)
   (hyperbole-mode 1)
   (call-interactively #'hkey-either))
-
-(defalias 'my/hyperbole-action-key #'pandaye/editor-hyperbole-action-key)
 
 (use-package hyperbole
   :commands (hyperbole hyperbole-mode hkey-either hkey-help)

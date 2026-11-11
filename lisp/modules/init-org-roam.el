@@ -53,9 +53,6 @@
                            #'pandaye/org-roam--list-items
                            #'pandaye/org-roam--insert-list-item))
 
-(defalias 'my/org-roam-list-notes-by-mtime
-  #'pandaye/org-roam-list-notes-by-mtime)
-
 ;; ============================================================
 ;; Org-roam 双向链接
 ;; ============================================================
