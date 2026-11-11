@@ -36,7 +36,6 @@
 ;;-------------------------UI Optimization------------------------------------
 ;; Disable startup screen and messages
 (setq inhibit-startup-screen t
-      inhibit-startup-message t
       initial-scratch-message nil)
 
 ;; Disable unnecessary UI elements early
@@ -48,19 +47,14 @@
 (setq frame-inhibit-implied-resize t)
 
 ;;-------------------------CLI vs GUI Settings-------------------------------
-(if (display-graphic-p)
-    ;; GUI settings
-    (progn
-      (push '(font . "Fira Mono-13") default-frame-alist)
-      (push '(left-fringe . 3) default-frame-alist)
-      (push '(right-fringe . 0) default-frame-alist)
-      (push '(internal-border-width . 5) default-frame-alist)
-      (push '(width . 140) default-frame-alist)
-      (push '(height . 40) default-frame-alist))  ; 修正：height 而不是 length
-  ;; CLI settings - 在终端中不设置字体和窗口大小
-  (progn
-    (setq menu-bar-mode nil)
-    (setq tool-bar-mode nil)))
+;; 只设初始窗口几何。字体与菜单栏/工具栏/滚动条由 lisp/modules/init-gui.el
+;; 按帧处理，这里再设一遍只会先套上旧字体再被覆盖。
+(when (display-graphic-p)
+  (push '(left-fringe . 3) default-frame-alist)
+  (push '(right-fringe . 0) default-frame-alist)
+  (push '(internal-border-width . 5) default-frame-alist)
+  (push '(width . 140) default-frame-alist)
+  (push '(height . 40) default-frame-alist))
 
 ;;-------------------------Additional Optimizations-------------------------
 ;; Improve redisplay performance
